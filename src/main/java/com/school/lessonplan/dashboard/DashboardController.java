@@ -40,7 +40,7 @@ public class DashboardController {
             model.addAllAttributes(stats);
         }
 
-        return "dashboard/index";
+        return "dashboard/dashboard-home";
     }
 
     @GetMapping("/api/dashboard/stats")

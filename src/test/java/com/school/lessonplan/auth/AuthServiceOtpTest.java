@@ -5,7 +5,7 @@ import com.school.lessonplan.campus.CampusRepository;
 import com.school.lessonplan.common.exception.BusinessException;
 import com.school.lessonplan.config.AppProperties;
 import com.school.lessonplan.department.DepartmentRepository;
-import com.school.lessonplan.mail.EmailOutboxRepository;
+import com.school.lessonplan.mail.EmailService;
 import com.school.lessonplan.role.RoleRepository;
 import com.school.lessonplan.security.CookieService;
 import com.school.lessonplan.security.JwtService;
@@ -38,7 +38,7 @@ class AuthServiceOtpTest {
     @Mock private EmailVerificationCodeRepository otpRepository;
     @Mock private PasswordResetTokenRepository resetTokenRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
-    @Mock private EmailOutboxRepository emailOutboxRepository;
+    @Mock private EmailService emailService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtService jwtService;
     @Mock private CookieService cookieService;
@@ -52,7 +52,7 @@ class AuthServiceOtpTest {
         appProperties = new AppProperties();
         authService = new AuthService(
             userRepository, roleRepository, departmentRepository, campusRepository,
-            otpRepository, resetTokenRepository, refreshTokenRepository, emailOutboxRepository,
+            otpRepository, resetTokenRepository, refreshTokenRepository, emailService,
             passwordEncoder, jwtService, cookieService, auditService, appProperties
         );
     }

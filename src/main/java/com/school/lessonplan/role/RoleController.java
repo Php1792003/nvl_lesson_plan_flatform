@@ -1,13 +1,16 @@
 package com.school.lessonplan.role;
 
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
+import com.school.lessonplan.role.dto.RoleCreateForm;
+import com.school.lessonplan.role.dto.RoleUpdateForm;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
 
 @Controller
 @RequestMapping("/admin/roles")
@@ -22,36 +25,71 @@ public class RoleController {
 
     @GetMapping
     public String listRoles(Model model) {
+        loadRoleLookups(model);
+        if (!model.containsAttribute("createRoleForm")) {
+            model.addAttribute("createRoleForm", new RoleCreateForm());
+        }
+        if (!model.containsAttribute("updateRoleForm")) {
+            model.addAttribute("updateRoleForm", new RoleUpdateForm());
+        }
+        return "admin/roles/role-permission-manager";
+    }
+
+    private void loadRoleLookups(Model model) {
         model.addAttribute("roles", roleService.getAllRoles());
         model.addAttribute("allPermissions", roleService.getAllPermissions());
-        return "admin/roles/list";
     }
 
     @PostMapping
-    public String createRole(@RequestParam("code") String code,
-                             @RequestParam("name") String name,
-                             @RequestParam(name = "permissionIds", required = false) List<Long> permissionIds,
-                             RedirectAttributes redirectAttributes) {
-        try {
-            roleService.createRole(code, name, permissionIds);
-            redirectAttributes.addFlashAttribute("successMessage", "Tạo vai trò mới thành công!");
-        } catch (BusinessException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+    public String createRole(
+            @Valid @ModelAttribute("createRoleForm") RoleCreateForm createRoleForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        if (!bindingResult.hasErrors()) {
+            try {
+                roleService.createRole(createRoleForm.getCode(), createRoleForm.getName(), createRoleForm.getPermissionIds());
+                redirectAttributes.addFlashAttribute("successMessage", "Tạo vai trò mới thành công!");
+                return "redirect:/admin/roles";
+            } catch (FieldValidationException e) {
+                bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
+            } catch (BusinessException e) {
+                bindingResult.reject("form.error", e.getMessage());
+            }
         }
-        return "redirect:/admin/roles";
+
+        loadRoleLookups(model);
+        if (!model.containsAttribute("updateRoleForm")) {
+            model.addAttribute("updateRoleForm", new RoleUpdateForm());
+        }
+        model.addAttribute("showCreateModal", true);
+        return "admin/roles/role-permission-manager";
     }
 
     @PostMapping("/{id}")
-    public String updateRole(@PathVariable("id") Long id,
-                             @RequestParam("name") String name,
-                             @RequestParam(name = "permissionIds", required = false) List<Long> permissionIds,
-                             RedirectAttributes redirectAttributes) {
-        try {
-            roleService.updateRole(id, name, permissionIds);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật vai trò thành công!");
-        } catch (BusinessException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+    public String updateRole(
+            @PathVariable("id") Long id,
+            @Valid @ModelAttribute("updateRoleForm") RoleUpdateForm updateRoleForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        if (!bindingResult.hasErrors()) {
+            try {
+                roleService.updateRole(id, updateRoleForm.getName(), updateRoleForm.getPermissionIds());
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật vai trò thành công!");
+                return "redirect:/admin/roles";
+            } catch (FieldValidationException e) {
+                bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
+            } catch (BusinessException e) {
+                bindingResult.reject("form.error", e.getMessage());
+            }
         }
-        return "redirect:/admin/roles";
+
+        loadRoleLookups(model);
+        if (!model.containsAttribute("createRoleForm")) {
+            model.addAttribute("createRoleForm", new RoleCreateForm());
+        }
+        model.addAttribute("activeEditRoleId", id);
+        return "admin/roles/role-permission-manager";
     }
 }

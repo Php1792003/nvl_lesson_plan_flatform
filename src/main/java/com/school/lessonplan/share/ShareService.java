@@ -2,6 +2,7 @@ package com.school.lessonplan.share;
 
 import com.school.lessonplan.audit.AuditService;
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
 import com.school.lessonplan.lessonplan.LessonPlan;
 import com.school.lessonplan.lessonplan.LessonPlanAccessService;
@@ -71,15 +72,15 @@ public class ShareService {
 
         String cleanEmail = recipientEmail.trim().toLowerCase();
         User recipient = userRepository.findByEmail(cleanEmail)
-            .orElseThrow(() -> new BusinessException("Không tìm thấy giáo viên với email: " + cleanEmail));
+            .orElseThrow(() -> new FieldValidationException("email", "NotFound", "Không tìm thấy giáo viên với email: " + cleanEmail));
 
         if (recipient.getId().equals(user.getId())) {
-            throw new BusinessException("Không thể chia sẻ giáo án cho chính mình.");
+            throw new FieldValidationException("email", "Self", "Không thể chia sẻ giáo án cho chính mình.");
         }
 
         // Kiểm tra xem đã chia sẻ chưa
         if (shareRepository.hasActiveShare(planId, recipient.getId())) {
-            throw new BusinessException("Giáo án đã được chia sẻ cho đồng nghiệp này.");
+            throw new FieldValidationException("email", "Duplicate", "Giáo án đã được chia sẻ cho đồng nghiệp này.");
         }
 
         User granter = userRepository.findById(user.getId()).orElse(null);
@@ -104,7 +105,7 @@ public class ShareService {
         payload.put("planTitle", plan.getTitle());
         payload.put("planId", plan.getId());
         payload.put("expiresAt", share.getExpiresAt() != null ? share.getExpiresAt().toString() : null);
-        emailService.queueEmail(recipient.getEmail(), "Giáo án được chia sẻ: " + plan.getTitle(), "mail/plan-shared", payload);
+        emailService.queueEmail(recipient.getEmail(), "Giáo án được chia sẻ: " + plan.getTitle(), "mail/mail-plan-shared", payload);
 
         // Tạo thông báo in-app
         Notification notif = new Notification();

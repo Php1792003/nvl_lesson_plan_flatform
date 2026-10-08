@@ -65,7 +65,7 @@ public class EmailService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("name", fullName);
         payload.put("code", code);
-        queueEmail(toEmail, "Mã xác thực email — THCS Nguyễn Văn Linh", "mail/verify-email", payload);
+        queueEmail(toEmail, "Mã xác thực email — THCS Nguyễn Văn Linh", "mail/mail-verify-email", payload);
     }
 
     /**
@@ -75,7 +75,7 @@ public class EmailService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("name", fullName);
         payload.put("code", code);
-        queueEmail(toEmail, "Mã đặt lại mật khẩu — THCS Nguyễn Văn Linh", "mail/reset-password", payload);
+        queueEmail(toEmail, "Mã đặt lại mật khẩu — THCS Nguyễn Văn Linh", "mail/mail-reset-password", payload);
     }
 
     /**
@@ -84,7 +84,7 @@ public class EmailService {
     public void sendAccountApproved(String toEmail, String fullName) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("name", fullName);
-        queueEmail(toEmail, "Tài khoản của bạn đã được kích hoạt — THCS Nguyễn Văn Linh", "mail/account-approved",
+        queueEmail(toEmail, "Tài khoản của bạn đã được kích hoạt — THCS Nguyễn Văn Linh", "mail/mail-account-approved",
                 payload);
     }
 
@@ -100,7 +100,7 @@ public class EmailService {
         payload.put("sharerName", granterName);
         payload.put("planId", planId);
         payload.put("expiresAt", expiresAt);
-        queueEmail(toEmail, "Giáo án được chia sẻ: " + planTitle, "mail/plan-shared", payload);
+        queueEmail(toEmail, "Giáo án được chia sẻ: " + planTitle, "mail/mail-plan-shared", payload);
     }
 
     /**
@@ -115,7 +115,7 @@ public class EmailService {
         payload.put("versionNo", versionNo);
         payload.put("content", content);
         payload.put("planId", planId);
-        queueEmail(toEmail, "Nhận xét mới cho giáo án: " + planTitle, "mail/new-evaluation", payload);
+        queueEmail(toEmail, "Nhận xét mới cho giáo án: " + planTitle, "mail/mail-new-evaluation", payload);
     }
 
     /**
@@ -130,6 +130,6 @@ public class EmailService {
         payload.put("planTitle", planTitle);
         payload.put("content", content);
         payload.put("planId", planId);
-        queueEmail(toEmail, "Phản hồi nhận xét giáo án: " + planTitle, "mail/evaluation-reply", payload);
+        queueEmail(toEmail, "Phản hồi nhận xét giáo án: " + planTitle, "mail/mail-evaluation-reply", payload);
     }
 }

@@ -38,7 +38,7 @@ public class NotificationController {
         );
 
         model.addAttribute("notifPage", notifPage);
-        return "notification/list";
+        return "notification/notification-inbox";
     }
 
     @PostMapping("/mark-all-read")

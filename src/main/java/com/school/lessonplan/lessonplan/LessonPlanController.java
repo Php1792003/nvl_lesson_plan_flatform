@@ -1,12 +1,16 @@
 package com.school.lessonplan.lessonplan;
 
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.department.DepartmentRepository;
 import com.school.lessonplan.evaluation.Evaluation;
 import com.school.lessonplan.evaluation.EvaluationService;
+import com.school.lessonplan.lessonplan.dto.PlanCreateForm;
+import com.school.lessonplan.lessonplan.dto.PlanUpdateForm;
 import com.school.lessonplan.security.CurrentUser;
 import com.school.lessonplan.share.LessonPlanShare;
 import com.school.lessonplan.share.ShareService;
+import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +22,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -49,55 +54,84 @@ public class LessonPlanController {
     }
 
     @GetMapping
-    public String listPlans(
+    public String myPlans(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestParam(name = "tab", defaultValue = "my") String tab,
             @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "size", defaultValue = "12") int size,
             Model model) {
 
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
         if ("shared".equals(tab)) {
-            PageRequest sharePageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "grantedAt"));
-            Page<LessonPlanShare> sharedPage = shareService.getSharedWithMe(currentUser, sharePageRequest);
+            Page<LessonPlanShare> sharedPage = shareService.getSharedWithMe(currentUser, pageRequest);
             model.addAttribute("sharedPage", sharedPage);
+        } else if ("orphan".equals(tab)) {
+            boolean canViewOrphan = currentUser.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
+            if (canViewOrphan) {
+                Page<LessonPlan> orphanPage = lessonPlanService.getOrphanPlans(pageRequest);
+                model.addAttribute("orphanPage", orphanPage);
+            }
         } else {
-            PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
             Page<LessonPlan> plansPage = lessonPlanService.getAccessiblePlans(currentUser, pageRequest);
             model.addAttribute("plansPage", plansPage);
         }
 
         model.addAttribute("currentTab", tab);
-        return "plans/list";
+        return "plans/plan-catalog";
     }
 
     @GetMapping("/new")
     public String newPlanForm(Model model) {
+        if (!model.containsAttribute("planForm")) {
+            PlanCreateForm form = new PlanCreateForm();
+            form.setSchoolYear("2025-2026");
+            form.setSemester(1);
+            form.setGrade("6");
+            model.addAttribute("planForm", form);
+        }
         model.addAttribute("departments", departmentRepository.findAll());
-        return "plans/create";
+        return "plans/plan-builder";
     }
 
     @PostMapping
     public String createPlan(
             @AuthenticationPrincipal CurrentUser currentUser,
-            @RequestParam("title") String title,
-            @RequestParam("departmentId") Long departmentId,
-            @RequestParam("grade") String grade,
-            @RequestParam("schoolYear") String schoolYear,
-            @RequestParam("semester") Integer semester,
-            @RequestParam(name = "weekNo", required = false) Integer weekNo,
-            @RequestParam(name = "description", required = false) String description,
-            @RequestParam("file") MultipartFile file,
+            @Valid @ModelAttribute("planForm") PlanCreateForm planForm,
+            BindingResult bindingResult,
+            Model model,
             RedirectAttributes redirectAttributes) {
 
-        try {
-            LessonPlan plan = lessonPlanService.createPlan(
-                currentUser, title, departmentId, grade, schoolYear, semester, weekNo, description, file);
-            redirectAttributes.addFlashAttribute("successMessage", "Tạo giáo án thành công!");
-            return "redirect:/plans/" + plan.getId();
-        } catch (BusinessException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/plans/new";
+        if (planForm.getFile() == null || planForm.getFile().isEmpty()) {
+            bindingResult.rejectValue("file", "Empty", "Vui lòng chọn file tải lên.");
         }
+
+        if (!bindingResult.hasErrors()) {
+            try {
+                LessonPlan plan = lessonPlanService.createPlan(
+                    currentUser,
+                    planForm.getTitle(),
+                    planForm.getDepartmentId(),
+                    planForm.getGrade(),
+                    planForm.getSchoolYear(),
+                    planForm.getSemester(),
+                    planForm.getWeekNo(),
+                    planForm.getDescription(),
+                    planForm.getFile()
+                );
+                redirectAttributes.addFlashAttribute("successMessage", "Tạo giáo án thành công!");
+                return "redirect:/plans/" + plan.getId();
+            } catch (FieldValidationException e) {
+                bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
+            } catch (BusinessException e) {
+                bindingResult.reject("form.error", e.getMessage());
+            }
+        }
+
+        model.addAttribute("departments", departmentRepository.findAll());
+        return "plans/plan-builder";
     }
 
     @GetMapping("/{id}")
@@ -125,7 +159,7 @@ public class LessonPlanController {
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("canManage", accessService.canManage(currentUser, plan));
 
-        return "plans/detail";
+        return "plans/plan-overview";
     }
 
     @GetMapping("/{id}/edit")
@@ -137,32 +171,51 @@ public class LessonPlanController {
         LessonPlan plan = lessonPlanService.getPlanById(id, currentUser);
         accessService.requireManageAccess(currentUser, plan);
 
+        if (!model.containsAttribute("planForm")) {
+            PlanUpdateForm form = new PlanUpdateForm();
+            form.setTitle(plan.getTitle());
+            if (plan.getDepartment() != null) form.setDepartmentId(plan.getDepartment().getId());
+            form.setGrade(plan.getGrade());
+            form.setSchoolYear(plan.getSchoolYear());
+            form.setSemester(plan.getSemester());
+            form.setWeekNo(plan.getWeekNo());
+            form.setDescription(plan.getDescription());
+            model.addAttribute("planForm", form);
+        }
+
         model.addAttribute("plan", plan);
         model.addAttribute("departments", departmentRepository.findAll());
-        return "plans/edit";
+        return "plans/plan-editor";
     }
 
     @PostMapping("/{id}")
     public String updatePlan(
             @PathVariable("id") Long id,
             @AuthenticationPrincipal CurrentUser currentUser,
-            @RequestParam("title") String title,
-            @RequestParam("departmentId") Long departmentId,
-            @RequestParam("grade") String grade,
-            @RequestParam("schoolYear") String schoolYear,
-            @RequestParam("semester") Integer semester,
-            @RequestParam(name = "weekNo", required = false) Integer weekNo,
-            @RequestParam(name = "description", required = false) String description,
+            @Valid @ModelAttribute("planForm") PlanUpdateForm planForm,
+            BindingResult bindingResult,
+            Model model,
             RedirectAttributes redirectAttributes) {
 
-        try {
-            lessonPlanService.updateMetadata(
-                id, currentUser, title, departmentId, grade, schoolYear, semester, weekNo, description);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin giáo án thành công!");
-        } catch (BusinessException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        if (!bindingResult.hasErrors()) {
+            try {
+                lessonPlanService.updateMetadata(
+                    id, currentUser, planForm.getTitle(), planForm.getDepartmentId(),
+                    planForm.getGrade(), planForm.getSchoolYear(), planForm.getSemester(),
+                    planForm.getWeekNo(), planForm.getDescription());
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin giáo án thành công!");
+                return "redirect:/plans/" + id;
+            } catch (FieldValidationException e) {
+                bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
+            } catch (BusinessException e) {
+                bindingResult.reject("form.error", e.getMessage());
+            }
         }
-        return "redirect:/plans/" + id;
+
+        LessonPlan plan = lessonPlanService.getPlanById(id, currentUser);
+        model.addAttribute("plan", plan);
+        model.addAttribute("departments", departmentRepository.findAll());
+        return "plans/plan-editor";
     }
 
     @PostMapping("/{id}/versions")
@@ -171,6 +224,11 @@ public class LessonPlanController {
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestParam("file") MultipartFile file,
             RedirectAttributes redirectAttributes) {
+
+        if (file == null || file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn file tải lên.");
+            return "redirect:/plans/" + id;
+        }
 
         try {
             LessonPlanVersion version = lessonPlanService.addVersion(id, currentUser, file);
@@ -240,6 +298,11 @@ public class LessonPlanController {
             @RequestParam(name = "expireDays", required = false) Integer expireDays,
             RedirectAttributes redirectAttributes) {
 
+        if (email == null || email.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng nhập email giáo viên nhận chia sẻ.");
+            return "redirect:/plans/" + id;
+        }
+
         try {
             shareService.sharePlan(id, currentUser, email, expireDays);
             redirectAttributes.addFlashAttribute("successMessage", "Chia sẻ giáo án thành công!");
@@ -272,6 +335,11 @@ public class LessonPlanController {
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestParam("content") String content,
             RedirectAttributes redirectAttributes) {
+
+        if (content == null || content.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Nội dung phản hồi không được để trống.");
+            return "redirect:/plans/" + id;
+        }
 
         try {
             evaluationService.replyToEvaluation(evaluationId, currentUser, content);

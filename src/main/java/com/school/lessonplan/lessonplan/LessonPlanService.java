@@ -70,6 +70,10 @@ public class LessonPlanService {
         return lessonPlanRepository.findAccessibleByUser(user.getId(), pageable);
     }
 
+    public Page<LessonPlan> getOrphanPlans(Pageable pageable) {
+        return lessonPlanRepository.findByOwnerIsNull(pageable);
+    }
+
     public Page<LessonPlan> searchAllForAdmin(String search, Long departmentId, String schoolYear,
                                              Integer semester, Pageable pageable) {
         String cleanSearch = (search != null && !search.trim().isEmpty()) ? search.trim() : null;

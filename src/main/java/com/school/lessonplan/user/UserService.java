@@ -7,6 +7,7 @@ import com.school.lessonplan.auth.RefreshTokenRepository;
 import com.school.lessonplan.campus.Campus;
 import com.school.lessonplan.campus.CampusRepository;
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
 import com.school.lessonplan.department.Department;
 import com.school.lessonplan.department.DepartmentRepository;
@@ -103,7 +104,7 @@ public class UserService {
                            Long departmentId, Long campusId, List<Long> roleIds) {
         String normalizedEmail = email.trim().toLowerCase();
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new BusinessException("Email đã được sử dụng.");
+            throw new FieldValidationException("email", "Duplicate", "Email này đã được sử dụng.");
         }
 
         Department department = departmentRepository.findById(departmentId)
@@ -178,7 +179,7 @@ public class UserService {
         // Gửi email thông báo phê duyệt
         Map<String, Object> payload = new HashMap<>();
         payload.put("name", user.getFullName());
-        emailService.queueEmail(user.getEmail(), "Tài khoản của bạn đã được kích hoạt", "mail/account-approved", payload);
+        emailService.queueEmail(user.getEmail(), "Tài khoản của bạn đã được kích hoạt", "mail/mail-account-approved", payload);
 
         auditService.log("USER_APPROVE", "USER", user.getId(), "Phê duyệt tài khoản: " + user.getEmail());
     }
@@ -239,7 +240,7 @@ public class UserService {
         User user = getById(id);
 
         if (confirmEmail == null || !confirmEmail.trim().equalsIgnoreCase(user.getEmail())) {
-            throw new BusinessException("Email xác nhận không khớp với tài khoản cần xoá.");
+            throw new FieldValidationException("confirmEmail", "Mismatch", "Email xác nhận không khớp.");
         }
 
         if (actor != null && actor.getId().equals(id)) {

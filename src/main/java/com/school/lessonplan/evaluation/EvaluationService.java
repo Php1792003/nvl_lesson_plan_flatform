@@ -2,6 +2,7 @@ package com.school.lessonplan.evaluation;
 
 import com.school.lessonplan.audit.AuditService;
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
 import com.school.lessonplan.lessonplan.LessonPlan;
 import com.school.lessonplan.lessonplan.LessonPlanRepository;
@@ -79,7 +80,7 @@ public class EvaluationService {
     @Transactional
     public Evaluation addEvaluation(Long planId, Long versionId, CurrentUser reviewerUser, String content) {
         if (content == null || content.trim().isEmpty()) {
-            throw new BusinessException("Nội dung nhận xét không được để trống.");
+            throw new FieldValidationException("content", "NotBlank", "Nội dung nhận xét không được để trống.");
         }
 
         LessonPlan plan = lessonPlanRepository.findById(planId)
@@ -115,7 +116,7 @@ public class EvaluationService {
             emailService.queueEmail(
                 plan.getOwner().getEmail(),
                 "Nhận xét mới cho giáo án: " + plan.getTitle(),
-                "mail/new-evaluation",
+                "mail/mail-new-evaluation",
                 payload
             );
 
@@ -139,7 +140,7 @@ public class EvaluationService {
     @Transactional
     public Evaluation editEvaluation(Long evaluationId, CurrentUser reviewerUser, String newContent) {
         if (newContent == null || newContent.trim().isEmpty()) {
-            throw new BusinessException("Nội dung nhận xét không được để trống.");
+            throw new FieldValidationException("content", "NotBlank", "Nội dung nhận xét không được để trống.");
         }
 
         Evaluation eval = evaluationRepository.findById(evaluationId)
@@ -164,7 +165,7 @@ public class EvaluationService {
     @Transactional
     public EvaluationReply replyToEvaluation(Long evaluationId, CurrentUser authorUser, String content) {
         if (content == null || content.trim().isEmpty()) {
-            throw new BusinessException("Nội dung phản hồi không được để trống.");
+            throw new FieldValidationException("content", "NotBlank", "Nội dung phản hồi không được để trống.");
         }
 
         Evaluation eval = evaluationRepository.findById(evaluationId)
@@ -198,7 +199,7 @@ public class EvaluationService {
             emailService.queueEmail(
                 eval.getReviewer().getEmail(),
                 "Phản hồi nhận xét giáo án: " + plan.getTitle(),
-                "mail/evaluation-reply",
+                "mail/mail-evaluation-reply",
                 payload
             );
 

@@ -537,7 +537,7 @@
                 if (btn) {
                     btn.disabled = false;
                     btn.classList.remove('loading');
-                    NVL.setText('submitLabel', 'Tải lên giáo án');
+                    NVL.setText('submitLabel', 'Tải lên');
                 }
             }
         });
