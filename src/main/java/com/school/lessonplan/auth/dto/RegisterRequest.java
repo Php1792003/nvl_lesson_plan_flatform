@@ -1,56 +1,106 @@
 package com.school.lessonplan.auth.dto;
 
-import jakarta.validation.constraints.Email;
+import com.school.lessonplan.common.validation.FormatGroup;
+import com.school.lessonplan.common.validation.PasswordConfirmable;
+import com.school.lessonplan.common.validation.PasswordMatches;
+import jakarta.validation.GroupSequence;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public class RegisterRequest {
+@GroupSequence({RegisterRequest.class, FormatGroup.class})
+@PasswordMatches(groups = FormatGroup.class)
+public class RegisterRequest implements PasswordConfirmable {
 
-    @NotBlank(message = "{register.lastName.required}")
-    @Size(max = 100, message = "{register.lastName.maxLength}")
+    public static final String NAME_REGEX = "^[\\p{L}][\\p{L} .'’-]*$";
+    public static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+    public static final String PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*\\d).+$";
+
+    @NotBlank
+    @Size(max = 50, groups = FormatGroup.class)
+    @Pattern(regexp = NAME_REGEX, groups = FormatGroup.class)
     private String lastName;
 
-    @NotBlank(message = "{register.givenName.required}")
-    @Size(max = 200, message = "{register.givenName.maxLength}")
+    @NotBlank
+    @Size(max = 80, groups = FormatGroup.class)
+    @Pattern(regexp = NAME_REGEX, groups = FormatGroup.class)
     private String givenName;
 
-    @NotBlank(message = "{register.email.required}")
-    @Email(message = "{register.email.invalid}")
-    @Size(max = 320, message = "{register.email.maxLength}")
+    @NotBlank
+    @Size(max = 150, groups = FormatGroup.class)
+    @Pattern(regexp = EMAIL_REGEX, groups = FormatGroup.class)
     private String email;
 
-    @NotNull(message = "{register.department.required}")
+    @NotNull
     private Long departmentId;
 
+    @NotNull
     private Long campusId;
 
-    @NotBlank(message = "{register.password.required}")
-    @Size(min = 8, max = 128, message = "{register.password.size}")
+    @NotBlank
+    @Size(min = 8, max = 72, groups = FormatGroup.class)
+    @Pattern(regexp = PASSWORD_REGEX, groups = FormatGroup.class)
     private String password;
 
-    @NotBlank(message = "{register.confirmPassword.required}")
+    @NotBlank
     private String confirmPassword;
 
-    // Getters and Setters
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getLastName() {
+        return lastName;
+    }
 
-    public String getGivenName() { return givenName; }
-    public void setGivenName(String givenName) { this.givenName = givenName; }
+    public void setLastName(String lastName) {
+        this.lastName = lastName == null ? null : lastName.trim();
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getGivenName() {
+        return givenName;
+    }
 
-    public Long getDepartmentId() { return departmentId; }
-    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
+    public void setGivenName(String givenName) {
+        this.givenName = givenName == null ? null : givenName.trim();
+    }
 
-    public Long getCampusId() { return campusId; }
-    public void setCampusId(Long campusId) { this.campusId = campusId; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setEmail(String email) {
+        this.email = email == null ? null : email.trim();
+    }
 
-    public String getConfirmPassword() { return confirmPassword; }
-    public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public Long getCampusId() {
+        return campusId;
+    }
+
+    public void setCampusId(Long campusId) {
+        this.campusId = campusId;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String getConfirmPassword() {
+        return confirmPassword;
+    }
+
+    public void setConfirmPassword(String confirmPassword) {
+        this.confirmPassword = confirmPassword;
+    }
 }

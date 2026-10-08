@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-base :: layout('Chỉnh sửa Giáo án', ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <div style="max-width: 800px; margin: 0 auto;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Chỉnh sửa thông tin Giáo án</h3>
+                </div>
+
+                <form th:action="@{/plans/{id}(id=${plan.id})}" th:object="${planForm}" method="post" data-validate novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+
+                    <div class="form-group" th:classappend="${#fields.hasErrors('title')} ? 'has-error'">
+                        <label class="form-label" for="title">Tiêu đề giáo án <span class="req">*</span></label>
+                        <input type="text" id="title" th:field="*{title}" class="form-control"
+                            maxlength="200" required autofocus
+                            data-msg-required="Vui lòng nhập tiêu đề giáo án."
+                            th:attr="aria-invalid=${#fields.hasErrors('title')},aria-describedby='title-error'">
+                        <p class="field-error" id="title-error" role="alert"
+                           th:if="${#fields.hasErrors('title')}" th:text="${#fields.errors('title')[0]}"></p>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
+                            <label class="form-label" for="departmentId">Môn học <span class="req">*</span></label>
+                            <select id="departmentId" th:field="*{departmentId}" class="form-select" required
+                                data-msg-required="Vui lòng chọn môn học."
+                                th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby='departmentId-error'">
+                                <option value="">-- Chọn bộ môn --</option>
+                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
+                                    th:selected="${dept.id == planForm.departmentId}"></option>
+                            </select>
+                            <p class="field-error" id="departmentId-error" role="alert"
+                               th:if="${#fields.hasErrors('departmentId')}" th:text="${#fields.errors('departmentId')[0]}"></p>
+                        </div>
+
+                        <div class="form-group" th:classappend="${#fields.hasErrors('grade')} ? 'has-error'">
+                            <label class="form-label" for="grade">Khối lớp <span class="req">*</span></label>
+                            <select id="grade" th:field="*{grade}" class="form-select" required
+                                data-msg-required="Vui lòng chọn khối lớp."
+                                th:attr="aria-invalid=${#fields.hasErrors('grade')},aria-describedby='grade-error'">
+                                <option value="6">Khối 6</option>
+                                <option value="7">Khối 7</option>
+                                <option value="8">Khối 8</option>
+                                <option value="9">Khối 9</option>
+                            </select>
+                            <p class="field-error" id="grade-error" role="alert"
+                               th:if="${#fields.hasErrors('grade')}" th:text="${#fields.errors('grade')[0]}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('schoolYear')} ? 'has-error'">
+                            <label class="form-label" for="schoolYear">Năm học <span class="req">*</span></label>
+                            <input type="text" id="schoolYear" th:field="*{schoolYear}" class="form-control"
+                                data-pattern="^\d{4}-\d{4}$"
+                                data-msg-required="Vui lòng nhập năm học."
+                                data-msg-pattern="Định dạng năm học: YYYY-YYYY (ví dụ: 2025-2026)"
+                                inputmode="numeric" required
+                                th:attr="aria-invalid=${#fields.hasErrors('schoolYear')},aria-describedby='schoolYear-error'">
+                            <p class="field-error" id="schoolYear-error" role="alert"
+                               th:if="${#fields.hasErrors('schoolYear')}" th:text="${#fields.errors('schoolYear')[0]}"></p>
+                        </div>
+
+                        <div class="form-group" th:classappend="${#fields.hasErrors('semester')} ? 'has-error'">
+                            <label class="form-label" for="semester">Học kỳ <span class="req">*</span></label>
+                            <select id="semester" th:field="*{semester}" class="form-select" required
+                                data-msg-required="Vui lòng chọn học kỳ."
+                                th:attr="aria-invalid=${#fields.hasErrors('semester')},aria-describedby='semester-error'">
+                                <option value="1">Học kỳ 1</option>
+                                <option value="2">Học kỳ 2</option>
+                            </select>
+                            <p class="field-error" id="semester-error" role="alert"
+                               th:if="${#fields.hasErrors('semester')}" th:text="${#fields.errors('semester')[0]}"></p>
+                        </div>
+
+                        <div class="form-group" th:classappend="${#fields.hasErrors('weekNo')} ? 'has-error'">
+                            <label class="form-label" for="weekNo">Tuần / Tiết học <span class="opt">(tuỳ chọn)</span></label>
+                            <input type="number" id="weekNo" th:field="*{weekNo}" class="form-control" min="1"
+                                placeholder="Ví dụ: 3"
+                                th:attr="aria-invalid=${#fields.hasErrors('weekNo')},aria-describedby='weekNo-error'">
+                            <p class="field-error" id="weekNo-error" role="alert"
+                               th:if="${#fields.hasErrors('weekNo')}" th:text="${#fields.errors('weekNo')[0]}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-group" th:classappend="${#fields.hasErrors('description')} ? 'has-error'">
+                        <label class="form-label" for="description">Mô tả tóm tắt nội dung</label>
+                        <textarea id="description" th:field="*{description}" rows="3" class="form-control"
+                            maxlength="1000"
+                            th:attr="aria-invalid=${#fields.hasErrors('description')},aria-describedby='description-error'"></textarea>
+                        <p class="field-error" id="description-error" role="alert"
+                           th:if="${#fields.hasErrors('description')}" th:text="${#fields.errors('description')[0]}"></p>
+                    </div>
+
+                    <div class="form-actions">
+                        <a th:href="@{/plans/{id}(id=${plan.id})}" class="btn btn-secondary">Huỷ</a>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

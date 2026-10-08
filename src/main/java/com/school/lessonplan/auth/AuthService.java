@@ -6,6 +6,7 @@ import com.school.lessonplan.auth.dto.RegisterRequest;
 import com.school.lessonplan.campus.Campus;
 import com.school.lessonplan.campus.CampusRepository;
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.common.exception.RateLimitException;
 import com.school.lessonplan.config.AppProperties;
 import com.school.lessonplan.department.Department;
@@ -114,7 +115,7 @@ public class AuthService {
                 user = existing;
                 otpRepository.deleteByUserId(user.getId());
             } else {
-                throw new BusinessException("Email đã được sử dụng.");
+                throw new FieldValidationException("email", "Duplicate", "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.");
             }
         } else {
             user = new User();
@@ -132,7 +133,11 @@ public class AuthService {
         user.setCampus(campus);
         user.setStatus(UserStatus.PENDING_EMAIL);
 
-        user = userRepository.save(user);
+        try {
+            user = userRepository.save(user);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new FieldValidationException("email", "Duplicate", "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.");
+        }
 
         // Gửi mã OTP
         sendVerificationOtp(user);
@@ -192,17 +197,17 @@ public class AuthService {
 
         // Kiểm tra đã dùng chưa
         if (otp.isConsumed()) {
-            throw new BusinessException("Mã đã được sử dụng. Vui lòng yêu cầu mã mới.");
+            throw new FieldValidationException("code", "Invalid", "Mã đã được sử dụng. Vui lòng yêu cầu mã mới.");
         }
 
         // Kiểm tra hết hạn
         if (otp.isExpired()) {
-            throw new BusinessException("Mã đã hết hạn. Vui lòng yêu cầu mã mới.");
+            throw new FieldValidationException("code", "Invalid", "Mã đã hết hạn. Vui lòng yêu cầu mã mới.");
         }
 
         // Kiểm tra số lần nhập sai
         if (otp.isMaxAttemptsReached(appProperties.getOtp().getMaxAttempts())) {
-            throw new BusinessException(
+            throw new FieldValidationException("code", "Invalid",
                     "Đã nhập sai quá " + appProperties.getOtp().getMaxAttempts() + " lần. Vui lòng yêu cầu mã mới.");
         }
 
@@ -211,7 +216,13 @@ public class AuthService {
         if (!inputHash.equals(otp.getCodeHash())) {
             otp.incrementAttempts();
             otpRepository.save(otp);
-            throw new BusinessException("Mã xác thực không đúng.");
+            int remaining = appProperties.getOtp().getMaxAttempts() - otp.getAttempts();
+            if (remaining <= 0) {
+                throw new FieldValidationException("code", "Invalid",
+                        "Đã nhập sai quá " + appProperties.getOtp().getMaxAttempts() + " lần. Vui lòng yêu cầu mã mới.");
+            }
+            throw new FieldValidationException("code", "Invalid",
+                    "Mã không đúng hoặc đã hết hạn. Bạn còn " + remaining + " lần thử.");
         }
 
         // Thành công - đánh dấu đã dùng
@@ -268,10 +279,17 @@ public class AuthService {
         user.setLockedUntil(null);
         userRepository.save(user);
 
-        // Tạo token pair
-        issueTokens(user, httpRequest, httpResponse);
+        // Tạo token pair (với rememberMe 30 ngày)
+        boolean rememberMe = request.isRememberMe();
+        issueTokens(user, rememberMe, httpRequest, httpResponse);
 
-        auditService.log("USER_LOGIN", "USER", user.getId(), "Đăng nhập", httpRequest);
+        if (rememberMe) {
+            cookieService.setRememberEmailCookie(httpResponse, user.getEmail(), 30 * 24 * 60 * 60);
+        } else {
+            cookieService.clearRememberEmailCookie(httpResponse);
+        }
+
+        auditService.log("USER_LOGIN", "USER", user.getId(), "Đăng nhập" + (rememberMe ? " (ghi nhớ 30 ngày)" : ""), httpRequest);
 
         return user;
     }
@@ -291,9 +309,16 @@ public class AuthService {
 
     @Transactional
     public void issueTokens(User user, HttpServletRequest request, HttpServletResponse response) {
+        issueTokens(user, false, request, response);
+    }
+
+    @Transactional
+    public void issueTokens(User user, boolean rememberMe, HttpServletRequest request, HttpServletResponse response) {
         // Access token
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getTokenVersion());
-        int accessMaxAge = appProperties.getJwt().getAccessTokenExpiryMinutes() * 60;
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getTokenVersion(), rememberMe);
+        int accessMaxAge = rememberMe
+                ? 30 * 24 * 60 * 60
+                : appProperties.getJwt().getAccessTokenExpiryMinutes() * 60;
         cookieService.setAccessTokenCookie(response, accessToken, accessMaxAge);
 
         // Refresh token
@@ -305,12 +330,13 @@ public class AuthService {
         rt.setUser(user);
         rt.setTokenHash(refreshHash);
         rt.setFamilyId(familyId);
-        rt.setExpiresAt(jwtService.getRefreshTokenExpiry());
+        rt.setExpiresAt(jwtService.getRefreshTokenExpiry(rememberMe));
         rt.setIp(request != null ? request.getRemoteAddr() : null);
         rt.setUserAgent(request != null ? request.getHeader("User-Agent") : null);
         refreshTokenRepository.save(rt);
 
-        int refreshMaxAge = appProperties.getJwt().getRefreshTokenExpiryDays() * 24 * 60 * 60;
+        int refreshDays = rememberMe ? 30 : appProperties.getJwt().getRefreshTokenExpiryDays();
+        int refreshMaxAge = refreshDays * 24 * 60 * 60;
         cookieService.setRefreshTokenCookie(response, refreshTokenValue, refreshMaxAge);
     }
 
@@ -353,11 +379,14 @@ public class AuthService {
         String newRefreshValue = jwtService.generateRefreshTokenValue();
         String newRefreshHash = hashSha256(newRefreshValue);
 
+        boolean isRemember = existingToken.getExpiresAt() != null
+                && ChronoUnit.DAYS.between(existingToken.getCreatedAt(), existingToken.getExpiresAt()) >= 14;
+
         RefreshToken newToken = new RefreshToken();
         newToken.setUser(user);
         newToken.setTokenHash(newRefreshHash);
         newToken.setFamilyId(existingToken.getFamilyId());
-        newToken.setExpiresAt(jwtService.getRefreshTokenExpiry());
+        newToken.setExpiresAt(jwtService.getRefreshTokenExpiry(isRemember));
         newToken.setIp(request.getRemoteAddr());
         newToken.setUserAgent(request.getHeader("User-Agent"));
         newToken = refreshTokenRepository.save(newToken);
@@ -366,11 +395,12 @@ public class AuthService {
         refreshTokenRepository.save(existingToken);
 
         // Issue new access token
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getTokenVersion());
-        int accessMaxAge = appProperties.getJwt().getAccessTokenExpiryMinutes() * 60;
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getTokenVersion(), isRemember);
+        int accessMaxAge = isRemember ? (30 * 24 * 60 * 60) : (appProperties.getJwt().getAccessTokenExpiryMinutes() * 60);
         cookieService.setAccessTokenCookie(response, accessToken, accessMaxAge);
 
-        int refreshMaxAge = appProperties.getJwt().getRefreshTokenExpiryDays() * 24 * 60 * 60;
+        int refreshDays = isRemember ? 30 : appProperties.getJwt().getRefreshTokenExpiryDays();
+        int refreshMaxAge = refreshDays * 24 * 60 * 60;
         cookieService.setRefreshTokenCookie(response, newRefreshValue, refreshMaxAge);
 
         return true;
@@ -436,22 +466,26 @@ public class AuthService {
         PasswordResetToken resetToken = tokens.get(0);
 
         if (resetToken.isConsumed()) {
-            throw new BusinessException("Mã đã được sử dụng.");
+            throw new FieldValidationException("code", "Invalid", "Mã đã được sử dụng. Vui lòng yêu cầu mã mới.");
         }
 
         if (resetToken.isExpired()) {
-            throw new BusinessException("Mã đã hết hạn. Vui lòng yêu cầu mã mới.");
+            throw new FieldValidationException("code", "Invalid", "Mã đã hết hạn. Vui lòng yêu cầu mã mới.");
         }
 
         if (resetToken.isMaxAttemptsReached(appProperties.getOtp().getMaxAttempts())) {
-            throw new BusinessException("Đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã mới.");
+            throw new FieldValidationException("code", "Invalid", "Đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã mới.");
         }
 
         String inputHash = hashSha256(code.trim());
         if (!inputHash.equals(resetToken.getCodeHash())) {
             resetToken.incrementAttempts();
             resetTokenRepository.save(resetToken);
-            throw new BusinessException("Mã xác thực không đúng.");
+            int remaining = appProperties.getOtp().getMaxAttempts() - resetToken.getAttempts();
+            if (remaining <= 0) {
+                throw new FieldValidationException("code", "Invalid", "Đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã mới.");
+            }
+            throw new FieldValidationException("code", "Invalid", "Mã không đúng hoặc đã hết hạn. Bạn còn " + remaining + " lần thử.");
         }
 
         // OTP đúng — đánh dấu consumed và tạo session token
@@ -476,7 +510,7 @@ public class AuthService {
     @Transactional
     public void resetPassword(String email, String sessionToken, String newPassword, String confirmPassword) {
         if (!newPassword.equals(confirmPassword)) {
-            throw new BusinessException("Mật khẩu xác nhận không khớp.");
+            throw new FieldValidationException("confirmPassword", "PasswordMatches", "Mật khẩu xác nhận không khớp.");
         }
 
         if (!newPassword.matches(".*[a-zA-Z].*") || !newPassword.matches(".*\\d.*")) {
@@ -521,11 +555,11 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException("Không tìm thấy tài khoản."));
 
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new BusinessException("Mật khẩu hiện tại không đúng.");
+            throw new FieldValidationException("currentPassword", "Invalid", "Mật khẩu hiện tại không đúng.");
         }
 
         if (!newPassword.equals(confirmPassword)) {
-            throw new BusinessException("Mật khẩu xác nhận không khớp.");
+            throw new FieldValidationException("confirmPassword", "PasswordMatches", "Mật khẩu xác nhận không khớp.");
         }
 
         if (!newPassword.matches(".*[a-zA-Z].*") || !newPassword.matches(".*\\d.*")) {

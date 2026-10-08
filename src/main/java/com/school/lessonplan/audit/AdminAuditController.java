@@ -39,6 +39,6 @@ public class AdminAuditController {
         model.addAttribute("action", action);
         model.addAttribute("actorEmail", actorEmail);
 
-        return "admin/audit/list";
+        return "admin/audit/audit-log-viewer";
     }
 }

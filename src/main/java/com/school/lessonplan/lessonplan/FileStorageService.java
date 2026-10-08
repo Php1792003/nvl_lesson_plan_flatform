@@ -1,6 +1,7 @@
 package com.school.lessonplan.lessonplan;
 
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.config.AppProperties;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
@@ -55,13 +56,13 @@ public class FileStorageService {
 
     public StoredFileResult storeFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException("Vui lòng chọn file tải lên.");
+            throw new FieldValidationException("file", "Empty", "Vui lòng chọn file tải lên.");
         }
 
         // 1. Kiểm tra dung lượng (10 MB)
         long maxBytes = (long) appProperties.getUpload().getMaxMb() * 1024 * 1024;
         if (file.getSize() > maxBytes) {
-            throw new BusinessException("Dung lượng file vượt quá giới hạn " + appProperties.getUpload().getMaxMb() + " MB.");
+            throw new FieldValidationException("file", "Size", "Tệp vượt quá " + appProperties.getUpload().getMaxMb() + " MB. Hãy nén lại rồi thử lại.");
         }
 
         // 2. Làm sạch tên file và kiểm tra path traversal
@@ -69,7 +70,7 @@ public class FileStorageService {
         String extension = getFileExtension(originalFilename);
 
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new BusinessException("Định dạng file không được hỗ trợ. Chỉ chấp nhận pdf, doc, docx, ppt, pptx.");
+            throw new FieldValidationException("file", "Extension", "Chỉ chấp nhận tệp PDF, Word hoặc PowerPoint.");
         }
 
         // 3. Kiểm tra MIME khai báo và Magic Bytes với Tika
@@ -79,7 +80,7 @@ public class FileStorageService {
             if (validMimes == null || !validMimes.contains(detectedMime.toLowerCase())) {
                 log.warn("MIME detection mismatch: file={}, declared={}, detected={}",
                     originalFilename, file.getContentType(), detectedMime);
-                throw new BusinessException("Nội dung file không khớp với định dạng " + extension + ". Vui lòng kiểm tra lại file.");
+                throw new FieldValidationException("file", "Extension", "Nội dung file không khớp với định dạng " + extension + ". Vui lòng kiểm tra lại file.");
             }
         } catch (IOException e) {
             throw new BusinessException("Không thể đọc nội dung file tải lên.");

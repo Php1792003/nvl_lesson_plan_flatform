@@ -1,6 +1,7 @@
 package com.school.lessonplan.lessonplan;
 
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.department.DepartmentRepository;
 import com.school.lessonplan.evaluation.EvaluationService;
 import com.school.lessonplan.security.CurrentUser;
@@ -53,7 +54,7 @@ public class AdminLessonPlanController {
         model.addAttribute("semester", semester);
         model.addAttribute("departments", departmentRepository.findAll());
 
-        return "admin/plans/list";
+        return "admin/plans/admin-plan-catalog";
     }
 
     @PostMapping("/{id}/evaluations")
@@ -64,6 +65,11 @@ public class AdminLessonPlanController {
             @RequestParam("content") String content,
             @AuthenticationPrincipal CurrentUser currentUser,
             RedirectAttributes redirectAttributes) {
+
+        if (content == null || content.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Nội dung nhận xét không được để trống.");
+            return "redirect:/plans/" + id;
+        }
 
         try {
             evaluationService.addEvaluation(id, versionId, currentUser, content);
@@ -83,6 +89,11 @@ public class AdminLessonPlanController {
             @RequestParam("content") String content,
             @AuthenticationPrincipal CurrentUser currentUser,
             RedirectAttributes redirectAttributes) {
+
+        if (content == null || content.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Nội dung nhận xét không được để trống.");
+            return "redirect:/plans/" + id;
+        }
 
         try {
             evaluationService.editEvaluation(evaluationId, currentUser, content);

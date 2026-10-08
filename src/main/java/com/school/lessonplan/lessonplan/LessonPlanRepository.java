@@ -16,6 +16,11 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
     Page<LessonPlan> findByOwnerId(Long ownerId, Pageable pageable);
 
     /**
+     * Giáo án mồ côi (giáo viên đã bị xoá khỏi hệ thống)
+     */
+    Page<LessonPlan> findByOwnerIsNull(Pageable pageable);
+
+    /**
      * Giáo án mà user được xem (chủ sở hữu HOẶC được chia sẻ)
      */
     @Query(value = """

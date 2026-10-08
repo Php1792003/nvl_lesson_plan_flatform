@@ -26,11 +26,20 @@ public class JwtService {
     }
 
     /**
-     * Tạo access token (15 phút)
+     * Tạo access token (15 phút mặc định)
      */
     public String generateAccessToken(Long userId, String email, int tokenVersion) {
+        return generateAccessToken(userId, email, tokenVersion, false);
+    }
+
+    /**
+     * Tạo access token (15 phút mặc định, 30 ngày nếu rememberMe)
+     */
+    public String generateAccessToken(Long userId, String email, int tokenVersion, boolean rememberMe) {
         Instant now = Instant.now();
-        Instant expiry = now.plus(appProperties.getJwt().getAccessTokenExpiryMinutes(), ChronoUnit.MINUTES);
+        Instant expiry = rememberMe
+            ? now.plus(30, ChronoUnit.DAYS)
+            : now.plus(appProperties.getJwt().getAccessTokenExpiryMinutes(), ChronoUnit.MINUTES);
 
         return Jwts.builder()
             .subject(String.valueOf(userId))
@@ -39,6 +48,7 @@ public class JwtService {
             .expiration(Date.from(expiry))
             .claim("email", email)
             .claim("tv", tokenVersion)
+            .claim("remember", rememberMe)
             .signWith(key, Jwts.SIG.HS256)
             .compact();
     }
@@ -80,6 +90,11 @@ public class JwtService {
      * Tính thời điểm hết hạn refresh token
      */
     public Instant getRefreshTokenExpiry() {
-        return Instant.now().plus(appProperties.getJwt().getRefreshTokenExpiryDays(), ChronoUnit.DAYS);
+        return getRefreshTokenExpiry(false);
+    }
+
+    public Instant getRefreshTokenExpiry(boolean rememberMe) {
+        int days = rememberMe ? 30 : appProperties.getJwt().getRefreshTokenExpiryDays();
+        return Instant.now().plus(days, ChronoUnit.DAYS);
     }
 }

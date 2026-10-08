@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-base :: layout('Danh sách Giáo án', ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <div class="plans" id="plansRoot">
+
+            <!-- Tab + nút tải lên -->
+            <div class="pl-top reveal" style="--i:0">
+                <div class="pl-tabs" role="tablist">
+                    <a th:href="@{/plans(tab='my')}" class="pl-tab" role="tab"
+                        th:classappend="${currentTab == 'my'} ? 'on'">
+                        <span>Giáo án của tôi</span>
+                        <span class="cnt" th:if="${currentTab == 'my'}" th:text="${plansPage.totalElements}">0</span>
+                    </a>
+                    <a th:href="@{/plans(tab='shared')}" class="pl-tab" role="tab"
+                        th:classappend="${currentTab == 'shared'} ? 'on'">
+                        <span>Được chia sẻ với tôi</span>
+                        <span class="cnt" th:if="${currentTab == 'shared'}"
+                            th:text="${sharedPage.totalElements}">0</span>
+                    </a>
+                </div>
+                <a th:href="@{/plans/new}" class="pl-btn primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Tải lên</span>
+                </a>
+            </div>
+
+            <!-- ================= Giáo án của tôi ================= -->
+            <section class="pl-panel reveal" style="--i:1" th:if="${currentTab == 'my'}">
+
+                <div class="pl-empty" th:if="${plansPage.empty}">
+                    <div class="ico">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="12" y1="18" x2="12" y2="12" />
+                            <polyline points="9 15 12 12 15 15" />
+                        </svg>
+                    </div>
+                    <h4>Chưa có giáo án nào</h4>
+                    <p>Hãy tải lên giáo án đầu tiên của bạn để bắt đầu quản lý và chia sẻ.</p>
+                    <a th:href="@{/plans/new}" class="pl-btn primary">Tải lên</a>
+                </div>
+
+                <th:block th:unless="${plansPage.empty}">
+                    <div class="pl-toolbar">
+                        <div class="pl-search">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input type="search" class="pl-input" id="plSearch"
+                                placeholder="Tìm theo tiêu đề, bộ môn, khối..." autocomplete="off"
+                                aria-label="Tìm giáo án">
+                        </div>
+                        <select class="pl-select" id="plDept" aria-label="Lọc theo bộ môn">
+                            <option value="">Tất cả bộ môn</option>
+                        </select>
+                        <div class="pl-meta">Hiển thị <b id="plShown">0</b> / <span id="plTotalPage">0</span> trên trang
+                            này</div>
+                    </div>
+
+                    <div class="pl-scroll">
+                        <table class="pl-table" id="plTable">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu đề giáo án</th>
+                                    <th>Bộ môn</th>
+                                    <th>Khối</th>
+                                    <th>Năm học</th>
+                                    <th>Phiên bản</th>
+                                    <th>Cập nhật</th>
+                                    <th class="right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="plan : ${plansPage.content}" class="row-in"
+                                    th:attr="data-href=@{/plans/{id}(id=${plan.id})},data-dept=${plan.department.name}">
+                                    <td class="cell-title">
+                                        <div class="pl-title">
+                                            <div class="pl-doc">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <path
+                                                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                    <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <a class="t" th:href="@{/plans/{id}(id=${plan.id})}"
+                                                    th:text="${plan.title}">Tiêu đề</a>
+                                                <div th:if="${plan.isOrphan()}">
+                                                    <span class="pl-badge orphan"
+                                                        th:text="${plan.displayOwnerName}">Giáo viên đã bị xoá</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Bộ môn"><span class="pl-dept"><i></i><span
+                                                th:text="${plan.department.name}">Toán học</span></span></td>
+                                    <td data-label="Khối" th:text="'Khối ' + ${plan.grade}">Khối 10</td>
+                                    <td data-label="Năm học">
+                                        <div class="pl-two"><span th:text="${plan.schoolYear}">2025-2026</span><small
+                                                th:text="'Học kỳ ' + ${plan.semester}">Học kỳ 1</small></div>
+                                    </td>
+                                    <td data-label="Phiên bản"><span class="pl-badge ver"
+                                            th:text="'v' + ${plan.currentVersionNo}">v1</span></td>
+                                    <td data-label="Cập nhật">
+                                        <div class="pl-two"><span
+                                                th:text="${#temporals.format(plan.updatedAt, 'dd/MM/yyyy')}">01/01/2026</span><small
+                                                th:text="${#temporals.format(plan.updatedAt, 'HH:mm')}">08:00</small>
+                                        </div>
+                                    </td>
+                                    <td class="right">
+                                        <a th:href="@{/plans/{id}(id=${plan.id})}" class="pl-btn ghost">
+                                            <span>Xem</span>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <line x1="5" y1="12" x2="19" y2="12" />
+                                                <polyline points="12 5 19 12 12 19" />
+                                            </svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pl-nomatch" id="plNoMatch">
+                        <strong>Không tìm thấy giáo án phù hợp</strong>
+                        Thử đổi từ khoá hoặc chọn lại bộ môn.
+                    </div>
+
+                    <div class="pl-foot">
+                        <span>Tổng cộng <b th:text="${plansPage.totalElements}">0</b> giáo án</span>
+                        <nav class="pl-pager" th:if="${plansPage.totalPages > 1}" aria-label="Phân trang">
+                            <a th:if="${!plansPage.first}" class="pl-pg"
+                                th:href="@{/plans(tab='my',page=${plansPage.number - 1})}">‹ Trước</a>
+                            <span th:if="${plansPage.first}" class="pl-pg off">‹ Trước</span>
+                            <span class="cur"
+                                th:text="'Trang ' + ${plansPage.number + 1} + ' / ' + ${plansPage.totalPages}">Trang 1 /
+                                1</span>
+                            <a th:if="${!plansPage.last}" class="pl-pg"
+                                th:href="@{/plans(tab='my',page=${plansPage.number + 1})}">Sau ›</a>
+                            <span th:if="${plansPage.last}" class="pl-pg off">Sau ›</span>
+                        </nav>
+                    </div>
+                </th:block>
+            </section>
+
+            <!-- ================= Được chia sẻ với tôi ================= -->
+            <section class="pl-panel reveal" style="--i:1" th:if="${currentTab == 'shared'}">
+
+                <div class="pl-empty" th:if="${sharedPage.empty}">
+                    <div class="ico">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3" />
+                            <circle cx="6" cy="12" r="3" />
+                            <circle cx="18" cy="19" r="3" />
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
+                    </div>
+                    <h4>Chưa có giáo án được chia sẻ</h4>
+                    <p>Khi đồng nghiệp chia sẻ giáo án cho bạn, chúng sẽ xuất hiện tại đây.</p>
+                </div>
+
+                <th:block th:unless="${sharedPage.empty}">
+                    <div class="pl-toolbar">
+                        <div class="pl-search">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input type="search" class="pl-input" id="plSearch"
+                                placeholder="Tìm theo tiêu đề, người chia sẻ, bộ môn..." autocomplete="off"
+                                aria-label="Tìm giáo án">
+                        </div>
+                        <select class="pl-select" id="plDept" aria-label="Lọc theo bộ môn">
+                            <option value="">Tất cả bộ môn</option>
+                        </select>
+                        <div class="pl-meta">Hiển thị <b id="plShown">0</b> / <span id="plTotalPage">0</span> trên trang
+                            này</div>
+                    </div>
+
+                    <div class="pl-scroll">
+                        <table class="pl-table" id="plTable">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu đề giáo án</th>
+                                    <th>Người chia sẻ</th>
+                                    <th>Bộ môn</th>
+                                    <th>Khối</th>
+                                    <th>Ngày chia sẻ</th>
+                                    <th>Thời hạn</th>
+                                    <th class="right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="share : ${sharedPage.content}" class="row-in"
+                                    th:attr="data-href=@{/plans/{id}(id=${share.plan.id})},data-dept=${share.plan.department.name}">
+                                    <td class="cell-title">
+                                        <div class="pl-title">
+                                            <div class="pl-doc">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <path
+                                                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                    <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <a class="t" th:href="@{/plans/{id}(id=${share.plan.id})}"
+                                                    th:text="${share.plan.title}">Tiêu đề</a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Người chia sẻ"
+                                        th:text="${share.grantedBy != null ? share.grantedBy.fullName : 'Hệ thống'}">
+                                        Thầy Bình</td>
+                                    <td data-label="Bộ môn"><span class="pl-dept"><i></i><span
+                                                th:text="${share.plan.department.name}">Vật lý</span></span></td>
+                                    <td data-label="Khối" th:text="'Khối ' + ${share.plan.grade}">Khối 11</td>
+                                    <td data-label="Ngày chia sẻ"
+                                        th:text="${#temporals.format(share.grantedAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                                    <td data-label="Thời hạn">
+                                        <span th:if="${share.expiresAt != null}" class="pl-two"
+                                            th:attr="data-expires=${share.expiresAt}">
+                                            <span
+                                                th:text="${#temporals.format(share.expiresAt, 'dd/MM/yyyy')}">31/12/2026</span>
+                                        </span>
+                                        <span th:if="${share.expiresAt == null}" class="pl-badge ok">Vô thời hạn</span>
+                                    </td>
+                                    <td class="right">
+                                        <a th:href="@{/plans/{id}(id=${share.plan.id})}" class="pl-btn ghost">
+                                            <span>Xem</span>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <line x1="5" y1="12" x2="19" y2="12" />
+                                                <polyline points="12 5 19 12 12 19" />
+                                            </svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pl-nomatch" id="plNoMatch">
+                        <strong>Không tìm thấy giáo án phù hợp</strong>
+                        Thử đổi từ khoá hoặc chọn lại bộ môn.
+                    </div>
+
+                    <div class="pl-foot">
+                        <span>Tổng cộng <b th:text="${sharedPage.totalElements}">0</b> giáo án được chia sẻ</span>
+                        <nav class="pl-pager" th:if="${sharedPage.totalPages > 1}" aria-label="Phân trang">
+                            <a th:if="${!sharedPage.first}" class="pl-pg"
+                                th:href="@{/plans(tab='shared',page=${sharedPage.number - 1})}">‹ Trước</a>
+                            <span th:if="${sharedPage.first}" class="pl-pg off">‹ Trước</span>
+                            <span class="cur"
+                                th:text="'Trang ' + ${sharedPage.number + 1} + ' / ' + ${sharedPage.totalPages}">Trang 1
+                                / 1</span>
+                            <a th:if="${!sharedPage.last}" class="pl-pg"
+                                th:href="@{/plans(tab='shared',page=${sharedPage.number + 1})}">Sau ›</a>
+                            <span th:if="${sharedPage.last}" class="pl-pg off">Sau ›</span>
+                        </nav>
+                    </div>
+                </th:block>
+            </section>
+        </div>
+    </div>
+</body>
+
+</html>

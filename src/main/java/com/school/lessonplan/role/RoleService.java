@@ -2,6 +2,7 @@ package com.school.lessonplan.role;
 
 import com.school.lessonplan.audit.AuditService;
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ public class RoleService {
     public Role createRole(String code, String name, List<Long> permissionIds) {
         String cleanCode = code.trim().toUpperCase();
         if (roleRepository.existsByCode(cleanCode)) {
-            throw new BusinessException("Mã vai trò đã tồn tại.");
+            throw new FieldValidationException("code", "Duplicate", "Mã vai trò đã tồn tại.");
         }
 
         Role role = new Role();

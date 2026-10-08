@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập — Hệ thống Quản lý Giáo án THCS Nguyễn Văn Linh</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/img/nvl_logo.png}" style="width: 100px; height: 100px;">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/form-validation.js}" defer></script>
+</head>
+
+<body class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-brand">
+                <img th:src="@{/img/nvl_logo.png}" alt="Nguyễn Văn Linh" style="width: 88px;">
+            </div>
+            <h1 class="auth-title">Đăng nhập</h1>
+            <p class="auth-subtitle">Cổng quản lý giáo án điện tử trường THCS Nguyễn Văn Linh</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div th:if="${param.logout}" class="alert alert-success" role="status">
+            <span>Bạn đã đăng xuất khỏi hệ thống thành công.</span>
+        </div>
+        <div th:if="${successMessage}" class="alert alert-success" role="status">
+            <span th:text="${successMessage}">Thành công!</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+            <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
+        </div>
+
+        <form th:action="@{/login}" th:object="${loginRequest}" method="post" data-validate novalidate>
+            <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+
+            <div class="form-group" th:classappend="${#fields.hasErrors('email')} ? 'has-error'">
+                <label class="form-label" for="email">Email <span class="req" aria-hidden="true">*</span></label>
+                <input type="email" id="email" th:field="*{email}" class="form-control"
+                       placeholder="giaovien@school.edu.vn" maxlength="150" required autocomplete="email" autofocus
+                       data-pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                       data-msg-required="Vui lòng nhập email."
+                       data-msg-pattern="Email không hợp lệ. Ví dụ: ten@school.edu.vn"
+                       th:attr="aria-invalid=${#fields.hasErrors('email')},aria-describedby='email-error'">
+                <p class="field-error" id="email-error" role="alert"
+                   th:if="${#fields.hasErrors('email')}" th:text="${#fields.errors('email')[0]}"></p>
+            </div>
+
+            <div class="form-group" th:classappend="${#fields.hasErrors('password')} ? 'has-error'">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label class="form-label" for="password">Mật khẩu <span class="req" aria-hidden="true">*</span></label>
+                    <a th:href="@{/forgot-password}"
+                       style="font-size: 12px; color: var(--primary); text-decoration: none;">Quên mật khẩu?</a>
+                </div>
+                <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="••••••••"
+                       required autocomplete="current-password"
+                       data-msg-required="Vui lòng nhập mật khẩu."
+                       th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby='password-error'">
+                <p class="field-error" id="password-error" role="alert"
+                   th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password')[0]}"></p>
+            </div>
+
+            <div class="form-group" style="margin-top: -6px; margin-bottom: 18px;">
+                <label class="form-check" for="rememberMe"
+                       style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="rememberMe" th:field="*{rememberMe}"
+                           style="width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer;">
+                    <span>Ghi nhớ đăng nhập</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 6px; padding: 12px;">Đăng nhập</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 24px; font-size: 13px; color: var(--text-muted);">
+            Chưa có tài khoản giảng viên?
+            <a th:href="@{/register}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Đăng ký ngay</a>
+        </div>
+    </div>
+</body>
+
+</html>

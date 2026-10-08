@@ -49,7 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
 
         String accessToken = cookieService.getAccessToken(request);
 
@@ -64,15 +64,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // Tải user từ DB - kiểm tra status và token_version
                 User user = userRepository.findByIdWithRolesAndPermissions(userId).orElse(null);
                 if (user != null
-                    && user.getStatus() == UserStatus.ACTIVE
-                    && user.getTokenVersion() == tokenVersion) {
+                        && user.getStatus() == UserStatus.ACTIVE
+                        && user.getTokenVersion() == tokenVersion) {
 
                     // Tải quyền từ DB (không tin JWT)
                     Set<GrantedAuthority> authorities = loadAuthorities(user);
                     CurrentUser currentUser = new CurrentUser(user, authorities);
 
-                    UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(currentUser, null, authorities);
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(currentUser,
+                            null, authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -109,8 +109,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Không filter cho static resources
-        return path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/vendor/")
-            || path.startsWith("/images/") || path.equals("/favicon.ico");
+        return path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")
+                || path.startsWith("/vendor/")
+                || path.startsWith("/images/") || path.equals("/favicon.ico")
+                || path.startsWith("/.well-known/");
     }
 }

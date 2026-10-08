@@ -1,20 +1,47 @@
 package com.school.lessonplan.auth.dto;
 
-import jakarta.validation.constraints.Email;
+import com.school.lessonplan.common.validation.FormatGroup;
+import jakarta.validation.GroupSequence;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
+@GroupSequence({LoginRequest.class, FormatGroup.class})
 public class LoginRequest {
 
-    @NotBlank(message = "{login.email.required}")
-    @Email(message = "{login.email.invalid}")
+    public static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+
+    @NotBlank
+    @Size(max = 150, groups = FormatGroup.class)
+    @Pattern(regexp = EMAIL_REGEX, groups = FormatGroup.class)
     private String email;
 
-    @NotBlank(message = "{login.password.required}")
+    @NotBlank
     private String password;
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    private boolean rememberMe;
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email == null ? null : email.trim();
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isRememberMe() {
+        return rememberMe;
+    }
+
+    public void setRememberMe(boolean rememberMe) {
+        this.rememberMe = rememberMe;
+    }
 }

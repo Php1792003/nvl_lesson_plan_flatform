@@ -48,7 +48,7 @@ for ($i = 0; $i -lt 30; $i++) {
 Write-Host ""
 
 if ($isReady) {
-    Write-Host "[NVL] Khoi dong thanh cong! Ung dung da san sang tai http://localhost:8080 (PID: $appPid)" -ForegroundColor Green
+    Write-Host "[NVL] Khoi dong thanh cong! Ung dung da san sang tai http://localhost:8080/portal (PID: $appPid)" -ForegroundColor Green
 } else {
     Write-Host "[NVL] Ung dung dang tiep tuc khoi dong trong nen." -ForegroundColor Yellow
     Write-Host "[NVL] Ban co the go 'make logs' de theo doi tien trinh hoac 'make status' de kiem tra." -ForegroundColor Yellow
