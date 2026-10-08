@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout/main :: layout('Thêm Giáo viên mới', ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <div style="max-width: 720px; margin: 0 auto;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Tạo tài khoản giáo viên mới</h3>
+                </div>
+
+                <form th:action="@{/admin/users}" method="post">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="lastName">Họ <span
+                                    style="color: var(--danger);">*</span></label>
+                            <input type="text" id="lastName" name="lastName" class="form-control" placeholder="Nguyễn"
+                                required autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="givenName">Tên đệm & Tên <span
+                                    style="color: var(--danger);">*</span></label>
+                            <input type="text" id="givenName" name="givenName" class="form-control"
+                                placeholder="Văn Bình" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email <span style="color: var(--danger);">*</span></label>
+                        <input type="email" id="email" name="email" class="form-control"
+                            placeholder="binh.nguyen@school.edu.vn" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Mật khẩu ban đầu <span
+                                style="color: var(--danger);">*</span></label>
+                        <input type="password" id="password" name="password" class="form-control"
+                            placeholder="Tối thiểu 8 ký tự, có chữ và số" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="departmentId">Môn học <span
+                                    style="color: var(--danger);">*</span></label>
+                            <select id="departmentId" name="departmentId" class="form-select" required>
+                                <option value="">-- Chọn bộ môn --</option>
+                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="campusId">Phân hiệu <span
+                                    style="color: var(--danger);">*</span></label>
+                            <select id="campusId" name="campusId" class="form-select" required>
+                                <option th:each="c : ${campuses}" th:value="${c.id}" th:text="${c.name}"
+                                    th:selected="${c.isDefault}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Vai trò</label>
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px;">
+                            <label th:each="r : ${roles}"
+                                style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+                                <input type="checkbox" name="roleIds" th:value="${r.id}"
+                                    th:checked="${r.code == 'TEACHER'}">
+                                <span th:text="${r.name}">Giáo viên</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                        <a th:href="@{/admin/users}" class="btn btn-secondary">Huỷ bỏ</a>
+                        <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

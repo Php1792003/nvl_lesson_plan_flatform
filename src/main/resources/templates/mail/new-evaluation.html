@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f9;
+        }
+
+        .card {
+            max-width: 580px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .header h2 {
+            margin: 0;
+            color: #1e3a8a;
+        }
+
+        .comment-box {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff !important;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+
+        .footer {
+            font-size: 13px;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 32px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="header">
+            <h2>Nhận xét mới từ Ban Giám Hiệu</h2>
+        </div>
+        <p>Xin chào <strong th:text="${ownerName}">Thầy/Cô</strong>,</p>
+        <p>Ban Giám Hiệu (<span th:text="${reviewerName}">BGH</span>) vừa gửi đánh giá/nhận xét cho giáo án: <strong
+                th:text="${planTitle}">Tiêu đề giáo án</strong> (phiên bản <span th:text="${versionNo}">1</span>).</p>
+
+        <div class="comment-box">
+            <span th:text="${content}">Nội dung nhận xét...</span>
+        </div>
+
+        <p>Thầy/Cô vui lòng đăng nhập vào hệ thống để xem chi tiết và phản hồi (nếu cần):</p>
+        <div style="text-align: center;">
+            <a th:href="${baseUrl} + '/plans/' + ${planId}" class="btn">Xem giáo án</a>
+        </div>
+        <div class="footer">
+            <p>Trường THCS Nguyễn Văn Linh — Hệ thống Quản lý Giáo án điện tử</p>
+        </div>
+    </div>
+</body>
+
+</html>

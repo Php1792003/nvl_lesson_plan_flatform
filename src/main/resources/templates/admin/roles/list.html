@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout/main :: layout('Quản lý Vai trò & Phân quyền', ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <div class="rol" id="rolRoot">
+
+            <div class="rl-head reveal" style="--i:0">
+                <div>
+                    <h2>Vai trò &amp; Quyền hạn hệ thống</h2>
+                    <p>Tạo vai trò và quyết định mỗi vai trò được làm những gì.</p>
+                </div>
+                <button type="button" class="rl-btn primary" data-open="createRoleModal">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Tạo vai trò mới</span>
+                </button>
+            </div>
+
+            <div class="rl-bar reveal" style="--i:1" th:unless="${roles.empty}">
+                <div class="rl-search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="search" class="rl-input" id="roleSearch" placeholder="Tìm theo tên hoặc mã vai trò..."
+                        autocomplete="off" aria-label="Tìm vai trò">
+                </div>
+                <div class="rl-stat">Hiển thị <b id="roleShown">0</b> / <b th:text="${roles.size()}">0</b> vai trò</div>
+            </div>
+
+            <!-- Chưa có vai trò nào -->
+            <div class="rl-empty reveal" style="--i:1" th:if="${roles.empty}">
+                <div class="ico">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                </div>
+                <h4>Chưa có vai trò nào</h4>
+                <p>Tạo vai trò đầu tiên rồi gán quyền hạn phù hợp.</p>
+                <button type="button" class="rl-btn primary" data-open="createRoleModal">Tạo vai trò mới</button>
+            </div>
+
+            <!-- Không khớp tìm kiếm -->
+            <div class="rl-empty hidden" id="roleNoMatch">
+                <div class="ico">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                </div>
+                <h4>Không tìm thấy vai trò phù hợp</h4>
+                <p>Thử đổi từ khoá tìm kiếm.</p>
+            </div>
+
+            <!-- ============ Danh sách vai trò ============ -->
+            <div class="rl-grid" id="roleGrid">
+                <article th:each="role : ${roles}" class="rl-card reveal" th:style="'--i:' + ${roleStat.index + 2}">
+                    <div class="rl-card-head">
+                        <div class="rl-ico">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                        </div>
+                        <div class="tx">
+                            <h3 class="rl-name" th:text="${role.name}">Tổ trưởng chuyên môn</h3>
+                            <span class="rl-code" th:text="${role.code}">ROLE_CODE</span>
+                        </div>
+                    </div>
+
+                    <div class="rl-perm-label">Danh sách quyền hạn</div>
+                    <div class="rl-perms" data-perms>
+                        <span th:if="${role.permissions.empty}" class="rl-none">Chưa có quyền hạn nào được gán.</span>
+                        <span th:each="p : ${role.permissions}" class="rl-tag" th:text="${p.description}">Sửa thông tin
+                            giáo viên</span>
+                    </div>
+
+                    <div class="rl-card-foot">
+                        <span class="rl-count"><b th:text="${role.permissions.size()}">0</b>quyền hạn</span>
+                        <button type="button" class="rl-btn ghost sm" th:attr="data-open=${'editRoleModal-' + role.id}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+                            </svg>
+                            Sửa
+                        </button>
+                    </div>
+
+                    <!-- Hộp thoại sửa vai trò -->
+                    <dialog th:id="'editRoleModal-' + ${role.id}" class="rl-dialog"
+                        th:attr="aria-label=${'Chỉnh sửa ' + role.name}">
+                        <form th:action="@{/admin/roles/{id}(id=${role.id})}" method="post" class="role-form">
+                            <div class="rl-dhead">
+                                <h3 th:text="'Chỉnh sửa: ' + ${role.name}">Chỉnh sửa vai trò</h3>
+                                <button type="button" class="rl-x" data-close aria-label="Đóng">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.2" stroke-linecap="round">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="rl-dbody">
+                                <div class="rl-field">
+                                    <label class="rl-label">Tên vai trò<span class="req">*</span></label>
+                                    <input type="text" name="name" th:value="${role.name}" class="rl-control" required>
+                                </div>
+
+                                <div class="rl-field" style="margin-bottom:0">
+                                    <label class="rl-label">Quyền hạn</label>
+                                    <div class="rl-ptop">
+                                        <span class="rl-picked">Đã bật <b class="picked-n">0</b>/<span
+                                                class="picked-t">0</span></span>
+                                        <span class="rl-links">
+                                            <button type="button" class="rl-link" data-all>Bật tất cả</button>
+                                            <button type="button" class="rl-link" data-none>Tắt tất cả</button>
+                                        </span>
+                                    </div>
+                                    <div class="rl-plist">
+                                        <label th:each="perm : ${allPermissions}" class="rl-perm">
+                                            <span class="tx" th:text="${perm.description}">Sửa thông tin giáo
+                                                viên</span>
+                                            <input type="checkbox" name="permissionIds" th:value="${perm.id}"
+                                                th:checked="${role.permissions.contains(perm)}">
+                                            <span class="sw" aria-hidden="true"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="rl-dfoot">
+                                <button type="button" class="rl-btn ghost" data-close>Huỷ</button>
+                                <button type="submit" class="rl-btn primary">Lưu thay đổi</button>
+                            </div>
+                        </form>
+                    </dialog>
+                </article>
+            </div>
+
+            <!-- Hộp thoại tạo vai trò -->
+            <dialog id="createRoleModal" class="rl-dialog" aria-label="Tạo vai trò mới">
+                <form th:action="@{/admin/roles}" method="post" class="role-form">
+                    <div class="rl-dhead">
+                        <h3>Tạo vai trò mới</h3>
+                        <button type="button" class="rl-x" data-close aria-label="Đóng">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="rl-dbody">
+                        <div class="rl-field">
+                            <label class="rl-label" for="roleCode">Mã vai trò (Code)<span class="req">*</span></label>
+                            <input type="text" id="roleCode" name="code" class="rl-control mono"
+                                placeholder="Ví dụ: DEPT_LEADER" required autocomplete="off" spellcheck="false">
+                            <span class="rl-hint">Tự động viết hoa, khoảng trắng đổi thành dấu gạch dưới.</span>
+                        </div>
+
+                        <div class="rl-field">
+                            <label class="rl-label" for="roleName">Tên hiển thị<span class="req">*</span></label>
+                            <input type="text" id="roleName" name="name" class="rl-control"
+                                placeholder="Ví dụ: Tổ trưởng chuyên môn" required>
+                        </div>
+
+                        <div class="rl-field" style="margin-bottom:0">
+                            <label class="rl-label">Quyền hạn ban đầu</label>
+                            <div class="rl-ptop">
+                                <span class="rl-picked">Đã bật <b class="picked-n">0</b>/<span
+                                        class="picked-t">0</span></span>
+                                <span class="rl-links">
+                                    <button type="button" class="rl-link" data-all>Bật tất cả</button>
+                                    <button type="button" class="rl-link" data-none>Tắt tất cả</button>
+                                </span>
+                            </div>
+                            <div class="rl-plist">
+                                <label th:each="perm : ${allPermissions}" class="rl-perm">
+                                    <span class="tx" th:text="${perm.description}">Sửa thông tin giáo viên</span>
+                                    <input type="checkbox" name="permissionIds" th:value="${perm.id}">
+                                    <span class="sw" aria-hidden="true"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rl-dfoot">
+                        <button type="button" class="rl-btn ghost" data-close>Huỷ</button>
+                        <button type="submit" class="rl-btn primary">Tạo vai trò</button>
+                    </div>
+                </form>
+            </dialog>
+        </div>
+    </div>
+</body>
+
+</html>

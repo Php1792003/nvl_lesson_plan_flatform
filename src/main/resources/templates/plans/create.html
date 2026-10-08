@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout/main :: layout('Tải lên Giáo án mới', ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <div class="upl" id="uplRoot">
+
+            <div class="up-head reveal" style="--i:0">
+                <a th:href="@{/plans}" class="up-back">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12" />
+                        <polyline points="12 19 5 12 12 5" />
+                    </svg>
+                    Danh sách giáo án
+                </a>
+                <h2>Tải lên giáo án mới</h2>
+                <p>Điền thông tin và đính kèm tệp. Tệp tải lên sẽ là phiên bản 1 của giáo án.</p>
+            </div>
+
+            <form th:action="@{/plans}" method="post" enctype="multipart/form-data" id="uplForm" novalidate>
+                <div class="up-grid">
+
+                    <!-- ============ Cột chính ============ -->
+                    <div class="up-card up-form-card reveal" style="--i:1">
+
+                        <div class="up-sec">
+                            <div class="up-sec-head">
+                                <h3>Thông tin giáo án</h3>
+                                <p>Tiêu đề và nội dung chính giúp đồng nghiệp tìm thấy giáo án dễ hơn.</p>
+                            </div>
+
+                            <div class="up-field">
+                                <label class="up-label" for="title">Tiêu đề giáo án<span class="req">*</span></label>
+                                <input type="text" id="title" name="title" class="up-control"
+                                    placeholder="Ví dụ: Kế hoạch bài dạy Bài 1 - Dao động điều hòa" required autofocus>
+                            </div>
+
+                            <div class="up-field" style="margin-bottom:0">
+                                <label class="up-label" for="description">Mô tả tóm tắt nội dung<span class="opt">(không
+                                        bắt buộc)</span></label>
+                                <textarea id="description" name="description" rows="3" class="up-control"
+                                    placeholder="Mục tiêu bài dạy, phương pháp giảng dạy chính..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="up-sec">
+                            <div class="up-sec-head">
+                                <h3>Phân loại</h3>
+                                <p>Chọn đúng bộ môn, khối lớp và học kỳ để giáo án được sắp xếp chính xác.</p>
+                            </div>
+
+                            <div class="up-row c2">
+                                <div class="up-field">
+                                    <label class="up-label" for="departmentId">Môn học<span class="req">*</span></label>
+                                    <select id="departmentId" name="departmentId" class="up-control" required>
+                                        <option value="">-- Chọn bộ môn --</option>
+                                        <option th:each="dept : ${departments}" th:value="${dept.id}"
+                                            th:text="${dept.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="up-field">
+                                    <label class="up-label" for="grade">Khối lớp<span class="req">*</span></label>
+                                    <select id="grade" name="grade" class="up-control" required>
+                                        <option value="6">Khối 6</option>
+                                        <option value="7">Khối 7</option>
+                                        <option value="8">Khối 8</option>
+                                        <option value="9">Khối 9</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="up-row c3">
+                                <div class="up-field">
+                                    <label class="up-label" for="schoolYear">Năm học<span class="req">*</span></label>
+                                    <input type="text" id="schoolYear" name="schoolYear" class="up-control"
+                                        value="2025-2026" pattern="\d{4}-\d{4}" title="Định dạng: 2025-2026"
+                                        inputmode="numeric" required>
+                                </div>
+                                <div class="up-field">
+                                    <label class="up-label" for="semester">Học kỳ<span class="req">*</span></label>
+                                    <select id="semester" name="semester" class="up-control" required>
+                                        <option value="1">Học kỳ 1</option>
+                                        <option value="2">Học kỳ 2</option>
+                                    </select>
+                                </div>
+                                <div class="up-field">
+                                    <label class="up-label" for="weekNo">Tuần / Tiết học<span class="opt">(tuỳ
+                                            chọn)</span></label>
+                                    <input type="number" id="weekNo" name="weekNo" class="up-control"
+                                        placeholder="Ví dụ: 3" min="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="up-sec">
+                            <div class="up-sec-head">
+                                <h3>Tệp đính kèm (Phiên bản 1)<span style="color:var(--rose);margin-left:2px">*</span>
+                                </h3>
+                                <p>PDF, Word (.doc, .docx) hoặc PowerPoint (.ppt, .pptx), tối đa 10 MB.</p>
+                            </div>
+
+                            <div class="up-dropwrap" id="dropWrap">
+                                <input type="file" id="file" name="file" class="up-file-input" required
+                                    accept=".pdf,.doc,.docx,.ppt,.pptx">
+
+                                <label for="file" class="up-drop" id="drop">
+                                    <div class="ico">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" y1="3" x2="12" y2="15" />
+                                        </svg>
+                                    </div>
+                                    <strong><u>Nhấp để chọn tệp</u> hoặc kéo thả vào đây</strong>
+                                    <span>PDF, Word, PowerPoint · Tối đa 10 MB</span>
+                                </label>
+
+                                <div class="up-chosen" id="chosen">
+                                    <div class="up-ext" id="chosenExt">DOC</div>
+                                    <div class="up-info">
+                                        <div class="up-name" id="chosenName">—</div>
+                                        <div class="up-size" id="chosenSize">—</div>
+                                        <div class="up-meter" title="Dung lượng so với giới hạn 10 MB"><b
+                                                id="chosenMeter"></b></div>
+                                    </div>
+                                    <button type="button" class="up-remove" id="removeFile">Chọn tệp khác</button>
+                                </div>
+                            </div>
+                            <div class="up-err" id="fileErr" role="alert"></div>
+                        </div>
+
+                        <div class="up-actions">
+                            <a th:href="@{/plans}" class="up-btn ghost">Huỷ bỏ</a>
+                            <button type="submit" class="up-btn primary" id="submitBtn">
+                                <span class="up-spin" aria-hidden="true"></span>
+                                <span id="submitLabel">Tải lên giáo án</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ============ Cột bên ============ -->
+                    <aside class="up-aside">
+                        <div class="up-card up-side up-progress-card reveal" style="--i:2">
+                            <div class="up-prog-top">
+                                <b id="progNum">0/0</b>
+                                <span>mục bắt buộc đã điền</span>
+                            </div>
+                            <div class="up-bar"><b id="progBar"></b></div>
+                        </div>
+
+                        <div class="up-card up-side up-rules-card reveal" style="--i:3">
+                            <h4>Yêu cầu về tệp</h4>
+                            <ul class="up-rules">
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span>Dung lượng tối đa <strong>10 MB</strong> mỗi tệp.</span>
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <div>
+                                        <span>Định dạng được chấp nhận:</span>
+                                        <div class="up-chips">
+                                            <span class="up-chip">.pdf</span><span class="up-chip">.doc</span><span
+                                                class="up-chip">.docx</span><span class="up-chip">.ppt</span><span
+                                                class="up-chip">.pptx</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="up-tip up-tip-card reveal" style="--i:4">
+                            <strong>Mẹo tiết kiệm dung lượng</strong>
+                            Thầy/Cô nên nén hình ảnh (Compress Pictures) trong Word / PowerPoint trước khi tải lên để
+                            tiết kiệm dung lượng lưu trữ của trường.
+                        </div>
+                    </aside>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

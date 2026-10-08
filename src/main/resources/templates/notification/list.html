@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout('Thông báo của tôi', ~{::contentBlock})}">
+<body>
+<div th:fragment="contentBlock">
+
+    <div style="max-width: 800px; margin: 0 auto;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 18px; font-weight: 700; color: var(--dark);">Hộp thư thông báo</h2>
+            <form th:action="@{/notifications/mark-all-read}" method="post">
+                <button type="submit" class="btn btn-outline btn-sm">Đánh dấu tất cả đã đọc</button>
+            </form>
+        </div>
+
+        <div class="card" style="padding: 0;">
+            <div th:if="${notifPage.empty}" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                Bạn không có thông báo nào.
+            </div>
+
+            <div th:each="n : ${notifPage.content}" style="padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;" th:styleappend="${n.readAt == null ? 'background: #f8fafc;' : ''}">
+                <div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--dark);" th:text="${n.title}">Thông báo mới</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" th:text="${#temporals.format(n.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</div>
+                </div>
+                <div th:if="${n.link != null}">
+                    <a th:href="@{${n.link}}" class="btn btn-outline btn-sm">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>

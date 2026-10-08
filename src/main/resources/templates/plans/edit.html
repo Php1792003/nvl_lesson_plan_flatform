@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout('Chỉnh sửa Giáo án', ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <div style="max-width: 800px; margin: 0 auto;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Chỉnh sửa thông tin Giáo án</h3>
+                </div>
+
+                <form th:action="@{/plans/{id}(id=${plan.id})}" method="post">
+                    <div class="form-group">
+                        <label class="form-label" for="title">Tiêu đề giáo án <span
+                                style="color: var(--danger);">*</span></label>
+                        <input type="text" id="title" name="title" th:value="${plan.title}" class="form-control"
+                            required autofocus>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="departmentId">Môn học <span
+                                    style="color: var(--danger);">*</span></label>
+                            <select id="departmentId" name="departmentId" class="form-select" required>
+                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
+                                    th:selected="${dept.id == plan.department.id}"></option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="grade">Khối lớp <span
+                                    style="color: var(--danger);">*</span></label>
+                            <select id="grade" name="grade" class="form-select" required>
+                                <option value="6" th:selected="${plan.grade == '6'}">Khối 6</option>
+                                <option value="7" th:selected="${plan.grade == '7'}">Khối 7</option>
+                                <option value="8" th:selected="${plan.grade == '8'}">Khối 8</option>
+                                <option value="9" th:selected="${plan.grade == '9'}">Khối 9</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="schoolYear">Năm học <span
+                                    style="color: var(--danger);">*</span></label>
+                            <input type="text" id="schoolYear" name="schoolYear" th:value="${plan.schoolYear}"
+                                class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="semester">Học kỳ <span
+                                    style="color: var(--danger);">*</span></label>
+                            <select id="semester" name="semester" class="form-select" required>
+                                <option value="1" th:selected="${plan.semester == 1}">Học kỳ 1</option>
+                                <option value="2" th:selected="${plan.semester == 2}">Học kỳ 2</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="weekNo">Tuần / Tiết học</label>
+                            <input type="number" id="weekNo" name="weekNo" th:value="${plan.weekNo}"
+                                class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">Mô tả tóm tắt nội dung</label>
+                        <textarea id="description" name="description" rows="3" class="form-control"
+                            th:text="${plan.description}"></textarea>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                        <a th:href="@{/plans/{id}(id=${plan.id})}" class="btn btn-secondary">Huỷ bỏ</a>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

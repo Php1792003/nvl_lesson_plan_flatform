@@ -1,0 +1,20 @@
+server:
+  port: 8443
+  ssl:
+    enabled: true
+
+spring:
+  thymeleaf:
+    cache: true
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.school.lessonplan: INFO
+    org.hibernate.SQL: WARN
