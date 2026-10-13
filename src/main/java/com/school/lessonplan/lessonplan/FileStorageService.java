@@ -59,7 +59,7 @@ public class FileStorageService {
             throw new FieldValidationException("file", "Empty", "Vui lòng chọn file tải lên.");
         }
 
-        // 1. Kiểm tra dung lượng (10 MB)
+        // 1. Kiểm tra dung lượng (20 MB mặc định)
         long maxBytes = (long) appProperties.getUpload().getMaxMb() * 1024 * 1024;
         if (file.getSize() > maxBytes) {
             throw new FieldValidationException("file", "Size", "Tệp vượt quá " + appProperties.getUpload().getMaxMb() + " MB. Hãy nén lại rồi thử lại.");
@@ -94,9 +94,18 @@ public class FileStorageService {
             throw new BusinessException("Lỗi trong quá trình tính mã băm file.");
         }
 
-        // 5. Lưu file vào đĩa bằng tên UUID ngẫu nhiên
-        String storedFilename = UUID.randomUUID().toString() + "." + extension;
+        // 5. Kiểm tra dung lượng đĩa trước khi lưu
         Path rootPath = Paths.get(appProperties.getStorage().getRoot()).toAbsolutePath().normalize();
+        long minDiskBytes = (long) appProperties.getUpload().getMinDiskMb() * 1024 * 1024;
+        long usableSpace = rootPath.toFile().getUsableSpace();
+        if (usableSpace < minDiskBytes) {
+            log.error("Disk space critically low: usable={}MB, minimum={}MB",
+                usableSpace / (1024 * 1024), appProperties.getUpload().getMinDiskMb());
+            throw new BusinessException("Hệ thống lưu trữ tạm thời đầy. Vui lòng liên hệ quản trị viên.");
+        }
+
+        // 6. Lưu file vào đĩa bằng tên UUID ngẫu nhiên
+        String storedFilename = UUID.randomUUID().toString() + "." + extension;
         Path targetPath = rootPath.resolve(storedFilename);
 
         try (InputStream is = file.getInputStream()) {

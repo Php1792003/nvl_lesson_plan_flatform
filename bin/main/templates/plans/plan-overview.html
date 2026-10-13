@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:replace="~{layout/layout-base :: layout(${plan.title}, ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <!-- Orphan plan notice -->
+        <div th:if="${plan.isOrphan()}" class="alert alert-warning">
+            <div>
+                <strong>Hồ sơ lưu trữ:</strong> Giáo án này thuộc về <span th:text="${plan.displayOwnerName}">Giáo viên
+                    đã bị xoá</span>.
+                Giáo án được bảo lưu vĩnh viễn trong hệ thống và không thể sửa/xoá.
+            </div>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="detail-header-row">
+            <div>
+                <h1 style="font-size: 22px; font-weight: 700; color: var(--dark);" th:text="${plan.title}">Tiêu đề giáo
+                    án</h1>
+                <div
+                    style="display: flex; gap: 12px; align-items: center; margin-top: 6px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
+                    <span>Người soạn: <strong th:text="${plan.displayOwnerName}" style="color: var(--dark);">Thầy
+                            Tuấn</strong></span>
+                    <span>•</span>
+                    <span th:text="${plan.department.name}">Toán</span>
+                    <span>•</span>
+                    <span th:text="'Khối ' + ${plan.grade}">Khối 10</span>
+                    <span>•</span>
+                    <span th:text="'Năm học ' + ${plan.schoolYear} + ' (HK ' + ${plan.semester} + ')'">2025-2026</span>
+                </div>
+            </div>
+
+            <div class="detail-header-actions">
+                <button type="button" class="btn btn-primary btn-sm" id="btnPreviewTop"
+                    onclick="openPreviewCurrentVersion()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span>Xem trước</span>
+                </button>
+                <a th:if="${canManage && !plan.isOrphan()}" th:href="@{/plans/{id}/edit(id=${plan.id})}"
+                    class="btn btn-outline btn-sm">Chỉnh sửa</a>
+                <button th:if="${isOwner && !plan.isOrphan()}" class="btn btn-outline btn-sm"
+                    data-modal-target="shareModal">Chia sẻ</button>
+                <form th:if="${canManage && !plan.isOrphan()}" th:action="@{/plans/{id}/delete(id=${plan.id})}"
+                    method="post"
+                    onsubmit="return confirm('Bạn có chắc chắn muốn xoá giáo án này? Nếu đã có nhận xét từ BGH thì giáo án sẽ không thể xoá.');">
+                    <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main 2-column Layout -->
+        <div class="detail-layout-grid">
+
+            <!-- Left Column: Details, Versions, Comments -->
+            <div>
+                <!-- Description Card -->
+                <div class="card" th:if="${plan.description != null && !plan.description.isBlank()}">
+                    <div class="card-header">
+                        <h3 class="card-title">Mô tả giáo án</h3>
+                    </div>
+                    <p style="font-size: 14px; line-height: 1.6; color: var(--text-main);"
+                        th:text="${plan.description}">Nội dung mô tả giáo án...</p>
+                </div>
+
+                <!-- Versions History Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">Lịch sử Phiên bản Tệp đính kèm</h3>
+                            <span class="table-scroll-hint">← Cuộn ngang bảng để xem thêm thông tin & tải về →</span>
+                        </div>
+                        <span class="badge badge-primary"
+                            th:text="'Bản hiện tại: v' + ${plan.currentVersionNo}">v1</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Phiên bản</th>
+                                    <th>Tên tệp</th>
+                                    <th>Dung lượng</th>
+                                    <th>Thời gian tải</th>
+                                    <th style="text-align: right;">Tải về</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="ver : ${versions}">
+                                    <td>
+                                        <strong th:text="'v' + ${ver.versionNo}">v1</strong>
+                                        <span th:if="${ver.versionNo == plan.currentVersionNo}"
+                                            class="badge badge-success" style="margin-left: 4px; font-size: 10px;">Mới
+                                            nhất</span>
+                                    </td>
+                                    <td th:text="${ver.originalFilename}">Giao_an_Bai_1.docx</td>
+                                    <td th:text="${ver.formattedSize}">1.5 MB</td>
+                                    <td th:text="${#temporals.format(ver.uploadedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div th:if="${ver.purged}">
+                                            <span class="badge badge-secondary"
+                                                title="Tệp đã dọn để tiết kiệm dung lượng">Đã dọn file</span>
+                                        </div>
+                                        <div th:if="${!ver.purged}"
+                                            style="display: flex; gap: 6px; justify-content: flex-end;">
+                                            <button type="button" class="btn btn-outline btn-sm" th:data-vid="${ver.id}"
+                                                th:data-vno="${ver.versionNo}" th:data-vfile="${ver.originalFilename}"
+                                                onclick="openPreviewModalForVersion(this.getAttribute('data-vid'), this.getAttribute('data-vno'), this.getAttribute('data-vfile'))">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                    <circle cx="12" cy="12" r="3"></circle>
+                                                </svg>
+                                                <span>Xem trước</span>
+                                            </button>
+                                            <a th:href="@{/plans/{id}/versions/{vid}/download(id=${plan.id}, vid=${ver.id})}"
+                                                class="btn btn-outline btn-sm">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                </svg>
+                                                <span>Tải về</span>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Upload New Version Form (only for owner) -->
+                    <div th:if="${canManage && !plan.isOrphan()}"
+                        style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border);">
+                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--dark);">Tải lên
+                            phiên bản mới (Thay thế tệp hiện tại)</h4>
+                        <form th:action="@{/plans/{id}/versions(id=${plan.id})}" method="post"
+                            enctype="multipart/form-data" class="upload-version-form" data-validate novalidate>
+                            <div class="form-group" style="flex: 1; margin: 0;">
+                                <input type="file" id="versionFile" name="file" class="form-control" required
+                                    accept=".pdf,.doc,.docx,.ppt,.pptx"
+                                    data-msg-required="Vui lòng chọn file tải lên."
+                                    aria-describedby="versionFile-error">
+                                <p class="field-error" id="versionFile-error" role="alert" hidden></p>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">Tải lên</button>
+                        </form>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Hệ thống sẽ từ chối nếu
+                            nội dung tệp giống hệt bản hiện tại.</div>
+                    </div>
+                </div>
+
+                <!-- BGH Evaluations Section (Visible only to owner and BGH per Rule 4.6) -->
+                <div th:if="${isOwner || isAdmin}" class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Đánh giá & Nhận xét của Ban Giám Hiệu</h3>
+                        <span class="badge badge-purple" th:text="${evaluations.size()} + ' nhận xét'">0 nhận xét</span>
+                    </div>
+
+                    <!-- BGH Add Evaluation Form (Only for BGH) -->
+                    <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
+                        style="margin-bottom: 24px; background: var(--surface-alt); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--dark);">Gửi nhận
+                            xét đánh giá</h4>
+                        <form th:action="@{/admin/plans/{id}/evaluations(id=${plan.id})}" method="post" data-validate novalidate>
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 12px;" for="evalVersionId">Đánh giá trên phiên bản: <span class="req">*</span></label>
+                                <select id="evalVersionId" name="versionId" class="form-select" style="font-size: 13px; max-width: 250px;"
+                                    required data-msg-required="Vui lòng chọn phiên bản đánh giá.">
+                                    <option th:each="v : ${versions}" th:value="${v.id}"
+                                        th:text="'Phiên bản v' + ${v.versionNo} + ' (' + ${v.originalFilename} + ')'"
+                                        th:selected="${v.versionNo == plan.currentVersionNo}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <textarea id="evalContent" name="content" rows="3" class="form-control"
+                                    placeholder="Viết nhận xét đóng góp cho giáo viên (tối thiểu 5 ký tự)..."
+                                    minlength="5" maxlength="2000" required
+                                    data-minlength="5" data-maxlength="2000"
+                                    data-msg-required="Nội dung nhận xét không được để trống."
+                                    data-msg-minlength="Nội dung nhận xét cần ít nhất 5 ký tự."
+                                    aria-describedby="evalContent-error"></textarea>
+                                <p class="field-error" id="evalContent-error" role="alert" hidden></p>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Gửi nhận xét</button>
+                        </form>
+                    </div>
+
+                    <!-- Evaluations List -->
+                    <div th:if="${evaluations.empty}"
+                        style="text-align: center; color: var(--text-muted); padding: 24px;">
+                        Chưa có nhận xét nào từ Ban Giám Hiệu.
+                    </div>
+
+                    <div th:each="eval : ${evaluations}"
+                        style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div>
+                                <strong style="font-size: 14px; color: var(--dark);"
+                                    th:text="${eval.reviewerNameSnapshot}">Thầy Hiệu Phó</strong>
+                                <span class="badge badge-purple" style="margin-left: 6px; font-size: 11px;"
+                                    th:text="'Nhận xét trên v' + ${eval.version.versionNo}">v1</span>
+                                <span th:if="${eval.editedAt != null}"
+                                    style="font-size: 11px; color: var(--text-muted); font-style: italic; margin-left: 6px;">(đã
+                                    chỉnh sửa)</span>
+                            </div>
+                            <span style="font-size: 12px; color: var(--text-muted);"
+                                th:text="${#temporals.format(eval.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                        </div>
+
+                        <!-- Escaped text per Rule 4.6 -->
+                        <div style="font-size: 14px; line-height: 1.6; background: #fdf2f8; padding: 12px 16px; border-radius: var(--radius-sm); border-left: 4px solid var(--purple); color: #1e293b;"
+                            th:text="${eval.content}">
+                            Nội dung nhận xét...
+                        </div>
+
+                        <!-- BGH Edit Evaluation Form Trigger (if reviewer matches or admin) -->
+                        <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
+                            style="margin-top: 6px; text-align: right;">
+                            <button type="button" class="btn btn-outline btn-sm"
+                                style="font-size: 11px; padding: 2px 8px;"
+                                th:onclick="'document.getElementById(\'edit-eval-' + ${eval.id} + '\').style.display = (document.getElementById(\'edit-eval-' + ${eval.id} + '\').style.display === \'none\' ? \'block\' : \'none\')'">Sửa</button>
+
+                            <div th:id="'edit-eval-' + ${eval.id}"
+                                style="display: none; margin-top: 10px; text-align: left;">
+                                <form
+                                    th:action="@{/admin/plans/{id}/evaluations/{eid}/edit(id=${plan.id}, eid=${eval.id})}"
+                                    method="post" data-validate novalidate>
+                                    <div class="form-group">
+                                        <textarea th:id="'editEvalContent-' + ${eval.id}" name="content" rows="2" class="form-control" th:text="${eval.content}"
+                                            minlength="5" maxlength="2000" required
+                                            data-minlength="5" data-maxlength="2000"
+                                            data-msg-required="Nội dung nhận xét không được để trống."
+                                            data-msg-minlength="Nội dung nhận xét cần ít nhất 5 ký tự."
+                                            th:attr="aria-describedby='editEvalContent-' + ${eval.id} + '-error'"></textarea>
+                                        <p class="field-error" th:id="'editEvalContent-' + ${eval.id} + '-error'" role="alert" hidden></p>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm" style="margin-top: 6px;">Lưu</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Replies to this evaluation -->
+                        <div style="margin-left: 24px; margin-top: 14px;">
+                            <div th:each="reply : ${eval.replies}"
+                                style="background: var(--surface-alt); padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 8px; border-left: 3px solid #3b82f6;">
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                    <strong th:text="${reply.authorNameSnapshot}">Giáo viên</strong>
+                                    <span style="color: var(--text-muted);"
+                                        th:text="${#temporals.format(reply.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                                </div>
+                                <div style="font-size: 13px;" th:text="${reply.content}">Nội dung phản hồi...</div>
+                            </div>
+
+                            <!-- Teacher reply form -->
+                            <form th:if="${isOwner && !plan.isOrphan()}"
+                                th:action="@{/plans/{id}/evaluations/{eid}/replies(id=${plan.id}, eid=${eval.id})}"
+                                method="post" style="display: flex; gap: 8px; margin-top: 10px;" data-validate novalidate>
+                                <div class="form-group" style="flex: 1; margin: 0;">
+                                    <input type="text" th:id="'replyContent-' + ${eval.id}" name="content" class="form-control" style="font-size: 13px;"
+                                        placeholder="Phản hồi ý kiến của Ban Giám Hiệu..." minlength="2" maxlength="2000" required
+                                        data-minlength="2" data-maxlength="2000"
+                                        data-msg-required="Nội dung phản hồi không được để trống."
+                                        data-msg-minlength="Nội dung phản hồi cần ít nhất 2 ký tự."
+                                        th:attr="aria-describedby='replyContent-' + ${eval.id} + '-error'">
+                                    <p class="field-error" th:id="'replyContent-' + ${eval.id} + '-error'" role="alert" hidden></p>
+                                </div>
+                                <button type="submit" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Trả lời</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Metadata & Shares -->
+            <div>
+                <!-- Info Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Chi tiết giáo án</h3>
+                    </div>
+                    <div style="font-size: 13px; display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <span style="color: var(--text-muted);">Môn học:</span><br>
+                            <strong th:text="${plan.department.name}">Toán</strong>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-muted);">Khối lớp:</span><br>
+                            <strong th:text="'Khối ' + ${plan.grade}">Khối 10</strong>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-muted);">Năm học & Học kỳ:</span><br>
+                            <strong th:text="${plan.schoolYear} + ' — Học kỳ ' + ${plan.semester}">2025-2026 — Học kỳ
+                                1</strong>
+                        </div>
+                        <div th:if="${plan.weekNo != null}">
+                            <span style="color: var(--text-muted);">Tuần / Tiết học:</span><br>
+                            <strong th:text="'Tuần ' + ${plan.weekNo}">Tuần 3</strong>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-muted);">Ngày tạo:</span><br>
+                            <strong
+                                th:text="${#temporals.format(plan.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Shares Card (Only for owner) -->
+                <div th:if="${isOwner && !plan.isOrphan()}" class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Giáo viên được chia sẻ</h3>
+                    </div>
+                    <div th:if="${activeShares.empty}" style="color: var(--text-muted); font-size: 13px;">
+                        Chưa chia sẻ giáo án này với giáo viên nào.
+                    </div>
+                    <div th:each="share : ${activeShares}"
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;" th:text="${share.sharedWithUser.fullName}">
+                                Thầy Bình</div>
+                            <div style="font-size: 11px; color: var(--text-muted);"
+                                th:text="${share.sharedWithUser.email}">binh@school.edu.vn</div>
+                        </div>
+                        <form th:action="@{/plans/{id}/shares/{sid}/revoke(id=${plan.id}, sid=${share.id})}"
+                            method="post">
+                            <button type="submit" class="btn btn-outline btn-sm"
+                                style="font-size: 11px; color: var(--danger);">Thu hồi</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Metadata marker for current version -->
+        <th:block th:each="v : ${versions}" th:if="${v.versionNo == plan.currentVersionNo}">
+            <span id="currentVersionMeta" th:data-id="${v.id}" th:data-no="${v.versionNo}"
+                th:data-file="${v.originalFilename}" th:data-purged="${v.purged}" style="display:none;"></span>
+        </th:block>
+
+        <!-- Modal Share Plan -->
+        <div id="shareModal" class="modal-overlay">
+            <div class="modal-box">
+                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Chia sẻ Giáo án với Đồng nghiệp</h3>
+                <form th:action="@{/plans/{id}/shares(id=${plan.id})}" method="post">
+                    <div class="form-group">
+                        <label class="form-label" for="shareEmail">Email đồng nghiệp nhận chia sẻ <span
+                                style="color: var(--danger);">*</span></label>
+                        <input type="email" id="shareEmail" name="email" class="form-control"
+                            placeholder="dongnghiep@school.edu.vn" required>
+                        <div class="form-hint">Đồng nghiệp sẽ có quyền xem và tải giáo án này (không thể chia sẻ tiếp).
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="expireDays">Thời hạn chia sẻ (số ngày)</label>
+                        <input type="number" id="expireDays" name="expireDays" class="form-control"
+                            placeholder="Để trống nếu không giới hạn">
+                    </div>
+                    <div class="form-actions" style="margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" data-modal-close>Huỷ</button>
+                        <button type="submit" class="btn btn-primary">Chia sẻ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Xem Trước Giáo Án (Preview Modal) -->
+        <div id="previewModal" class="modal-overlay">
+            <div class="modal-box-xl">
+                <!-- Modal Header -->
+                <div class="preview-modal-header">
+                    <div class="preview-modal-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" class="preview-title-icon">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <span class="preview-title-prefix">Xem trước:</span>
+                        <strong id="previewFileName" class="preview-filename-text" title="Tệp giáo án">Giao_an.pdf</strong>
+                        <span id="previewVersionBadge" class="badge badge-primary">v1</span>
+                    </div>
+                    <div class="preview-modal-actions">
+                        <a id="previewNewTabBtn" href="#" target="_blank" class="btn btn-outline btn-sm preview-header-btn"
+                            title="Mở trong tab mới">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                            <span class="preview-btn-label">Mở tab mới</span>
+                        </a>
+                        <a id="previewDownloadBtn" href="#" class="btn btn-outline btn-sm preview-header-btn" title="Tải về máy">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span class="preview-btn-label">Tải về</span>
+                        </a>
+                        <button type="button" class="btn btn-secondary btn-sm preview-close-btn" onclick="closePreviewModal()"
+                            title="Đóng xem trước" aria-label="Đóng xem trước">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            <span class="preview-btn-label">Đóng</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Body (Viewer + Review Sidebar) -->
+                <div class="preview-modal-body">
+                    <!-- Main Viewer Area -->
+                    <div class="preview-viewer-pane">
+                        <!-- Loading state -->
+                        <div id="previewLoadingState" class="preview-loading" style="display: none;">
+                            <div class="preview-spinner"></div>
+                            <span>Đang tải nội dung xem trước...</span>
+                        </div>
+
+                        <!-- PDF Viewer -->
+                        <iframe id="previewPdfIframe" class="preview-iframe" style="display: none;"></iframe>
+
+                        <!-- Word (Docx) Viewer -->
+                        <div id="previewDocxWrapper" class="preview-docx-container" style="display: none;">
+                            <div id="previewDocxPaper" class="preview-docx-paper"></div>
+                        </div>
+
+                        <!-- Other formats (PPT, PPTX, etc.) -->
+                        <div id="previewOtherWrapper" class="preview-other-container" style="display: none;">
+                            <div class="preview-unsupported-card">
+                                <div class="preview-unsupported-icon-circle">
+                                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.6">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                </div>
+                                <h4 class="preview-unsupported-heading">Định dạng bài giảng / tài liệu đặc thù</h4>
+                                <p class="preview-unsupported-sub">
+                                    Tệp tài liệu này (PowerPoint hoặc Word cũ) không hỗ trợ render trực tiếp trong trình
+                                    duyệt mà không làm vỡ bố cục trình chiếu.
+                                </p>
+                                <div class="preview-unsupported-btn-group">
+                                    <a id="previewOtherNewTab" href="#" target="_blank"
+                                        class="btn preview-unsupported-btn btn-glass-secondary">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                            <polyline points="15 3 21 3 21 9"></polyline>
+                                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                                        </svg>
+                                        <span>Mở trong tab mới</span>
+                                    </a>
+                                    <a id="previewOtherDownload" href="#" class="btn btn-primary preview-unsupported-btn">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                        <span>Tải về máy xem chuẩn</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review Sidebar for BGH / Teachers -->
+                    <div class="preview-sidebar-pane">
+                        <div class="preview-sidebar-header">
+                            <span style="display: flex; align-items: center; gap: 8px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span>Đánh giá & Nhận xét</span>
+                            </span>
+                        </div>
+                        <div class="preview-sidebar-body">
+                            <!-- Quick Evaluation Form for BGH -->
+                            <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
+                                class="preview-review-form-box">
+                                <h5 class="preview-review-form-title">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    <span>Gửi nhận xét cho phiên bản này</span>
+                                </h5>
+                                <form th:action="@{/admin/plans/{id}/evaluations(id=${plan.id})}" method="post">
+                                    <input type="hidden" name="versionId" id="previewModalVersionInput" value="">
+                                    <textarea name="content" rows="4" class="form-control"
+                                        style="font-size: 13px; margin-bottom: 10px; resize: vertical;"
+                                        placeholder="Nhập nhận xét đóng góp ý kiến cho giáo viên..."
+                                        required></textarea>
+                                    <div class="preview-review-btn-row">
+                                        <button type="button" class="btn btn-secondary btn-sm preview-form-close-btn"
+                                            onclick="closePreviewModal()">Đóng</button>
+                                        <button type="submit" class="btn btn-primary btn-sm preview-form-submit-btn">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                            </svg>
+                                            <span>Gửi nhận xét</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Existing Evaluations for Context -->
+                            <div>
+                                <div
+                                    style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">
+                                    Lịch sử nhận xét của BGH
+                                </div>
+                                <div th:if="${evaluations.empty}"
+                                    style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 16px;">
+                                    Chưa có nhận xét nào.
+                                </div>
+                                <div th:each="eval : ${evaluations}"
+                                    style="background: var(--surface-alt); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 10px; border-left: 3px solid var(--purple);">
+                                    <div
+                                        style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                        <strong th:text="${eval.reviewerNameSnapshot}">Thầy Hiệu Phó</strong>
+                                        <span class="badge badge-purple" style="font-size: 10px;"
+                                            th:text="'v' + ${eval.version.versionNo}">v1</span>
+                                    </div>
+                                    <div style="font-size: 13px; line-height: 1.5; color: #1e293b;"
+                                        th:text="${eval.content}">Nội dung nhận xét...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sidebar Footer with Close Button -->
+                        <div class="preview-sidebar-footer">
+                            <button type="button" class="btn btn-secondary btn-sm preview-sidebar-close-btn"
+                                onclick="closePreviewModal()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                                <span>Đóng xem trước</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Script Mammoth (Local) and Preview Handler -->
+        <script th:src="@{/vendor/mammoth/mammoth.browser.min.js}"></script>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const planDetailId = /*[[${plan.id}]]*/ 0;
+
+            function openPreviewModalForVersion(versionId, versionNo, filename) {
+                const modal = document.getElementById('previewModal');
+                const fileNameEl = document.getElementById('previewFileName');
+                const versionBadgeEl = document.getElementById('previewVersionBadge');
+                const newTabBtn = document.getElementById('previewNewTabBtn');
+                const downloadBtn = document.getElementById('previewDownloadBtn');
+                const versionInput = document.getElementById('previewModalVersionInput');
+
+                const loader = document.getElementById('previewLoadingState');
+                const pdfIframe = document.getElementById('previewPdfIframe');
+                const docxWrapper = document.getElementById('previewDocxWrapper');
+                const docxPaper = document.getElementById('previewDocxPaper');
+                const otherWrapper = document.getElementById('previewOtherWrapper');
+                const otherNewTab = document.getElementById('previewOtherNewTab');
+                const otherDownload = document.getElementById('previewOtherDownload');
+
+                if (!modal) return;
+
+                fileNameEl.textContent = filename || 'Tệp giáo án';
+                versionBadgeEl.textContent = 'v' + versionNo;
+                if (versionInput) {
+                    versionInput.value = versionId;
+                }
+
+                const plansBaseUrl = /*[[@{/plans/}]]*/ '/plans/';
+                const previewUrl = plansBaseUrl + planDetailId + '/versions/' + versionId + '/preview';
+                const downloadUrl = plansBaseUrl + planDetailId + '/versions/' + versionId + '/download';
+
+                newTabBtn.href = previewUrl;
+                downloadBtn.href = downloadUrl;
+                if (otherNewTab) otherNewTab.href = previewUrl;
+                if (otherDownload) otherDownload.href = downloadUrl;
+
+                // Reset views
+                loader.style.display = 'flex';
+                pdfIframe.style.display = 'none';
+                docxWrapper.style.display = 'none';
+                otherWrapper.style.display = 'none';
+                docxPaper.innerHTML = '';
+
+                const lowerName = (filename || '').toLowerCase();
+
+                modal.classList.add('open');
+
+                if (lowerName.endsWith('.pdf')) {
+                    // PDF Viewer
+                    pdfIframe.src = previewUrl;
+                    pdfIframe.onload = function () {
+                        loader.style.display = 'none';
+                        pdfIframe.style.display = 'block';
+                    };
+                    // Fallback timeout in case onload doesn't fire for some mime types
+                    setTimeout(function () {
+                        loader.style.display = 'none';
+                        pdfIframe.style.display = 'block';
+                    }, 1200);
+                } else if (lowerName.endsWith('.docx')) {
+                    // Word Viewer with Mammoth
+                    fetch(previewUrl)
+                        .then(function (res) {
+                            if (!res.ok) throw new Error('Không thể tải tệp để xem trước');
+                            return res.arrayBuffer();
+                        })
+                        .then(function (arrayBuffer) {
+                            if (window.mammoth) {
+                                return window.mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                            } else {
+                                throw new Error('Thư viện đọc Word chưa sẵn sàng.');
+                            }
+                        })
+                        .then(function (result) {
+                            loader.style.display = 'none';
+                            docxPaper.innerHTML = result.value || '<p>Tài liệu trống.</p>';
+                            docxWrapper.style.display = 'flex';
+                        })
+                        .catch(function (err) {
+                            loader.style.display = 'none';
+                            docxPaper.innerHTML = '<div style="color: var(--danger); padding: 20px;">Lỗi khi tải bản xem trước Word: ' + err.message + '</div>';
+                            docxWrapper.style.display = 'flex';
+                        });
+                } else {
+                    // Other file types
+                    loader.style.display = 'none';
+                    otherWrapper.style.display = 'flex';
+                }
+            }
+
+            function openPreviewCurrentVersion() {
+                const meta = document.getElementById('currentVersionMeta');
+                if (meta) {
+                    const vid = meta.getAttribute('data-id');
+                    const vno = meta.getAttribute('data-no');
+                    const file = meta.getAttribute('data-file');
+                    openPreviewModalForVersion(vid, vno, file);
+                } else {
+                    alert('Chưa có phiên bản tệp đính kèm nào.');
+                }
+            }
+
+            function closePreviewModal() {
+                const modal = document.getElementById('previewModal');
+                if (modal) {
+                    modal.classList.remove('open');
+                    const pdfIframe = document.getElementById('previewPdfIframe');
+                    if (pdfIframe) pdfIframe.src = 'about:blank';
+                }
+            }
+
+            // ESC key support to close preview modal
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' || e.key === 'Esc') {
+                    const modal = document.getElementById('previewModal');
+                    if (modal && modal.classList.contains('open')) {
+                        closePreviewModal();
+                    }
+                }
+            });
+
+            // Click backdrop overlay to close preview modal
+            document.addEventListener('DOMContentLoaded', function () {
+                const previewModalEl = document.getElementById('previewModal');
+                if (previewModalEl) {
+                    previewModalEl.addEventListener('click', function (e) {
+                        if (e.target === previewModalEl) {
+                            closePreviewModal();
+                        }
+                    });
+                }
+
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('preview') === 'true') {
+                    openPreviewCurrentVersion();
+                }
+            });
+            /*]]>*/
+        </script>
+
+    </div>
+</body>
+
+</html>

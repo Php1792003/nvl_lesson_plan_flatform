@@ -121,9 +121,11 @@ public class AppProperties {
     }
 
     public static class Upload {
-        private int maxMb = 10;
+        private int maxMb = 20;
         private String allowedExtensions = "pdf,doc,docx,ppt,pptx";
         private String allowedContentTypes = "";
+        private int maxConcurrent = 3;
+        private int minDiskMb = 500;
 
         public int getMaxMb() {
             return maxMb;
@@ -147,6 +149,22 @@ public class AppProperties {
 
         public void setAllowedContentTypes(String allowedContentTypes) {
             this.allowedContentTypes = allowedContentTypes;
+        }
+
+        public int getMaxConcurrent() {
+            return maxConcurrent;
+        }
+
+        public void setMaxConcurrent(int maxConcurrent) {
+            this.maxConcurrent = maxConcurrent;
+        }
+
+        public int getMinDiskMb() {
+            return minDiskMb;
+        }
+
+        public void setMinDiskMb(int minDiskMb) {
+            this.minDiskMb = minDiskMb;
         }
     }
 
@@ -253,6 +271,7 @@ public class AppProperties {
         private RateLimitConfig login = new RateLimitConfig(10, 15);
         private RateLimitConfig register = new RateLimitConfig(5, 60);
         private RateLimitConfig otp = new RateLimitConfig(5, 60);
+        private UploadRateLimitConfig upload = new UploadRateLimitConfig();
 
         public RateLimitConfig getLogin() {
             return login;
@@ -276,6 +295,14 @@ public class AppProperties {
 
         public void setOtp(RateLimitConfig otp) {
             this.otp = otp;
+        }
+
+        public UploadRateLimitConfig getUpload() {
+            return upload;
+        }
+
+        public void setUpload(UploadRateLimitConfig upload) {
+            this.upload = upload;
         }
     }
 
@@ -326,6 +353,31 @@ public class AppProperties {
 
         public void setLockDurationMinutes(int lockDurationMinutes) {
             this.lockDurationMinutes = lockDurationMinutes;
+        }
+    }
+
+    /**
+     * Cấu hình Token Bucket cho upload: capacity (số token tối đa) và
+     * refillSeconds (mỗi bao nhiêu giây bổ sung 1 token).
+     */
+    public static class UploadRateLimitConfig {
+        private int capacity = 3;
+        private int refillSeconds = 10;
+
+        public int getCapacity() {
+            return capacity;
+        }
+
+        public void setCapacity(int capacity) {
+            this.capacity = capacity;
+        }
+
+        public int getRefillSeconds() {
+            return refillSeconds;
+        }
+
+        public void setRefillSeconds(int refillSeconds) {
+            this.refillSeconds = refillSeconds;
         }
     }
 

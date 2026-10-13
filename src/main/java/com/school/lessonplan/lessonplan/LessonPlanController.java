@@ -8,6 +8,8 @@ import com.school.lessonplan.evaluation.EvaluationService;
 import com.school.lessonplan.lessonplan.dto.PlanCreateForm;
 import com.school.lessonplan.lessonplan.dto.PlanUpdateForm;
 import com.school.lessonplan.security.CurrentUser;
+import com.school.lessonplan.security.RateLimiterService;
+import com.school.lessonplan.security.UploadThrottleService;
 import com.school.lessonplan.share.LessonPlanShare;
 import com.school.lessonplan.share.ShareService;
 import jakarta.validation.Valid;
@@ -40,17 +42,23 @@ public class LessonPlanController {
     private final EvaluationService evaluationService;
     private final ShareService shareService;
     private final DepartmentRepository departmentRepository;
+    private final RateLimiterService rateLimiterService;
+    private final UploadThrottleService uploadThrottleService;
 
     public LessonPlanController(LessonPlanService lessonPlanService,
                                 LessonPlanAccessService accessService,
                                 EvaluationService evaluationService,
                                 ShareService shareService,
-                                DepartmentRepository departmentRepository) {
+                                DepartmentRepository departmentRepository,
+                                RateLimiterService rateLimiterService,
+                                UploadThrottleService uploadThrottleService) {
         this.lessonPlanService = lessonPlanService;
         this.accessService = accessService;
         this.evaluationService = evaluationService;
         this.shareService = shareService;
         this.departmentRepository = departmentRepository;
+        this.rateLimiterService = rateLimiterService;
+        this.uploadThrottleService = uploadThrottleService;
     }
 
     @GetMapping
@@ -109,6 +117,15 @@ public class LessonPlanController {
         }
 
         if (!bindingResult.hasErrors()) {
+            // Rate limit theo tài khoản đã xác thực (Token Bucket)
+            rateLimiterService.checkUploadRateLimit(currentUser.getId());
+
+            // Giới hạn upload đồng thời (Semaphore)
+            if (!uploadThrottleService.tryAcquire()) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                    "Hệ thống đang xử lý nhiều file. Vui lòng thử lại sau ít giây.");
+                return "redirect:/plans/new";
+            }
             try {
                 LessonPlan plan = lessonPlanService.createPlan(
                     currentUser,
@@ -127,6 +144,8 @@ public class LessonPlanController {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException e) {
                 bindingResult.reject("form.error", e.getMessage());
+            } finally {
+                uploadThrottleService.release();
             }
         }
 
@@ -230,12 +249,23 @@ public class LessonPlanController {
             return "redirect:/plans/" + id;
         }
 
+        // Rate limit theo tài khoản đã xác thực (Token Bucket)
+        rateLimiterService.checkUploadRateLimit(currentUser.getId());
+
+        // Giới hạn upload đồng thời (Semaphore)
+        if (!uploadThrottleService.tryAcquire()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                "Hệ thống đang xử lý nhiều file. Vui lòng thử lại sau ít giây.");
+            return "redirect:/plans/" + id;
+        }
         try {
             LessonPlanVersion version = lessonPlanService.addVersion(id, currentUser, file);
             redirectAttributes.addFlashAttribute("successMessage",
                 "Tải lên phiên bản " + version.getVersionNo() + " thành công!");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } finally {
+            uploadThrottleService.release();
         }
         return "redirect:/plans/" + id;
     }
