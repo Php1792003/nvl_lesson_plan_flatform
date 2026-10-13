@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout/layout-base :: layout('Chi tiết Giáo viên: ' + ${user.fullName}, ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <div style="max-width: 900px; margin: 0 auto;">
+
+            <!-- Status / Profile Card -->
+            <div class="card profile-card">
+                <div class="profile-card__main">
+                    <div class="profile-card__avatar" th:text="${#strings.substring(user.lastName, 0, 1)}">N</div>
+                    <div class="profile-card__info">
+                        <h2 class="profile-card__name" th:text="${user.fullName}">Nguyễn Văn An</h2>
+                        <p class="profile-card__email" th:text="${user.email}">an.nguyen@school.edu.vn</p>
+                    </div>
+                </div>
+
+                <div class="profile-card__actions">
+                    <span th:if="${user.status.name() == 'ACTIVE'}" class="badge badge-success">Đang hoạt động</span>
+                    <span th:if="${user.status.name() == 'PENDING_APPROVAL'}" class="badge badge-warning">Chờ BGH duyệt</span>
+                    <span th:if="${user.status.name() == 'PENDING_EMAIL'}" class="badge badge-secondary">Chưa xác thực email</span>
+                    <span th:if="${user.status.name() == 'LOCKED'}" class="badge badge-danger">Tài khoản bị khoá</span>
+
+                    <!-- Action buttons based on status -->
+                    <form th:if="${user.status.name() == 'PENDING_APPROVAL'}"
+                        th:action="@{/admin/users/{id}/approve(id=${user.id})}" method="post">
+                        <button type="submit" class="btn btn-success btn-sm">Duyệt</button>
+                    </form>
+
+                    <button th:if="${user.status.name() == 'ACTIVE'}" class="btn btn-danger btn-sm"
+                        data-modal-target="lockModal">Khoá</button>
+
+                    <form th:if="${user.status.name() == 'LOCKED'}"
+                        th:action="@{/admin/users/{id}/unlock(id=${user.id})}" method="post">
+                        <button type="submit" class="btn btn-success btn-sm">Mở khoá</button>
+                    </form>
+
+                    <button class="btn btn-outline btn-sm" style="color: var(--danger); border-color: #fca5a5;"
+                        data-modal-target="deleteModal">Xoá</button>
+                </div>
+            </div>
+
+            <!-- Lock details if locked -->
+            <div th:if="${user.status.name() == 'LOCKED'}" class="alert alert-danger" role="alert">
+                <div>
+                    <strong>Tài khoản đang bị khoá:</strong><br>
+                    <span>Lý do: <span th:text="${user.lockReason}">Vi phạm quy định</span></span><br>
+                    <span style="font-size: 12px;">Thời điểm khoá: <span
+                            th:text="${#temporals.format(user.lockedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</span></span>
+                </div>
+            </div>
+
+            <!-- Edit Profile Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Cập nhật thông tin giảng viên</h3>
+                </div>
+
+                <form th:action="@{/admin/users/{id}(id=${user.id})}" th:object="${userForm}" method="post" data-validate novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+
+                    <div class="form-grid">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('lastName')} ? 'has-error'">
+                            <label class="form-label" for="lastName">Họ <span class="req" aria-hidden="true">*</span></label>
+                            <input type="text" id="lastName" th:field="*{lastName}" class="form-control"
+                                   maxlength="50" required autocomplete="family-name"
+                                   data-pattern="^[\p{L}][\p{L} .'’-]*$"
+                                   data-msg-required="Vui lòng nhập họ."
+                                   data-msg-pattern="Họ chỉ gồm chữ cái và khoảng trắng."
+                                   th:attr="aria-invalid=${#fields.hasErrors('lastName')},aria-describedby='lastName-error'">
+                            <p class="field-error" id="lastName-error" role="alert"
+                               th:if="${#fields.hasErrors('lastName')}" th:text="${#fields.errors('lastName')[0]}"></p>
+                        </div>
+                        <div class="form-group" th:classappend="${#fields.hasErrors('givenName')} ? 'has-error'">
+                            <label class="form-label" for="givenName">Tên đệm & Tên <span class="req" aria-hidden="true">*</span></label>
+                            <input type="text" id="givenName" th:field="*{givenName}" class="form-control"
+                                   maxlength="80" required autocomplete="given-name"
+                                   data-pattern="^[\p{L}][\p{L} .'’-]*$"
+                                   data-msg-required="Vui lòng nhập tên đệm và tên."
+                                   data-msg-pattern="Tên đệm và tên chỉ gồm chữ cái và khoảng trắng."
+                                   th:attr="aria-invalid=${#fields.hasErrors('givenName')},aria-describedby='givenName-error'">
+                            <p class="field-error" id="givenName-error" role="alert"
+                               th:if="${#fields.hasErrors('givenName')}" th:text="${#fields.errors('givenName')[0]}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
+                            <label class="form-label" for="departmentId">Môn học <span class="req" aria-hidden="true">*</span></label>
+                            <select id="departmentId" th:field="*{departmentId}" class="form-select" required
+                                    data-msg-required="Vui lòng chọn môn học."
+                                    th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby='departmentId-error'">
+                                <option value="">-- Chọn môn học --</option>
+                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
+                                    th:selected="${user.department != null && dept.id == user.department.id}"></option>
+                            </select>
+                            <p class="field-error" id="departmentId-error" role="alert"
+                               th:if="${#fields.hasErrors('departmentId')}" th:text="${#fields.errors('departmentId')[0]}"></p>
+                        </div>
+
+                        <div class="form-group" th:classappend="${#fields.hasErrors('campusId')} ? 'has-error'">
+                            <label class="form-label" for="campusId">Phân hiệu <span class="req" aria-hidden="true">*</span></label>
+                            <select id="campusId" th:field="*{campusId}" class="form-select" required
+                                    data-msg-required="Vui lòng chọn phân hiệu."
+                                    th:attr="aria-invalid=${#fields.hasErrors('campusId')},aria-describedby='campusId-error'">
+                                <option value="">-- Chọn phân hiệu --</option>
+                                <option th:each="c : ${campuses}" th:value="${c.id}" th:text="${c.name}"
+                                    th:selected="${user.campus != null && c.id == user.campus.id}"></option>
+                            </select>
+                            <p class="field-error" id="campusId-error" role="alert"
+                               th:if="${#fields.hasErrors('campusId')}" th:text="${#fields.errors('campusId')[0]}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Vai trò & Quyền hạn</label>
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px;">
+                            <label th:each="r : ${allRoles}"
+                                style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+                                <input type="checkbox" name="roleIds" th:value="${r.id}"
+                                    th:checked="${userForm.roleIds != null ? userForm.roleIds.contains(r.id) : user.roles.contains(r)}">
+                                <span th:text="${r.name}">Giáo viên</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a th:href="@{/admin/users}" class="btn btn-secondary">Quay lại</a>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- Modal Lock User -->
+        <div id="lockModal" class="modal-overlay" th:classappend="${showLockModal} ? 'active' : ''">
+            <div class="modal-box">
+                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--danger);">Khoá tài khoản giáo viên</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                    Tài khoản bị khoá sẽ mất hiệu lực ngay lập tức, kể cả khi token chưa hết hạn.
+                </p>
+                <form th:action="@{/admin/users/{id}/lock(id=${user.id})}" th:object="${lockUserForm}" method="post" data-validate novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+
+                    <div class="form-group" th:classappend="${#fields.hasErrors('reason')} ? 'has-error'">
+                        <label class="form-label" for="reason">Lý do khoá <span class="req" aria-hidden="true">*</span></label>
+                        <textarea id="reason" th:field="*{reason}" rows="3" class="form-control"
+                                  placeholder="Nhập lý do cụ thể (5 - 500 ký tự)..." minlength="5" maxlength="500" required
+                                  data-minlength="5" data-maxlength="500"
+                                  data-msg-required="Vui lòng nhập lý do khoá tài khoản."
+                                  data-msg-minlength="Lý do khoá cần ít nhất 5 ký tự."
+                                  data-msg-maxlength="Lý do khoá không quá 500 ký tự."
+                                  th:attr="aria-invalid=${#fields.hasErrors('reason')},aria-describedby='reason-error'"></textarea>
+                        <p class="field-error" id="reason-error" role="alert"
+                           th:if="${#fields.hasErrors('reason')}" th:text="${#fields.errors('reason')[0]}"></p>
+                    </div>
+                    <div class="form-actions" style="margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" data-modal-close>Huỷ</button>
+                        <button type="submit" class="btn btn-danger">Khoá</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Delete User (Rule 4.5a) -->
+        <div id="deleteModal" class="modal-overlay" th:classappend="${showDeleteModal} ? 'active' : ''">
+            <div class="modal-box">
+                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--danger);">Xác nhận xoá tài khoản giáo viên</h3>
+
+                <div class="alert alert-warning" style="font-size: 13px; line-height: 1.5; margin-bottom: 16px;" role="note">
+                    <strong>LƯU Ý QUAN TRỌNG (Quy tắc 4.5a):</strong><br>
+                    - Toàn bộ giáo án của giáo viên này sẽ được <strong>GIỮ LẠI ĐẦY ĐỦ</strong> (cả file và các phiên bản) dưới dạng giáo án mồ côi làm hồ sơ lưu trữ của nhà trường.<br>
+                    - Mọi đánh giá, nhận xét của Ban Giám Hiệu trên các giáo án này <strong>KHÔNG BỊ XOÁ</strong>.
+                </div>
+
+                <p style="font-size: 13px; margin-bottom: 14px;">
+                    Để xác nhận thao tác, vui lòng nhập chính xác địa chỉ email của giáo viên này:<br>
+                    <strong style="color: var(--dark);" th:text="${user.email}">user@school.edu.vn</strong>
+                </p>
+
+                <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" th:object="${deleteUserForm}" method="post" data-validate novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+
+                    <div class="form-group" th:classappend="${#fields.hasErrors('confirmEmail')} ? 'has-error'">
+                        <label class="form-label" for="confirmEmail">Nhập lại email để xác nhận <span class="req" aria-hidden="true">*</span></label>
+                        <input type="email" id="confirmEmail" th:field="*{confirmEmail}" class="form-control"
+                               placeholder="Nhập lại email chính xác..." maxlength="150" required autocomplete="off"
+                               data-pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                               data-msg-required="Vui lòng nhập email xác nhận."
+                               data-msg-pattern="Email không hợp lệ. Ví dụ: ten@school.edu.vn"
+                               th:attr="aria-invalid=${#fields.hasErrors('confirmEmail')},aria-describedby='confirmEmail-error'">
+                        <p class="field-error" id="confirmEmail-error" role="alert"
+                           th:if="${#fields.hasErrors('confirmEmail')}" th:text="${#fields.errors('confirmEmail')[0]}"></p>
+                    </div>
+                    <div class="form-actions" style="margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" data-modal-close>Huỷ</button>
+                        <button type="submit" class="btn btn-danger">Xoá</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

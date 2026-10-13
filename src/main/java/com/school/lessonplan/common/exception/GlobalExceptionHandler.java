@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -73,16 +74,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RateLimitException.class)
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
-    public String handleRateLimit(RateLimitException ex, Model model) {
+    public String handleRateLimit(RateLimitException ex, HttpServletResponse response, Model model) {
+        // Set Retry-After header khi có thông tin thời gian chờ
+        if (ex.getRetryAfterSeconds() > 0) {
+            response.setHeader("Retry-After", String.valueOf(ex.getRetryAfterSeconds()));
+        }
         model.addAttribute("message", ex.getMessage());
         return "error/429";
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
     public String handleMaxUploadSize(MaxUploadSizeExceededException ex, Model model) {
-        model.addAttribute("message", "File quá lớn. Giới hạn tối đa là 10 MB.");
-        return "error/400";
+        model.addAttribute("message", "File quá lớn. Giới hạn tối đa là 20 MB.");
+        return "error/413";
     }
 
     @ExceptionHandler(Exception.class)

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-base :: layout('Hồ sơ Cá nhân', ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+
+        <div style="max-width: 800px; margin: 0 auto;">
+
+            <!-- Profile Info Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Thông tin tài khoản</h3>
+                </div>
+
+                <form th:action="@{/profile/edit}" th:object="${profileEditForm}" method="post" data-validate novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+
+                    <div class="form-grid">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('lastName')} ? 'has-error'">
+                            <label class="form-label" for="lastName">Họ <span class="req" aria-hidden="true">*</span></label>
+                            <input type="text" id="lastName" th:field="*{lastName}" class="form-control"
+                                   maxlength="50" required autocomplete="family-name"
+                                   data-pattern="^[\p{L}][\p{L} .'’-]*$"
+                                   data-msg-required="Vui lòng nhập họ."
+                                   data-msg-pattern="Họ chỉ gồm chữ cái và khoảng trắng."
+                                   th:attr="aria-invalid=${#fields.hasErrors('lastName')},aria-describedby='lastName-error'">
+                            <p class="field-error" id="lastName-error" role="alert"
+                               th:if="${#fields.hasErrors('lastName')}" th:text="${#fields.errors('lastName')[0]}"></p>
+                        </div>
+                        <div class="form-group" th:classappend="${#fields.hasErrors('givenName')} ? 'has-error'">
+                            <label class="form-label" for="givenName">Tên đệm & Tên <span class="req" aria-hidden="true">*</span></label>
+                            <input type="text" id="givenName" th:field="*{givenName}" class="form-control"
+                                   maxlength="80" required autocomplete="given-name"
+                                   data-pattern="^[\p{L}][\p{L} .'’-]*$"
+                                   data-msg-required="Vui lòng nhập tên đệm và tên."
+                                   data-msg-pattern="Tên đệm và tên chỉ gồm chữ cái và khoảng trắng."
+                                   th:attr="aria-invalid=${#fields.hasErrors('givenName')},aria-describedby='givenName-error'">
+                            <p class="field-error" id="givenName-error" role="alert"
+                               th:if="${#fields.hasErrors('givenName')}" th:text="${#fields.errors('givenName')[0]}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email tài khoản</label>
+                        <input type="email" th:value="${user.email}" class="form-control" disabled
+                               style="background: var(--surface-alt);">
+                        <div class="form-hint">Email dùng làm tên đăng nhập và nhận thông báo từ hệ thống.</div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
+                            <label class="form-label" for="departmentId">Môn học <span class="req" aria-hidden="true">*</span></label>
+                            <select id="departmentId" th:field="*{departmentId}" class="form-select" required
+                                    data-msg-required="Vui lòng chọn môn học."
+                                    th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby='departmentId-error'">
+                                <option value="">-- Chọn môn học --</option>
+                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
+                                        th:selected="${user.department != null && dept.id == user.department.id}"></option>
+                            </select>
+                            <p class="field-error" id="departmentId-error" role="alert"
+                               th:if="${#fields.hasErrors('departmentId')}" th:text="${#fields.errors('departmentId')[0]}"></p>
+                        </div>
+
+                        <div class="form-group" th:classappend="${#fields.hasErrors('campusId')} ? 'has-error'">
+                            <label class="form-label" for="campusId">Phân hiệu <span class="req" aria-hidden="true">*</span></label>
+                            <select id="campusId" th:field="*{campusId}" class="form-select" required
+                                    data-msg-required="Vui lòng chọn phân hiệu."
+                                    th:attr="aria-invalid=${#fields.hasErrors('campusId')},aria-describedby='campusId-error'">
+                                <option value="">-- Chọn phân hiệu --</option>
+                                <option th:each="c : ${campuses}" th:value="${c.id}" th:text="${c.name}"
+                                        th:selected="${user.campus != null && c.id == user.campus.id}"></option>
+                            </select>
+                            <p class="field-error" id="campusId-error" role="alert"
+                               th:if="${#fields.hasErrors('campusId')}" th:text="${#fields.errors('campusId')[0]}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Change Password Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Đổi mật khẩu</h3>
+                </div>
+
+                <form th:action="@{/change-password}" th:object="${changePasswordForm}" method="post" data-validate novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+
+                    <div class="form-group" th:classappend="${#fields.hasErrors('currentPassword')} ? 'has-error'">
+                        <label class="form-label" for="currentPassword">Mật khẩu hiện tại <span class="req" aria-hidden="true">*</span></label>
+                        <input type="password" id="currentPassword" th:field="*{currentPassword}" class="form-control"
+                               placeholder="••••••••" required autocomplete="current-password"
+                               data-msg-required="Vui lòng nhập mật khẩu hiện tại."
+                               th:attr="aria-invalid=${#fields.hasErrors('currentPassword')},aria-describedby='currentPassword-error'">
+                        <p class="field-error" id="currentPassword-error" role="alert"
+                           th:if="${#fields.hasErrors('currentPassword')}" th:text="${#fields.errors('currentPassword')[0]}"></p>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('newPassword')} ? 'has-error'">
+                            <label class="form-label" for="newPassword">Mật khẩu mới <span class="req" aria-hidden="true">*</span></label>
+                            <input type="password" id="newPassword" th:field="*{newPassword}" class="form-control"
+                                   placeholder="Tối thiểu 8 ký tự, có chữ và số" minlength="8" maxlength="72" required autocomplete="new-password"
+                                   data-minlength="8" data-pattern="^(?=.*[A-Za-z])(?=.*\d).+$"
+                                   data-msg-required="Vui lòng nhập mật khẩu mới."
+                                   data-msg-minlength="Mật khẩu cần từ 8 đến 72 ký tự."
+                                   data-msg-pattern="Mật khẩu phải có cả chữ cái và chữ số."
+                                   th:attr="aria-invalid=${#fields.hasErrors('newPassword')},aria-describedby='newPassword-hint newPassword-error'">
+                            <p class="form-hint" id="newPassword-hint">Tối thiểu 8 ký tự, gồm cả chữ cái và chữ số.</p>
+                            <p class="field-error" id="newPassword-error" role="alert"
+                               th:if="${#fields.hasErrors('newPassword')}" th:text="${#fields.errors('newPassword')[0]}"></p>
+                        </div>
+
+                        <div class="form-group" th:classappend="${#fields.hasErrors('confirmPassword')} ? 'has-error'">
+                            <label class="form-label" for="confirmPassword">Xác nhận mật khẩu mới <span class="req" aria-hidden="true">*</span></label>
+                            <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control"
+                                   placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password" data-match="newPassword"
+                                   data-msg-required="Vui lòng nhập lại mật khẩu mới."
+                                   data-msg-match="Mật khẩu xác nhận không khớp."
+                                   th:attr="aria-invalid=${#fields.hasErrors('confirmPassword')},aria-describedby='confirmPassword-error'">
+                            <p class="field-error" id="confirmPassword-error" role="alert"
+                               th:if="${#fields.hasErrors('confirmPassword')}" th:text="${#fields.errors('confirmPassword')[0]}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-secondary">Đổi mật khẩu</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+</body>
+
+</html>
