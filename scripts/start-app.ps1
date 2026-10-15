@@ -15,10 +15,25 @@ if ($existing) {
     exit 0
 }
 
-Write-Host "[NVL] Dang khoi dong ung dung trong nen (Background Mode)..." -ForegroundColor Green
+# 2. Dọn các tiến trình bootRun cũ còn sót (nếu có) trước khi khởi động mới
+$lingering = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*bootRun*" }
+foreach ($p in $lingering) {
+    try {
+        Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue
+    } catch {}
+}
 
-# 2. Làm mới file app.log
-"" | Out-File -FilePath $logFile -Encoding utf8 -Force
+# 3. Làm mới file app.log (xử lý an toàn nếu file đang bị tạm khoá)
+try {
+    "" | Out-File -FilePath $logFile -Encoding utf8 -Force
+} catch {
+    Start-Sleep -Milliseconds 500
+    try {
+        "" | Out-File -FilePath $logFile -Encoding utf8 -Force
+    } catch {
+        Write-Host "[NVL] Canh bao: Khong the xoa app.log, se ghi tiep vao log." -ForegroundColor Yellow
+    }
+}
 
 # 3. Khởi chạy ngầm độc lập qua WMI Win32_Process (tách biệt 100% khỏi terminal caller)
 $commandLine = "cmd.exe /c .\gradlew.bat bootRun > `"$logFile`" 2>&1"

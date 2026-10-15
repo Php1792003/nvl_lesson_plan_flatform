@@ -38,12 +38,13 @@ public class AdminLessonPlanController {
             @RequestParam(name = "departmentId", required = false) Long departmentId,
             @RequestParam(name = "schoolYear", required = false) String schoolYear,
             @RequestParam(name = "semester", required = false) Integer semester,
+            @RequestParam(name = "favorite", required = false) Boolean favorite,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             Model model) {
 
         Page<LessonPlan> plansPage = lessonPlanService.searchAllForAdmin(
-            search, departmentId, schoolYear, semester,
+            search, departmentId, schoolYear, semester, favorite,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
 
@@ -52,9 +53,36 @@ public class AdminLessonPlanController {
         model.addAttribute("departmentId", departmentId);
         model.addAttribute("schoolYear", schoolYear);
         model.addAttribute("semester", semester);
+        model.addAttribute("favorite", favorite);
         model.addAttribute("departments", departmentRepository.findAll());
 
         return "admin/plans/admin-plan-catalog";
+    }
+
+    /**
+     * Endpoint Ban Giám Hiệu dọn dẹp giáo án sau mỗi học kỳ.
+     * Tự động bảo vệ tất cả giáo án được đánh dấu yêu thích.
+     */
+    @PostMapping("/cleanup-semester")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PLAN_VIEW_ALL')")
+    public String cleanupSemester(
+            @RequestParam("schoolYear") String schoolYear,
+            @RequestParam("semester") int semester,
+            @AuthenticationPrincipal CurrentUser currentUser,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            LessonPlanService.SemesterCleanupResult result =
+                lessonPlanService.cleanupSemesterPlans(schoolYear, semester, currentUser);
+
+            redirectAttributes.addFlashAttribute("successMessage",
+                String.format("Dọn dẹp thành công học kỳ %d (%s)! Đã xoá %d giáo án thông thường. Đã bảo vệ an toàn %d giáo án yêu thích (không bị xoá) và %d giáo án có nhận xét.",
+                    semester, schoolYear, result.deletedCount(), result.protectedFavoriteCount(), result.protectedEvaluatedCount()));
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/admin/plans?schoolYear=" + (schoolYear != null ? schoolYear : "") + "&semester=" + semester;
     }
 
     @PostMapping("/{id}/evaluations")

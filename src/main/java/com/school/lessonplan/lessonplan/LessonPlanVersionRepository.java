@@ -68,4 +68,31 @@ public interface LessonPlanVersionRepository extends JpaRepository<LessonPlanVer
 
     @Query("SELECT COUNT(v) FROM LessonPlanVersion v WHERE v.filePurgedAt IS NOT NULL")
     long getTotalPurgedVersionsCount();
+
+    /**
+     * Tìm các version đã quá hạn scheduled_delete_at, chưa bị purge,
+     * dùng cho job tự động xoá file vật lý sau 30 ngày.
+     */
+    @Query("""
+        SELECT v FROM LessonPlanVersion v
+        WHERE v.scheduledDeleteAt IS NOT NULL
+          AND v.scheduledDeleteAt <= :now
+          AND v.filePurgedAt IS NULL
+    """)
+    List<LessonPlanVersion> findVersionsDueForDeletion(@Param("now") java.time.Instant now);
+
+    /**
+     * Tìm version cũ (không phải version hiện tại) chưa lên lịch xoá và chưa bị purge
+     */
+    @Query("""
+        SELECT v FROM LessonPlanVersion v
+        WHERE v.plan.id = :planId
+          AND v.versionNo <> :currentVersionNo
+          AND v.scheduledDeleteAt IS NULL
+          AND v.filePurgedAt IS NULL
+    """)
+    List<LessonPlanVersion> findOldVersionsNotScheduled(
+        @Param("planId") Long planId,
+        @Param("currentVersionNo") int currentVersionNo
+    );
 }

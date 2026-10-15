@@ -11,6 +11,7 @@ public class AppProperties {
     private Storage storage = new Storage();
     private Upload upload = new Upload();
     private int keepVersions = 3;
+    private int versionDeleteDays = 30;
     private Jwt jwt = new Jwt();
     private Mail mail = new Mail();
     private Otp otp = new Otp();
@@ -49,6 +50,14 @@ public class AppProperties {
 
     public void setKeepVersions(int keepVersions) {
         this.keepVersions = keepVersions;
+    }
+
+    public int getVersionDeleteDays() {
+        return versionDeleteDays;
+    }
+
+    public void setVersionDeleteDays(int versionDeleteDays) {
+        this.versionDeleteDays = versionDeleteDays;
     }
 
     public Jwt getJwt() {

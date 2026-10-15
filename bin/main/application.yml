@@ -92,6 +92,7 @@ app:
     max-concurrent: ${APP_UPLOAD_MAX_CONCURRENT:3}
     min-disk-mb: ${APP_UPLOAD_MIN_DISK_MB:500}
   keep-versions: ${APP_KEEP_VERSIONS:3}
+  version-delete-days: ${APP_VERSION_DELETE_DAYS:30}
   jwt:
     secret: ${JWT_SECRET:DEFAULT_DEV_SECRET_MUST_BE_AT_LEAST_256_BITS_LONG_CHANGE_IN_PRODUCTION_PLEASE}
     access-token-expiry-minutes: 15

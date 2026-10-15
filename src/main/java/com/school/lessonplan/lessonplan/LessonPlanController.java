@@ -29,9 +29,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/plans")
@@ -74,6 +77,9 @@ public class LessonPlanController {
         if ("shared".equals(tab)) {
             Page<LessonPlanShare> sharedPage = shareService.getSharedWithMe(currentUser, pageRequest);
             model.addAttribute("sharedPage", sharedPage);
+        } else if ("favorite".equals(tab)) {
+            Page<LessonPlan> favoritePage = lessonPlanService.getFavoriteAccessiblePlans(currentUser, pageRequest);
+            model.addAttribute("favoritePage", favoritePage);
         } else if ("orphan".equals(tab)) {
             boolean canViewOrphan = currentUser.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -86,6 +92,10 @@ public class LessonPlanController {
             Page<LessonPlan> plansPage = lessonPlanService.getAccessiblePlans(currentUser, pageRequest);
             model.addAttribute("plansPage", plansPage);
         }
+
+        // Lấy số lượng giáo án yêu thích để hiển thị badge trên tab
+        long favCount = lessonPlanService.getFavoriteAccessiblePlans(currentUser, PageRequest.of(0, 1)).getTotalElements();
+        model.addAttribute("favoriteCount", favCount);
 
         model.addAttribute("currentTab", tab);
         return "plans/plan-catalog";
@@ -170,9 +180,14 @@ public class LessonPlanController {
             .map(GrantedAuthority::getAuthority)
             .anyMatch(a -> a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
 
+        Set<Long> evaluatedVersionIds = evaluations.stream()
+            .map(e -> e.getVersion().getId())
+            .collect(Collectors.toSet());
+
         model.addAttribute("plan", plan);
         model.addAttribute("versions", versions);
         model.addAttribute("evaluations", evaluations);
+        model.addAttribute("evaluatedVersionIds", evaluatedVersionIds);
         model.addAttribute("activeShares", activeShares);
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("isAdmin", isAdmin);
@@ -266,6 +281,65 @@ public class LessonPlanController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } finally {
             uploadThrottleService.release();
+        }
+        return "redirect:/plans/" + id;
+    }
+
+    @PostMapping("/{id}/versions/{vid}/delete")
+    public String deleteVersion(
+            @PathVariable("id") Long id,
+            @PathVariable("vid") Long versionId,
+            @AuthenticationPrincipal CurrentUser currentUser,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            lessonPlanService.deleteOldVersion(id, versionId, currentUser);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xoá file phiên bản cũ thành công! Dung lượng đã được giải phóng.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/plans/" + id;
+    }
+
+    @PostMapping("/{id}/favorite")
+    public Object toggleFavorite(
+            @PathVariable("id") Long id,
+            @AuthenticationPrincipal CurrentUser currentUser,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            boolean isFavorite = lessonPlanService.toggleFavorite(id, currentUser);
+            String msg = isFavorite
+                ? "Đã đánh dấu giáo án yêu thích (bảo vệ khỏi các đợt dọn dẹp học kỳ của BGH)."
+                : "Đã bỏ đánh dấu yêu thích.";
+
+            String requestedWith = request.getHeader("X-Requested-With");
+            String accept = request.getHeader("Accept");
+            if ("XMLHttpRequest".equalsIgnoreCase(requestedWith) || (accept != null && accept.contains("application/json"))) {
+                return ResponseEntity.ok(java.util.Map.of(
+                    "success", true,
+                    "favorite", isFavorite,
+                    "message", msg
+                ));
+            }
+
+            redirectAttributes.addFlashAttribute("successMessage", msg);
+        } catch (BusinessException e) {
+            String requestedWith = request.getHeader("X-Requested-With");
+            String accept = request.getHeader("Accept");
+            if ("XMLHttpRequest".equalsIgnoreCase(requestedWith) || (accept != null && accept.contains("application/json"))) {
+                return ResponseEntity.badRequest().body(java.util.Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+                ));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isBlank() && !referer.contains("/favorite")) {
+            return "redirect:" + referer;
         }
         return "redirect:/plans/" + id;
     }
