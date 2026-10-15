@@ -2,6 +2,7 @@ package com.school.lessonplan.lessonplan;
 
 import com.school.lessonplan.audit.AuditService;
 import com.school.lessonplan.common.exception.BusinessException;
+import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
 import com.school.lessonplan.config.AppProperties;
 import com.school.lessonplan.department.Department;
@@ -23,12 +24,30 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 @Service
 public class LessonPlanService {
 
     private static final Logger log = LoggerFactory.getLogger(LessonPlanService.class);
+
+    /**
+     * Danh sách năm học bắt đầu từ 2026-2027 và 5 năm học sau:
+     * 2026-2027, 2027-2028, 2028-2029, 2029-2030, 2030-2031, 2031-2032
+     */
+    public static final List<String> DEFAULT_SCHOOL_YEARS = List.of(
+            "2026-2027",
+            "2027-2028",
+            "2028-2029",
+            "2029-2030",
+            "2030-2031",
+            "2031-2032"
+    );
 
     private final LessonPlanRepository lessonPlanRepository;
     private final LessonPlanVersionRepository versionRepository;
@@ -76,13 +95,39 @@ public class LessonPlanService {
     }
 
     public Page<LessonPlan> getFavoriteAccessiblePlans(CurrentUser user, Pageable pageable) {
+        boolean isAdmin = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return lessonPlanRepository.findByFavoriteTrue(pageable);
+        }
         return lessonPlanRepository.findFavoriteAccessiblePlans(user.getId(), pageable);
+    }
+
+    public List<String> getAvailableSchoolYears() {
+        return DEFAULT_SCHOOL_YEARS;
+    }
+
+    public List<String> getSchoolYearsForPlan(String currentPlanSchoolYear) {
+        Set<String> years = new LinkedHashSet<>(DEFAULT_SCHOOL_YEARS);
+        if (currentPlanSchoolYear != null && !currentPlanSchoolYear.trim().isEmpty()) {
+            years.add(currentPlanSchoolYear.trim());
+        }
+        return new ArrayList<>(years);
+    }
+
+    public List<String> getDistinctSchoolYears() {
+        Set<String> years = new LinkedHashSet<>(DEFAULT_SCHOOL_YEARS);
+        years.addAll(lessonPlanRepository.findDistinctSchoolYears());
+        return new ArrayList<>(years);
     }
 
     public Page<LessonPlan> searchAllForAdmin(String search, Long departmentId, String schoolYear,
             Integer semester, Boolean favorite, Pageable pageable) {
         String cleanSearch = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
-        return lessonPlanRepository.searchAll(cleanSearch, departmentId, schoolYear, semester, favorite, pageable);
+        String cleanSchoolYear = (schoolYear != null && !schoolYear.trim().isEmpty()) ? schoolYear.trim() : null;
+        return lessonPlanRepository.searchAll(cleanSearch, departmentId, cleanSchoolYear, semester, favorite, pageable);
     }
 
     public LessonPlan getPlanById(Long id, CurrentUser user) {
@@ -96,7 +141,8 @@ public class LessonPlanService {
     @Transactional
     public LessonPlan createPlan(CurrentUser user, String title, Long departmentId,
             String grade, String schoolYear, Integer semester,
-            Integer weekNo, String description, MultipartFile file) {
+            Integer weekNo, Integer startPeriod, Integer endPeriod,
+            String description, MultipartFile file) {
         User owner = userRepository.findById(user.getId())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy thông tin người dùng."));
 
@@ -105,6 +151,21 @@ public class LessonPlanService {
 
         // Lưu file vật lý
         FileStorageService.StoredFileResult stored = fileStorageService.storeFile(file);
+
+        // Chuẩn hoá tiết học
+        if (startPeriod != null && endPeriod == null) {
+            endPeriod = startPeriod;
+        } else if (startPeriod == null && endPeriod != null) {
+            startPeriod = endPeriod;
+        }
+        if (startPeriod != null && endPeriod != null && endPeriod < startPeriod) {
+            throw new BusinessException("Tiết kết thúc phải lớn hơn hoặc bằng tiết bắt đầu.");
+        }
+
+        String periodRange = null;
+        if (startPeriod != null) {
+            periodRange = startPeriod.equals(endPeriod) ? startPeriod.toString() : (startPeriod + "-" + endPeriod);
+        }
 
         // Tạo LessonPlan
         LessonPlan plan = new LessonPlan();
@@ -115,6 +176,10 @@ public class LessonPlanService {
         plan.setSchoolYear(schoolYear.trim());
         plan.setSemester(semester);
         plan.setWeekNo(weekNo);
+        plan.setStartPeriod(startPeriod);
+        plan.setEndPeriod(endPeriod);
+        plan.setPeriodRange(periodRange);
+        plan.setPeriodNo(startPeriod);
         plan.setDescription(description != null ? description.trim() : null);
         plan.setCurrentVersionNo(1);
         plan = lessonPlanRepository.save(plan);
@@ -245,7 +310,7 @@ public class LessonPlanService {
     @Transactional
     public LessonPlan updateMetadata(Long planId, CurrentUser user, String title,
             Long departmentId, String grade, String schoolYear,
-            Integer semester, Integer weekNo, String description) {
+            Integer semester, Integer weekNo, Integer startPeriod, Integer endPeriod, String description) {
         LessonPlan plan = lessonPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giáo án."));
 
@@ -254,17 +319,43 @@ public class LessonPlanService {
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new BusinessException("Bộ môn không tồn tại."));
 
+        // Chuẩn hoá tiết học
+        if (startPeriod != null && endPeriod == null) {
+            endPeriod = startPeriod;
+        } else if (startPeriod == null && endPeriod != null) {
+            startPeriod = endPeriod;
+        }
+        if (startPeriod != null && endPeriod != null && endPeriod < startPeriod) {
+            throw new FieldValidationException("endPeriod", "invalid", "Đến tiết phải lớn hơn hoặc bằng Từ tiết.");
+        }
+
+        String periodRange = null;
+        if (startPeriod != null) {
+            periodRange = startPeriod.equals(endPeriod) ? startPeriod.toString() : (startPeriod + "-" + endPeriod);
+        }
+
         plan.setTitle(title.trim());
         plan.setDepartment(department);
         plan.setGrade(grade.trim());
         plan.setSchoolYear(schoolYear.trim());
         plan.setSemester(semester);
         plan.setWeekNo(weekNo);
+        plan.setStartPeriod(startPeriod);
+        plan.setEndPeriod(endPeriod);
+        plan.setPeriodRange(periodRange);
+        plan.setPeriodNo(startPeriod);
         plan.setDescription(description != null ? description.trim() : null);
 
         plan = lessonPlanRepository.save(plan);
         auditService.log("PLAN_UPDATE", "LESSON_PLAN", plan.getId(), "Cập nhật thông tin giáo án: " + plan.getTitle());
         return plan;
+    }
+
+    @Transactional
+    public LessonPlan updateMetadata(Long planId, CurrentUser user, String title,
+            Long departmentId, String grade, String schoolYear,
+            Integer semester, Integer weekNo, String description) {
+        return updateMetadata(planId, user, title, departmentId, grade, schoolYear, semester, weekNo, null, null, description);
     }
 
     /**

@@ -42,6 +42,14 @@
                     <span th:text="'Khối ' + ${plan.grade}">Khối 10</span>
                     <span>•</span>
                     <span th:text="'Năm học ' + ${plan.schoolYear} + ' (HK ' + ${plan.semester} + ')'">2025-2026</span>
+                    <th:block th:if="${plan.weekNo != null}">
+                        <span>•</span>
+                        <span th:text="'Tuần ' + ${plan.weekNo}">Tuần 3</span>
+                    </th:block>
+                    <th:block th:if="${plan.startPeriod != null}">
+                        <span>•</span>
+                        <span th:text="${plan.displayPeriodText}">Tiết 1 - 3 (3 tiết)</span>
+                    </th:block>
                 </div>
             </div>
 
@@ -419,8 +427,12 @@
                                 1</strong>
                         </div>
                         <div th:if="${plan.weekNo != null}">
-                            <span style="color: var(--text-muted);">Tuần / Tiết học:</span><br>
+                            <span style="color: var(--text-muted);">Tuần học:</span><br>
                             <strong th:text="'Tuần ' + ${plan.weekNo}">Tuần 3</strong>
+                        </div>
+                        <div th:if="${plan.startPeriod != null}">
+                            <span style="color: var(--text-muted);">Tiết học (PPCT):</span><br>
+                            <strong th:text="${plan.displayPeriodText}">Tiết 1 - 3 (3 tiết)</strong>
                         </div>
                         <div>
                             <span style="color: var(--text-muted);">Ngày tạo:</span><br>

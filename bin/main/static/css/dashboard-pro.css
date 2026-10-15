@@ -754,23 +754,28 @@
             .up-field {
                 display: flex;
                 flex-direction: column;
-                gap: 6px;
-                margin-bottom: 16px;
+                gap: 8px;
+                margin-bottom: 20px;
             }
 
             .up-row .up-field {
                 margin-bottom: 0;
             }
 
+            .up-row+.up-row {
+                margin-top: 20px;
+            }
+
             .up-row+.up-field,
             .up-field+.up-row {
-                margin-top: 16px;
+                margin-top: 20px;
             }
 
             .up-label {
-                font-size: .84rem;
+                font-size: .86rem;
                 font-weight: 600;
                 color: var(--ink-2);
+                line-height: 1.4;
             }
 
             .up-label .req {
@@ -1349,9 +1354,15 @@
                 padding: 0 7px;
                 border-radius: 999px;
                 font-size: .74rem;
+                font-weight: 700;
                 line-height: 20px;
                 text-align: center;
-                background: rgba(255, 255, 255, .18);
+                background: #e2e8f0;
+                color: var(--ink-2);
+            }
+
+            .pl-tab.on .cnt {
+                background: rgba(255, 255, 255, .22);
                 color: #fff;
             }
 

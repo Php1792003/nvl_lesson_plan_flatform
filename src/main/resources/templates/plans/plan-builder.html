@@ -92,12 +92,11 @@
                             <div class="up-row c3">
                                 <div class="form-group up-field" th:classappend="${#fields.hasErrors('schoolYear')} ? 'has-error'">
                                     <label class="up-label" for="schoolYear">Năm học <span class="req">*</span></label>
-                                    <input type="text" id="schoolYear" th:field="*{schoolYear}" class="up-control"
-                                        data-pattern="^\d{4}-\d{4}$"
-                                        data-msg-required="Vui lòng nhập năm học."
-                                        data-msg-pattern="Định dạng năm học: YYYY-YYYY (ví dụ: 2025-2026)"
-                                        inputmode="numeric" required
+                                    <select id="schoolYear" th:field="*{schoolYear}" class="up-control" required
+                                        data-msg-required="Vui lòng chọn năm học."
                                         th:attr="aria-invalid=${#fields.hasErrors('schoolYear')},aria-describedby='schoolYear-error'">
+                                        <option th:each="yr : ${schoolYears}" th:value="${yr}" th:text="${yr}"></option>
+                                    </select>
                                     <p class="field-error" id="schoolYear-error" role="alert"
                                        th:if="${#fields.hasErrors('schoolYear')}" th:text="${#fields.errors('schoolYear')[0]}"></p>
                                 </div>
@@ -113,13 +112,41 @@
                                        th:if="${#fields.hasErrors('semester')}" th:text="${#fields.errors('semester')[0]}"></p>
                                 </div>
                                 <div class="form-group up-field" th:classappend="${#fields.hasErrors('weekNo')} ? 'has-error'">
-                                    <label class="up-label" for="weekNo">Tuần / Tiết học <span class="opt">(tuỳ chọn)</span></label>
+                                    <label class="up-label" for="weekNo">Tuần học <span class="opt">(tuỳ chọn)</span></label>
                                     <input type="number" id="weekNo" th:field="*{weekNo}" class="up-control"
-                                        placeholder="Ví dụ: 3" min="1"
+                                        placeholder="Ví dụ: 3 (Tuần 1-35)" min="1" max="35"
                                         th:attr="aria-invalid=${#fields.hasErrors('weekNo')},aria-describedby='weekNo-error'">
                                     <p class="field-error" id="weekNo-error" role="alert"
                                        th:if="${#fields.hasErrors('weekNo')}" th:text="${#fields.errors('weekNo')[0]}"></p>
                                 </div>
+                            </div>
+
+                            <div class="up-row c2">
+                                <div class="form-group up-field" th:classappend="${#fields.hasErrors('startPeriod')} ? 'has-error'">
+                                    <label class="up-label" for="startPeriod">Từ tiết <span class="opt">(PPCT)</span></label>
+                                    <input type="number" id="startPeriod" th:field="*{startPeriod}" class="up-control"
+                                        placeholder="Ví dụ: 1 hoặc 5" min="1" max="200"
+                                        th:attr="aria-invalid=${#fields.hasErrors('startPeriod')},aria-describedby='startPeriod-error'">
+                                    <p class="field-error" id="startPeriod-error" role="alert"
+                                       th:if="${#fields.hasErrors('startPeriod')}" th:text="${#fields.errors('startPeriod')[0]}"></p>
+                                </div>
+                                <div class="form-group up-field" th:classappend="${#fields.hasErrors('endPeriod')} ? 'has-error'">
+                                    <label class="up-label" for="endPeriod">Đến tiết <span class="opt">(để trống nếu giáo án 1 tiết)</span></label>
+                                    <input type="number" id="endPeriod" th:field="*{endPeriod}" class="up-control"
+                                        placeholder="Ví dụ: 3 hoặc 10 (để trống nếu 1 tiết)" min="1" max="200"
+                                        th:attr="aria-invalid=${#fields.hasErrors('endPeriod')},aria-describedby='endPeriod-error'">
+                                    <p class="field-error" id="endPeriod-error" role="alert"
+                                       th:if="${#fields.hasErrors('endPeriod')}" th:text="${#fields.errors('endPeriod')[0]}"></p>
+                                </div>
+                            </div>
+
+                            <div id="periodHelperBox" style="margin-top: 16px; margin-bottom: 6px; padding: 12px 16px; border-radius: 8px; font-size: 13.5px; line-height: 1.5; display: none; align-items: center; gap: 10px; border: 1px solid transparent; transition: all 0.2s ease;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <span id="periodHelperText">💡 Nhập số tiết theo phân phối chương trình môn học.</span>
                             </div>
                         </div>
 
