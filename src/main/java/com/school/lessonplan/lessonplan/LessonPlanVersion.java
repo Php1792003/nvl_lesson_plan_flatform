@@ -39,6 +39,9 @@ public class LessonPlanVersion {
     @Column(name = "file_purged_at")
     private Instant filePurgedAt;
 
+    @Column(name = "scheduled_delete_at")
+    private Instant scheduledDeleteAt;
+
     public LessonPlanVersion() {}
 
     // Getters and Setters
@@ -72,12 +75,33 @@ public class LessonPlanVersion {
     public Instant getFilePurgedAt() { return filePurgedAt; }
     public void setFilePurgedAt(Instant filePurgedAt) { this.filePurgedAt = filePurgedAt; }
 
+    public Instant getScheduledDeleteAt() { return scheduledDeleteAt; }
+    public void setScheduledDeleteAt(Instant scheduledDeleteAt) { this.scheduledDeleteAt = scheduledDeleteAt; }
+
     public boolean isFilePurged() {
         return filePurgedAt != null;
     }
 
     public boolean isPurged() {
         return filePurgedAt != null;
+    }
+
+    /**
+     * Version đã được lên lịch xoá tự động (sau 30 ngày khi có version mới)
+     */
+    public boolean isScheduledForDeletion() {
+        return scheduledDeleteAt != null && filePurgedAt == null;
+    }
+
+    /**
+     * Số ngày còn lại trước khi tự động xoá file vật lý
+     */
+    public Long getDaysUntilDeletion() {
+        if (scheduledDeleteAt == null) {
+            return null;
+        }
+        long days = java.time.Duration.between(Instant.now(), scheduledDeleteAt).toDays();
+        return Math.max(0, days);
     }
 
     public String getFormattedSize() {

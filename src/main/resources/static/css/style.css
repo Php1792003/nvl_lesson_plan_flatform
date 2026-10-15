@@ -665,6 +665,18 @@ html, body {
   background-color: #dc2626;
 }
 
+.btn-warning-fav {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+  color: #b45309;
+  font-weight: 600;
+}
+.btn-warning-fav:hover {
+  background-color: #fde68a;
+  border-color: #d97706;
+  color: #92400e;
+}
+
 .btn-outline {
   background-color: transparent;
   border-color: var(--border);

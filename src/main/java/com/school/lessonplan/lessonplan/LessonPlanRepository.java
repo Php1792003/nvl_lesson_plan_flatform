@@ -54,14 +54,49 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
           AND (:departmentId IS NULL OR lp.department.id = :departmentId)
           AND (:schoolYear IS NULL OR lp.schoolYear = :schoolYear)
           AND (:semester IS NULL OR lp.semester = :semester)
+          AND (:favorite IS NULL OR lp.favorite = :favorite)
     """)
     Page<LessonPlan> searchAll(
         @Param("search") String search,
         @Param("departmentId") Long departmentId,
         @Param("schoolYear") String schoolYear,
         @Param("semester") Integer semester,
+        @Param("favorite") Boolean favorite,
         Pageable pageable
     );
+
+    /**
+     * Danh sách giáo án yêu thích mà user có quyền truy cập
+     */
+    @Query(value = """
+        SELECT DISTINCT lp FROM LessonPlan lp
+        LEFT JOIN LessonPlanShare s ON s.plan.id = lp.id
+            AND s.sharedWithUser.id = :userId
+            AND s.revokedAt IS NULL
+            AND (s.expiresAt IS NULL OR s.expiresAt > CURRENT_TIMESTAMP)
+        WHERE (lp.owner.id = :userId OR s.id IS NOT NULL)
+          AND lp.favorite = true
+    """,
+    countQuery = """
+        SELECT COUNT(DISTINCT lp) FROM LessonPlan lp
+        LEFT JOIN LessonPlanShare s ON s.plan.id = lp.id
+            AND s.sharedWithUser.id = :userId
+            AND s.revokedAt IS NULL
+            AND (s.expiresAt IS NULL OR s.expiresAt > CURRENT_TIMESTAMP)
+        WHERE (lp.owner.id = :userId OR s.id IS NOT NULL)
+          AND lp.favorite = true
+    """)
+    Page<LessonPlan> findFavoriteAccessiblePlans(@Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * Tìm tất cả giáo án theo năm học và học kỳ (dùng cho BGH dọn dẹp sau học kỳ)
+     */
+    List<LessonPlan> findBySchoolYearAndSemester(String schoolYear, int semester);
+
+    /**
+     * Đếm số giáo án yêu thích trong năm học và học kỳ
+     */
+    long countBySchoolYearAndSemesterAndFavoriteTrue(String schoolYear, int semester);
 
     /**
      * Đếm giáo án theo owner

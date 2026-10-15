@@ -17,8 +17,21 @@
         <!-- Header Actions -->
         <div class="detail-header-row">
             <div>
-                <h1 style="font-size: 22px; font-weight: 700; color: var(--dark);" th:text="${plan.title}">Tiêu đề giáo
-                    án</h1>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <h1 style="font-size: 22px; font-weight: 700; color: var(--dark); margin: 0;"
+                        th:text="${plan.title}">Tiêu đề giáo án</h1>
+                    <span th:if="${plan.favorite}" class="badge"
+                        style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;"
+                        title="Giáo án được đánh dấu yêu thích — Ban Giám Hiệu sẽ không xoá sau mỗi học kỳ">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b"
+                            stroke-width="2">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
+                        </svg>
+                        <span>Yêu thích </span>
+                    </span>
+                </div>
                 <div
                     style="display: flex; gap: 12px; align-items: center; margin-top: 6px; font-size: 13px; color: var(--text-muted); flex-wrap: wrap;">
                     <span>Người soạn: <strong th:text="${plan.displayOwnerName}" style="color: var(--dark);">Thầy
@@ -33,6 +46,21 @@
             </div>
 
             <div class="detail-header-actions">
+                <!-- Nút Yêu thích (Bảo vệ khỏi dọn dẹp học kỳ) -->
+                <form th:action="@{/plans/{id}/favorite(id=${plan.id})}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn btn-sm"
+                        th:classappend="${plan.favorite} ? 'btn-warning-fav' : 'btn-outline'"
+                        th:title="${plan.favorite} ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu yêu thích (giữ lại, không bị BGH xoá sau mỗi học kỳ)'"
+                        style="display: inline-flex; align-items: center; gap: 6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" th:fill="${plan.favorite} ? '#d97706' : 'none'"
+                            th:stroke="${plan.favorite} ? '#d97706' : 'currentColor'" stroke-width="2">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
+                        </svg>
+                        <span th:text="${plan.favorite} ? 'Đã yêu thích' : 'Yêu thích'">Yêu thích</span>
+                    </button>
+                </form>
                 <button type="button" class="btn btn-primary btn-sm" id="btnPreviewTop"
                     onclick="openPreviewCurrentVersion()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -86,7 +114,8 @@
                                     <th>Tên tệp</th>
                                     <th>Dung lượng</th>
                                     <th>Thời gian tải</th>
-                                    <th style="text-align: right;">Tải về</th>
+                                    <th>Trạng thái</th>
+                                    <th style="text-align: right;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -101,13 +130,48 @@
                                     <td th:text="${ver.formattedSize}">1.5 MB</td>
                                     <td th:text="${#temporals.format(ver.uploadedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026
                                     </td>
+                                    <td>
+                                        <!-- Version hiện tại -->
+                                        <span th:if="${ver.versionNo == plan.currentVersionNo && !ver.purged}"
+                                            class="badge badge-success" style="font-size: 11px;">Đang sử dụng</span>
+                                        <!-- Đã bị dọn/xoá -->
+                                        <span th:if="${ver.purged}" class="badge badge-secondary"
+                                            title="Tệp đã dọn để tiết kiệm dung lượng" style="font-size: 11px;">Đã xoá
+                                            file</span>
+                                        <!-- Đang lên lịch xoá tự động -->
+                                        <span
+                                            th:if="${ver.scheduledForDeletion && ver.versionNo != plan.currentVersionNo}"
+                                            class="badge"
+                                            style="font-size: 11px; background: #fef3c7; color: #92400e; border: 1px solid #fbbf24;"
+                                            th:title="'Sẽ tự động xoá file lúc ' + ${#temporals.format(ver.scheduledDeleteAt, 'dd/MM/yyyy HH:mm')}">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2"
+                                                style="vertical-align: -2px; margin-right: 3px;">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                            <span th:if="${ver.daysUntilDeletion != null && ver.daysUntilDeletion > 0}"
+                                                th:text="'Xoá sau ' + ${ver.daysUntilDeletion} + ' ngày'">Xoá sau 30
+                                                ngày</span>
+                                            <span
+                                                th:if="${ver.daysUntilDeletion != null && ver.daysUntilDeletion <= 0}">Đến
+                                                hạn xoá hôm nay</span>
+                                        </span>
+                                        <!-- Version cũ chưa lên lịch, chưa purge, không phải hiện tại -->
+                                        <span
+                                            th:if="${!ver.purged && !ver.scheduledForDeletion && ver.versionNo != plan.currentVersionNo}"
+                                            class="badge"
+                                            style="font-size: 11px; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;">Phiên
+                                            bản cũ</span>
+                                    </td>
                                     <td style="text-align: right;">
                                         <div th:if="${ver.purged}">
                                             <span class="badge badge-secondary"
-                                                title="Tệp đã dọn để tiết kiệm dung lượng">Đã dọn file</span>
+                                                title="Tệp đã dọn để tiết kiệm dung lượng" style="font-size: 11px;">Đã
+                                                dọn file</span>
                                         </div>
                                         <div th:if="${!ver.purged}"
-                                            style="display: flex; gap: 6px; justify-content: flex-end;">
+                                            style="display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap;">
                                             <button type="button" class="btn btn-outline btn-sm" th:data-vid="${ver.id}"
                                                 th:data-vno="${ver.versionNo}" th:data-vfile="${ver.originalFilename}"
                                                 onclick="openPreviewModalForVersion(this.getAttribute('data-vid'), this.getAttribute('data-vno'), this.getAttribute('data-vfile'))">
@@ -128,6 +192,37 @@
                                                 </svg>
                                                 <span>Tải về</span>
                                             </a>
+                                            <!-- Nút Xoá file cho version cũ (không phải version hiện tại) -->
+                                            <th:block
+                                                th:if="${canManage && !plan.isOrphan() && ver.versionNo != plan.currentVersionNo}">
+                                                <span
+                                                    th:if="${evaluatedVersionIds != null && evaluatedVersionIds.contains(ver.id)}"
+                                                    class="badge"
+                                                    style="background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; font-size: 11px; align-self: center;"
+                                                    title="Phiên bản đã có đánh giá từ Ban Giám Hiệu nên không thể xoá file theo quy định.">
+                                                    Có nhận xét BGH
+                                                </span>
+                                                <form
+                                                    th:if="${evaluatedVersionIds == null || !evaluatedVersionIds.contains(ver.id)}"
+                                                    th:action="@{/plans/{id}/versions/{vid}/delete(id=${plan.id}, vid=${ver.id})}"
+                                                    method="post" style="margin: 0;"
+                                                    th:onsubmit="'return confirm(\\'Bạn có chắc chắn muốn xoá file phiên bản v' + ${ver.versionNo} + '? File sẽ bị xoá vĩnh viễn khỏi hệ thống để tiết kiệm dung lượng.\\')'">
+                                                    <button type="submit" class="btn btn-danger btn-sm"
+                                                        title="Xoá file vĩnh viễn để tiết kiệm dung lượng"
+                                                        style="font-size: 12px;">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                            stroke="currentColor" stroke-width="2">
+                                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                                            <path
+                                                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                            </path>
+                                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                        </svg>
+                                                        <span>Xoá file</span>
+                                                    </button>
+                                                </form>
+                                            </th:block>
                                         </div>
                                     </td>
                                 </tr>
@@ -144,15 +239,28 @@
                             enctype="multipart/form-data" class="upload-version-form" data-validate novalidate>
                             <div class="form-group" style="flex: 1; margin: 0;">
                                 <input type="file" id="versionFile" name="file" class="form-control" required
-                                    accept=".pdf,.doc,.docx,.ppt,.pptx"
-                                    data-msg-required="Vui lòng chọn file tải lên."
+                                    accept=".pdf,.doc,.docx,.ppt,.pptx" data-msg-required="Vui lòng chọn file tải lên."
                                     aria-describedby="versionFile-error">
                                 <p class="field-error" id="versionFile-error" role="alert" hidden></p>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">Tải lên</button>
+                            <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">Tải
+                                lên</button>
                         </form>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Hệ thống sẽ từ chối nếu
-                            nội dung tệp giống hệt bản hiện tại.</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.5;">
+                            <div>Hệ thống sẽ từ chối nếu nội dung tệp giống hệt bản hiện tại.</div>
+                            <div
+                                style="color: #b45309; margin-top: 4px; display: flex; align-items: flex-start; gap: 4px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" style="flex-shrink: 0; margin-top: 2px;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>Khi tải lên phiên bản mới, các tệp phiên bản cũ sẽ tự động được lên lịch xoá vĩnh
+                                    viễn sau 30 ngày để tiết kiệm dung lượng (bạn cũng có thể bấm <strong>Xoá
+                                        file</strong> ở danh sách trên bất cứ lúc nào).</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -168,11 +276,14 @@
                         style="margin-bottom: 24px; background: var(--surface-alt); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
                         <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--dark);">Gửi nhận
                             xét đánh giá</h4>
-                        <form th:action="@{/admin/plans/{id}/evaluations(id=${plan.id})}" method="post" data-validate novalidate>
+                        <form th:action="@{/admin/plans/{id}/evaluations(id=${plan.id})}" method="post" data-validate
+                            novalidate>
                             <div class="form-group">
-                                <label class="form-label" style="font-size: 12px;" for="evalVersionId">Đánh giá trên phiên bản: <span class="req">*</span></label>
-                                <select id="evalVersionId" name="versionId" class="form-select" style="font-size: 13px; max-width: 250px;"
-                                    required data-msg-required="Vui lòng chọn phiên bản đánh giá.">
+                                <label class="form-label" style="font-size: 12px;" for="evalVersionId">Đánh giá trên
+                                    phiên bản: <span class="req">*</span></label>
+                                <select id="evalVersionId" name="versionId" class="form-select"
+                                    style="font-size: 13px; max-width: 250px;" required
+                                    data-msg-required="Vui lòng chọn phiên bản đánh giá.">
                                     <option th:each="v : ${versions}" th:value="${v.id}"
                                         th:text="'Phiên bản v' + ${v.versionNo} + ' (' + ${v.originalFilename} + ')'"
                                         th:selected="${v.versionNo == plan.currentVersionNo}"></option>
@@ -181,8 +292,7 @@
                             <div class="form-group">
                                 <textarea id="evalContent" name="content" rows="3" class="form-control"
                                     placeholder="Viết nhận xét đóng góp cho giáo viên (tối thiểu 5 ký tự)..."
-                                    minlength="5" maxlength="2000" required
-                                    data-minlength="5" data-maxlength="2000"
+                                    minlength="5" maxlength="2000" required data-minlength="5" data-maxlength="2000"
                                     data-msg-required="Nội dung nhận xét không được để trống."
                                     data-msg-minlength="Nội dung nhận xét cần ít nhất 5 ký tự."
                                     aria-describedby="evalContent-error"></textarea>
@@ -234,15 +344,17 @@
                                     th:action="@{/admin/plans/{id}/evaluations/{eid}/edit(id=${plan.id}, eid=${eval.id})}"
                                     method="post" data-validate novalidate>
                                     <div class="form-group">
-                                        <textarea th:id="'editEvalContent-' + ${eval.id}" name="content" rows="2" class="form-control" th:text="${eval.content}"
-                                            minlength="5" maxlength="2000" required
-                                            data-minlength="5" data-maxlength="2000"
+                                        <textarea th:id="'editEvalContent-' + ${eval.id}" name="content" rows="2"
+                                            class="form-control" th:text="${eval.content}" minlength="5"
+                                            maxlength="2000" required data-minlength="5" data-maxlength="2000"
                                             data-msg-required="Nội dung nhận xét không được để trống."
                                             data-msg-minlength="Nội dung nhận xét cần ít nhất 5 ký tự."
                                             th:attr="aria-describedby='editEvalContent-' + ${eval.id} + '-error'"></textarea>
-                                        <p class="field-error" th:id="'editEvalContent-' + ${eval.id} + '-error'" role="alert" hidden></p>
+                                        <p class="field-error" th:id="'editEvalContent-' + ${eval.id} + '-error'"
+                                            role="alert" hidden></p>
                                     </div>
-                                    <button type="submit" class="btn btn-primary btn-sm" style="margin-top: 6px;">Lưu</button>
+                                    <button type="submit" class="btn btn-primary btn-sm"
+                                        style="margin-top: 6px;">Lưu</button>
                                 </form>
                             </div>
                         </div>
@@ -263,17 +375,21 @@
                             <!-- Teacher reply form -->
                             <form th:if="${isOwner && !plan.isOrphan()}"
                                 th:action="@{/plans/{id}/evaluations/{eid}/replies(id=${plan.id}, eid=${eval.id})}"
-                                method="post" style="display: flex; gap: 8px; margin-top: 10px;" data-validate novalidate>
+                                method="post" style="display: flex; gap: 8px; margin-top: 10px;" data-validate
+                                novalidate>
                                 <div class="form-group" style="flex: 1; margin: 0;">
-                                    <input type="text" th:id="'replyContent-' + ${eval.id}" name="content" class="form-control" style="font-size: 13px;"
-                                        placeholder="Phản hồi ý kiến của Ban Giám Hiệu..." minlength="2" maxlength="2000" required
-                                        data-minlength="2" data-maxlength="2000"
+                                    <input type="text" th:id="'replyContent-' + ${eval.id}" name="content"
+                                        class="form-control" style="font-size: 13px;"
+                                        placeholder="Phản hồi ý kiến của Ban Giám Hiệu..." minlength="2"
+                                        maxlength="2000" required data-minlength="2" data-maxlength="2000"
                                         data-msg-required="Nội dung phản hồi không được để trống."
                                         data-msg-minlength="Nội dung phản hồi cần ít nhất 2 ký tự."
                                         th:attr="aria-describedby='replyContent-' + ${eval.id} + '-error'">
-                                    <p class="field-error" th:id="'replyContent-' + ${eval.id} + '-error'" role="alert" hidden></p>
+                                    <p class="field-error" th:id="'replyContent-' + ${eval.id} + '-error'" role="alert"
+                                        hidden></p>
                                 </div>
-                                <button type="submit" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Trả lời</button>
+                                <button type="submit" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Trả
+                                    lời</button>
                             </form>
                         </div>
                     </div>
@@ -385,12 +501,13 @@
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                         <span class="preview-title-prefix">Xem trước:</span>
-                        <strong id="previewFileName" class="preview-filename-text" title="Tệp giáo án">Giao_an.pdf</strong>
+                        <strong id="previewFileName" class="preview-filename-text"
+                            title="Tệp giáo án">Giao_an.pdf</strong>
                         <span id="previewVersionBadge" class="badge badge-primary">v1</span>
                     </div>
                     <div class="preview-modal-actions">
-                        <a id="previewNewTabBtn" href="#" target="_blank" class="btn btn-outline btn-sm preview-header-btn"
-                            title="Mở trong tab mới">
+                        <a id="previewNewTabBtn" href="#" target="_blank"
+                            class="btn btn-outline btn-sm preview-header-btn" title="Mở trong tab mới">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -399,7 +516,8 @@
                             </svg>
                             <span class="preview-btn-label">Mở tab mới</span>
                         </a>
-                        <a id="previewDownloadBtn" href="#" class="btn btn-outline btn-sm preview-header-btn" title="Tải về máy">
+                        <a id="previewDownloadBtn" href="#" class="btn btn-outline btn-sm preview-header-btn"
+                            title="Tải về máy">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -408,8 +526,8 @@
                             </svg>
                             <span class="preview-btn-label">Tải về</span>
                         </a>
-                        <button type="button" class="btn btn-secondary btn-sm preview-close-btn" onclick="closePreviewModal()"
-                            title="Đóng xem trước" aria-label="Đóng xem trước">
+                        <button type="button" class="btn btn-secondary btn-sm preview-close-btn"
+                            onclick="closePreviewModal()" title="Đóng xem trước" aria-label="Đóng xem trước">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -459,17 +577,18 @@
                                 <div class="preview-unsupported-btn-group">
                                     <a id="previewOtherNewTab" href="#" target="_blank"
                                         class="btn preview-unsupported-btn btn-glass-secondary">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                             <polyline points="15 3 21 3 21 9"></polyline>
                                             <line x1="10" y1="14" x2="21" y2="3"></line>
                                         </svg>
                                         <span>Mở trong tab mới</span>
                                     </a>
-                                    <a id="previewOtherDownload" href="#" class="btn btn-primary preview-unsupported-btn">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2">
+                                    <a id="previewOtherDownload" href="#"
+                                        class="btn btn-primary preview-unsupported-btn">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                             <polyline points="7 10 12 15 17 10"></polyline>
                                             <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -485,7 +604,8 @@
                     <div class="preview-sidebar-pane">
                         <div class="preview-sidebar-header">
                             <span style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" style="color: var(--primary);">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                 </svg>
                                 <span>Đánh giá & Nhận xét</span>
@@ -496,7 +616,8 @@
                             <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
                                 class="preview-review-form-box">
                                 <h5 class="preview-review-form-title">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
@@ -512,7 +633,8 @@
                                         <button type="button" class="btn btn-secondary btn-sm preview-form-close-btn"
                                             onclick="closePreviewModal()">Đóng</button>
                                         <button type="submit" class="btn btn-primary btn-sm preview-form-submit-btn">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                                             </svg>

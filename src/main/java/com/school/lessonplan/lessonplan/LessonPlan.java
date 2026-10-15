@@ -63,6 +63,12 @@ public class LessonPlan {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
+    @Column(name = "is_favorite", nullable = false)
+    private boolean favorite = false;
+
+    @Column(name = "favorited_at")
+    private Instant favoritedAt;
+
     public LessonPlan() {}
 
     // === Getters and Setters ===
@@ -116,6 +122,12 @@ public class LessonPlan {
 
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
+    public boolean isFavorite() { return favorite; }
+    public void setFavorite(boolean favorite) { this.favorite = favorite; }
+
+    public Instant getFavoritedAt() { return favoritedAt; }
+    public void setFavoritedAt(Instant favoritedAt) { this.favoritedAt = favoritedAt; }
 
     /**
      * Kiểm tra đây có phải giáo án mồ côi (chủ đã bị xoá) không

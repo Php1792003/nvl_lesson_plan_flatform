@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-base :: layout('Danh sách Giáo án', ~{::contentBlock})}">
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout/layout-base :: layout('Danh sách Giáo án', ~{::contentBlock})}">
 
 <body>
     <div th:fragment="contentBlock">
@@ -19,6 +20,15 @@
                         <span>Được chia sẻ với tôi</span>
                         <span class="cnt" th:if="${currentTab == 'shared'}"
                             th:text="${sharedPage.totalElements}">0</span>
+                    </a>
+                    <a th:href="@{/plans(tab='favorite')}" class="pl-tab" role="tab"
+                        th:classappend="${currentTab == 'favorite'} ? 'on'"
+                        title="Danh sách các giáo án được yêu thích — BGH sẽ không xoá sau mỗi học kỳ">
+                        <span>⭐ Yêu thích </span>
+                        <span class="cnt" th:if="${currentTab == 'favorite'}"
+                            th:text="${favoritePage.totalElements}">0</span>
+                        <span class="cnt" th:if="${currentTab != 'favorite'}"
+                            th:text="${favoriteCount != null ? favoriteCount : 0}">0</span>
                     </a>
                 </div>
                 <a th:href="@{/plans/new}" class="pl-btn primary">
@@ -96,8 +106,14 @@
                                                 </svg>
                                             </div>
                                             <div>
-                                                <a class="t" th:href="@{/plans/{id}(id=${plan.id})}"
-                                                    th:text="${plan.title}">Tiêu đề</a>
+                                                <div style="display: flex; align-items: center; gap: 6px;">
+                                                    <a class="t" th:href="@{/plans/{id}(id=${plan.id})}"
+                                                        th:text="${plan.title}">Tiêu đề</a>
+                                                    <span th:if="${plan.favorite}" class="badge"
+                                                        style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 999px;"
+                                                        title="Giáo án yêu thích — Được bảo vệ sau mỗi học kỳ">⭐ Yêu
+                                                        thích</span>
+                                                </div>
                                                 <div th:if="${plan.isOrphan()}">
                                                     <span class="pl-badge orphan"
                                                         th:text="${plan.displayOwnerName}">Giáo viên đã bị xoá</span>
@@ -121,15 +137,27 @@
                                         </div>
                                     </td>
                                     <td class="right">
-                                        <a th:href="@{/plans/{id}(id=${plan.id})}" class="pl-btn ghost">
-                                            <span>Xem</span>
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <line x1="5" y1="12" x2="19" y2="12" />
-                                                <polyline points="12 5 19 12 12 19" />
-                                            </svg>
-                                        </a>
+                                        <div
+                                            style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                                            <form th:action="@{/plans/{id}/favorite(id=${plan.id})}" method="post"
+                                                style="margin: 0;" onclick="event.stopPropagation();">
+                                                <button type="submit" class="pl-btn ghost"
+                                                    th:style="${plan.favorite} ? 'color: #d97706; padding: 5px 8px;' : 'color: #9ca3af; padding: 5px 8px;'"
+                                                    th:title="${plan.favorite} ? 'Bỏ yêu thích' : 'Đánh dấu yêu thích (Bảo vệ khỏi dọn dẹp học kỳ)'">
+                                                    <span th:text="${plan.favorite} ? '⭐ Đã thích' : '☆ Thích'">☆
+                                                        Thích</span>
+                                                </button>
+                                            </form>
+                                            <a th:href="@{/plans/{id}(id=${plan.id})}" class="pl-btn ghost">
+                                                <span>Xem</span>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                                    <polyline points="12 5 19 12 12 19" />
+                                                </svg>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -277,6 +305,139 @@
                             <a th:if="${!sharedPage.last}" class="pl-pg"
                                 th:href="@{/plans(tab='shared',page=${sharedPage.number + 1})}">Sau ›</a>
                             <span th:if="${sharedPage.last}" class="pl-pg off">Sau ›</span>
+                        </nav>
+                    </div>
+                </th:block>
+            </section>
+
+            <!-- ================= Giáo án yêu thích  ================= -->
+            <section class="pl-panel reveal" style="--i:1" th:if="${currentTab == 'favorite'}">
+
+                <div class="pl-empty" th:if="${favoritePage.empty}">
+                    <div class="ico" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                    </div>
+                    <h4>Chưa có giáo án yêu thích nào</h4>
+                    <p>Bấm vào nút <strong>☆ Thích</strong> trên bất kỳ giáo án nào để đưa vào danh sách yêu thích.<br>
+                        Các giáo án yêu thích sẽ được <strong>bảo vệ tuyệt đối</strong> và không bị Ban Giám Hiệu xoá
+                        trong các đợt dọn dẹp học kỳ.</p>
+                    <a th:href="@{/plans(tab='my')}" class="pl-btn primary">Xem giáo án của tôi</a>
+                </div>
+
+                <th:block th:unless="${favoritePage.empty}">
+                    <div class="pl-toolbar">
+                        <div class="pl-search">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input type="search" class="pl-input" id="plSearch"
+                                placeholder="Tìm theo tiêu đề, bộ môn, khối..." autocomplete="off"
+                                aria-label="Tìm giáo án">
+                        </div>
+                        <select class="pl-select" id="plDept" aria-label="Lọc theo bộ môn">
+                            <option value="">Tất cả bộ môn</option>
+                        </select>
+                        <div class="pl-meta">Hiển thị <b id="plShown">0</b> / <span id="plTotalPage">0</span> trên trang
+                            này</div>
+                    </div>
+
+                    <div class="pl-scroll">
+                        <table class="pl-table" id="plTable">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu đề giáo án</th>
+                                    <th>Người soạn</th>
+                                    <th>Bộ môn</th>
+                                    <th>Khối</th>
+                                    <th>Năm học</th>
+                                    <th>Phiên bản</th>
+                                    <th>Bảo vệ học kỳ</th>
+                                    <th class="right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="plan : ${favoritePage.content}" class="row-in"
+                                    th:attr="data-href=@{/plans/{id}(id=${plan.id})},data-dept=${plan.department.name}">
+                                    <td class="cell-title">
+                                        <div class="pl-title">
+                                            <div class="pl-doc"
+                                                style="background: rgba(245, 158, 11, 0.15); color: #d97706;">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b"
+                                                    stroke="#f59e0b" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <polygon
+                                                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <a class="t" th:href="@{/plans/{id}(id=${plan.id})}"
+                                                    th:text="${plan.title}">Tiêu đề</a>
+                                                <div>
+                                                    <span class="badge"
+                                                        style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; font-size: 11px;">⭐
+                                                        Yêu thích</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Người soạn" th:text="${plan.displayOwnerName}">Thầy Tuấn</td>
+                                    <td data-label="Bộ môn"><span class="pl-dept"><i></i><span
+                                                th:text="${plan.department.name}">Toán học</span></span></td>
+                                    <td data-label="Khối" th:text="'Khối ' + ${plan.grade}">Khối 10</td>
+                                    <td data-label="Năm học">
+                                        <div class="pl-two"><span th:text="${plan.schoolYear}">2025-2026</span><small
+                                                th:text="'Học kỳ ' + ${plan.semester}">Học kỳ 1</small></div>
+                                    </td>
+                                    <td data-label="Phiên bản"><span class="pl-badge ver"
+                                            th:text="'v' + ${plan.currentVersionNo}">v1</span></td>
+                                    <td data-label="Bảo vệ học kỳ">
+                                        <span class="badge badge-success" style="font-size: 11px; font-weight: 600;"
+                                            title="Giáo án được bảo vệ, BGH sẽ không xoá sau mỗi học kỳ">
+                                            ✓ Được bảo vệ
+                                        </span>
+                                    </td>
+                                    <td class="right">
+                                        <div
+                                            style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                                            <form th:action="@{/plans/{id}/favorite(id=${plan.id})}" method="post"
+                                                style="margin: 0;" onclick="event.stopPropagation();">
+                                                <button type="submit" class="pl-btn ghost" title="Bỏ đánh dấu yêu thích"
+                                                    style="color: #d97706; padding: 5px 8px;">
+                                                    ⭐ Bỏ thích
+                                                </button>
+                                            </form>
+                                            <a th:href="@{/plans/{id}(id=${plan.id})}" class="pl-btn ghost">
+                                                <span>Xem</span>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.2">
+                                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pl-foot">
+                        <span>Tổng cộng <b th:text="${favoritePage.totalElements}">0</b> giáo án yêu thích</span>
+                        <nav class="pl-pager" th:if="${favoritePage.totalPages > 1}" aria-label="Phân trang">
+                            <a th:if="${!favoritePage.first}" class="pl-pg"
+                                th:href="@{/plans(tab='favorite',page=${favoritePage.number - 1})}">‹ Trước</a>
+                            <span th:if="${favoritePage.first}" class="pl-pg off">‹ Trước</span>
+                            <span class="cur"
+                                th:text="'Trang ' + ${favoritePage.number + 1} + ' / ' + ${favoritePage.totalPages}">Trang
+                                1 / 1</span>
+                            <a th:if="${!favoritePage.last}" class="pl-pg"
+                                th:href="@{/plans(tab='favorite',page=${favoritePage.number + 1})}">Sau ›</a>
+                            <span th:if="${favoritePage.last}" class="pl-pg off">Sau ›</span>
                         </nav>
                     </div>
                 </th:block>

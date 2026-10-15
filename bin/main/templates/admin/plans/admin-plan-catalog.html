@@ -12,7 +12,20 @@
                     <h2>Toàn bộ giáo án</h2>
                     <p>Xem trước, nhận xét và theo dõi giáo án của toàn trường.</p>
                 </div>
-                <div class="ad-count"><b th:text="${plansPage.totalElements}">0</b> giáo án phù hợp</div>
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" class="ad-btn ghost"
+                        onclick="document.getElementById('cleanupModal').classList.add('active')"
+                        style="color: #b45309; border-color: #f59e0b; background: #fffbeb; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                            </path>
+                        </svg>
+                        <span>Dọn dẹp giáo án học kỳ</span>
+                    </button>
+                    <div class="ad-count"><b th:text="${plansPage.totalElements}">0</b> giáo án phù hợp</div>
+                </div>
             </div>
 
             <!-- ============ Bộ lọc ============ -->
@@ -53,6 +66,15 @@
                                 <option value="">Tất cả</option>
                                 <option value="1" th:selected="${semester == 1}">HK 1</option>
                                 <option value="2" th:selected="${semester == 2}">HK 2</option>
+                            </select>
+                        </div>
+
+                        <div class="ad-field">
+                            <label class="ad-label" for="fFav">Trạng thái yêu thích</label>
+                            <select id="fFav" name="favorite" class="ad-control">
+                                <option value="">Tất cả</option>
+                                <option value="true" th:selected="${favorite == true}">⭐ Yêu thích </option>
+                                <option value="false" th:selected="${favorite == false}">Bình thường</option>
                             </select>
                         </div>
 
@@ -123,8 +145,14 @@
                                                 </svg>
                                             </div>
                                             <div>
-                                                <a class="t" th:href="@{/plans/{id}(id=${plan.id})}"
-                                                    th:text="${plan.title}">Tiêu đề</a>
+                                                <div style="display: flex; align-items: center; gap: 6px;">
+                                                    <a class="t" th:href="@{/plans/{id}(id=${plan.id})}"
+                                                        th:text="${plan.title}">Tiêu đề</a>
+                                                    <span th:if="${plan.favorite}" class="badge"
+                                                        style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 999px;"
+                                                        title="Giáo án yêu thích — Được bảo vệ tuyệt đối khi BGH dọn dẹp học kỳ">⭐
+                                                        Yêu thích (Bảo vệ)</span>
+                                                </div>
                                                 <div th:if="${plan.isOrphan()}">
                                                     <span class="ad-badge orphan"
                                                         th:text="${plan.displayOwnerName}">Giáo viên đã bị xoá</span>
@@ -178,20 +206,98 @@
                                 th:text="${plansPage.totalElements}">0</b> giáo án</span>
                         <nav class="ad-pager" th:if="${plansPage.totalPages > 1}" aria-label="Phân trang">
                             <a th:if="${!plansPage.first}" class="ad-pg"
-                                th:href="@{/admin/plans(search=${search},departmentId=${departmentId},schoolYear=${schoolYear},semester=${semester},page=${plansPage.number - 1})}">‹
+                                th:href="@{/admin/plans(search=${search},departmentId=${departmentId},schoolYear=${schoolYear},semester=${semester},favorite=${favorite},page=${plansPage.number - 1})}">‹
                                 Trước</a>
                             <span th:if="${plansPage.first}" class="ad-pg off">‹ Trước</span>
                             <span class="cur"
                                 th:text="'Trang ' + ${plansPage.number + 1} + ' / ' + ${plansPage.totalPages}">Trang 1 /
                                 1</span>
                             <a th:if="${!plansPage.last}" class="ad-pg"
-                                th:href="@{/admin/plans(search=${search},departmentId=${departmentId},schoolYear=${schoolYear},semester=${semester},page=${plansPage.number + 1})}">Sau
+                                th:href="@{/admin/plans(search=${search},departmentId=${departmentId},schoolYear=${schoolYear},semester=${semester},favorite=${favorite},page=${plansPage.number + 1})}">Sau
                                 ›</a>
                             <span th:if="${plansPage.last}" class="ad-pg off">Sau ›</span>
                         </nav>
                     </div>
                 </th:block>
             </section>
+
+            <!-- Modal Dọn dẹp giáo án sau học kỳ -->
+            <div id="cleanupModal" class="modal-overlay" style="display: none;">
+                <div class="modal-card"
+                    style="max-width: 520px; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3
+                            style="font-size: 18px; font-weight: 700; color: var(--dark); margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #b45309;">🧹</span> Dọn dẹp giáo án sau học kỳ
+                        </h3>
+                        <button type="button"
+                            onclick="document.getElementById('cleanupModal').classList.remove('active')"
+                            style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6b7280;">&times;</button>
+                    </div>
+
+                    <div
+                        style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; line-height: 1.5; color: #1e40af;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Quy tắc bảo vệ dữ liệu tự động:</div>
+                        <div>✓ <strong>Giáo án YÊU THÍCH (⭐)</strong>: Được <strong>BẢO VỆ TUYỆT ĐỐI</strong>, hệ thống
+                            sẽ KHÔNG XOÁ.</div>
+                        <div>✓ <strong>Giáo án đã có nhận xét BGH</strong>: Được GIỮ LẠI theo quy định lưu trữ.</div>
+                        <div>✓ Chỉ xoá các giáo án thông thường chưa có nhận xét của học kỳ được chọn.</div>
+                    </div>
+
+                    <form th:action="@{/admin/plans/cleanup-semester}" method="post"
+                        onsubmit="return confirm('Bạn có chắc chắn muốn thực hiện dọn dẹp cho học kỳ đã chọn? Các giáo án thông thường sẽ bị xoá vĩnh viễn. Giáo án YÊU THÍCH ⭐ và giáo án có nhận xét BGH sẽ được bảo vệ tuyệt đối.')">
+                        <div style="margin-bottom: 14px;">
+                            <label
+                                style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--dark);"
+                                for="cleanYear">Năm học</label>
+                            <input type="text" id="cleanYear" name="schoolYear"
+                                th:value="${schoolYear != null ? schoolYear : '2025-2026'}" class="form-control"
+                                required
+                                style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;">
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label
+                                style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--dark);"
+                                for="cleanSem">Học kỳ</label>
+                            <select id="cleanSem" name="semester" class="form-select" required
+                                style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;">
+                                <option value="1">Học kỳ 1</option>
+                                <option value="2">Học kỳ 2</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" class="btn btn-outline btn-sm"
+                                onclick="document.getElementById('cleanupModal').classList.remove('active')">Huỷ</button>
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                style="display: inline-flex; align-items: center; gap: 6px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                </svg>
+                                <span>Tiến hành dọn dẹp</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <style>
+                #cleanupModal.active {
+                    display: flex !important;
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0, 0, 0, 0.5);
+                    z-index: 1050;
+                    align-items: center;
+                    justify-content: center;
+                }
+            </style>
         </div>
     </div>
 </body>
