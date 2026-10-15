@@ -51,6 +51,15 @@ public class LessonPlan {
     @Column(name = "period_no")
     private Integer periodNo;
 
+    @Column(name = "start_period")
+    private Integer startPeriod;
+
+    @Column(name = "end_period")
+    private Integer endPeriod;
+
+    @Column(name = "period_range", length = 50)
+    private String periodRange;
+
     @Column(length = 2000)
     private String description;
 
@@ -110,6 +119,51 @@ public class LessonPlan {
 
     public Integer getPeriodNo() { return periodNo; }
     public void setPeriodNo(Integer periodNo) { this.periodNo = periodNo; }
+
+    public Integer getStartPeriod() { return startPeriod; }
+    public void setStartPeriod(Integer startPeriod) { this.startPeriod = startPeriod; }
+
+    public Integer getEndPeriod() { return endPeriod; }
+    public void setEndPeriod(Integer endPeriod) { this.endPeriod = endPeriod; }
+
+    public String getPeriodRange() { return periodRange; }
+    public void setPeriodRange(String periodRange) { this.periodRange = periodRange; }
+
+    public String getDisplayPeriodText() {
+        if (periodRange != null && !periodRange.isBlank()) {
+            if (startPeriod != null && endPeriod != null && !startPeriod.equals(endPeriod)) {
+                int count = Math.max(1, endPeriod - startPeriod + 1);
+                return "Tiết " + periodRange + " (" + count + " tiết)";
+            } else if (startPeriod != null) {
+                return "Tiết " + startPeriod + " (1 tiết)";
+            }
+            return "Tiết " + periodRange;
+        }
+        if (startPeriod != null && endPeriod != null) {
+            if (startPeriod.equals(endPeriod)) {
+                return "Tiết " + startPeriod + " (1 tiết)";
+            }
+            int count = Math.max(1, endPeriod - startPeriod + 1);
+            return "Tiết " + startPeriod + " - " + endPeriod + " (" + count + " tiết)";
+        }
+        if (startPeriod != null) {
+            return "Tiết " + startPeriod + " (1 tiết)";
+        }
+        if (periodNo != null) {
+            return "Tiết " + periodNo + " (1 tiết)";
+        }
+        return null;
+    }
+
+    public Integer getTotalPeriods() {
+        if (startPeriod != null && endPeriod != null) {
+            return Math.max(1, endPeriod - startPeriod + 1);
+        }
+        if (startPeriod != null) {
+            return 1;
+        }
+        return null;
+    }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

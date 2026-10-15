@@ -616,6 +616,13 @@ html, body {
   min-width: 0;
 }
 
+.form-grid + .form-grid,
+.form-grid + .form-grid-3,
+.form-grid-3 + .form-grid,
+.form-grid-3 + .form-grid-3 {
+  margin-top: 20px;
+}
+
 /* ================= BUTTONS ================= */
 .btn {
   display: inline-flex;
@@ -699,10 +706,10 @@ html, body {
 
 .form-label {
   display: block;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--dark);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .form-control, .form-select {

@@ -627,7 +627,7 @@
         NVL.setupRowClicks(rows);
 
         var form = NVL.$('filterForm');
-        var fSearch = NVL.$('fSearch'), fDept = NVL.$('fDept'), fYear = NVL.$('fYear'), fSem = NVL.$('fSem');
+        var fSearch = NVL.$('fSearch'), fDept = NVL.$('fDept'), fYear = NVL.$('fYear'), fSem = NVL.$('fSem'), fFav = NVL.$('fFav');
 
         function submitForm() {
             root.classList.add('is-loading');
@@ -640,8 +640,12 @@
         var items = [];
         if (fSearch && fSearch.value.trim()) items.push({ el: fSearch, text: 'Từ khoá: ' + fSearch.value.trim() });
         if (fDept && fDept.value) items.push({ el: fDept, text: fDept.options[fDept.selectedIndex].text });
-        if (fYear && fYear.value.trim()) items.push({ el: fYear, text: 'Năm học ' + fYear.value.trim() });
+        if (fYear && fYear.value && fYear.value.trim()) {
+            var yText = (fYear.tagName === 'SELECT') ? ('Năm học ' + fYear.options[fYear.selectedIndex].text) : ('Năm học ' + fYear.value.trim());
+            items.push({ el: fYear, text: yText });
+        }
         if (fSem && fSem.value) items.push({ el: fSem, text: fSem.options[fSem.selectedIndex].text });
+        if (fFav && fFav.value) items.push({ el: fFav, text: fFav.options[fFav.selectedIndex].text });
 
         if (host && items.length) {
             items.forEach(function (it) {
@@ -663,7 +667,9 @@
         }
 
         if (fDept) fDept.addEventListener('change', submitForm);
+        if (fYear) fYear.addEventListener('change', submitForm);
         if (fSem) fSem.addEventListener('change', submitForm);
+        if (fFav) fFav.addEventListener('change', submitForm);
         if (form) {
             form.addEventListener('submit', function () {
                 root.classList.add('is-loading');
@@ -894,11 +900,83 @@
         });
     };
 
+    /**
+     * Hỗ trợ tự động tính toán và hiển thị số tiết học (PPCT)
+     * Khoảng tiết: Từ tiết ... Đến tiết ...
+     */
+    NVL.setupPeriodHelper = function (startId, endId, boxId, textId) {
+        var startEl = NVL.$(startId);
+        var endEl = NVL.$(endId);
+        var boxEl = NVL.$(boxId);
+        var textEl = NVL.$(textId);
+        if (!startEl || !endEl || !boxEl || !textEl) return;
+
+        function update() {
+            var sVal = (startEl.value || '').trim();
+            var eVal = (endEl.value || '').trim();
+
+            if (!sVal && !eVal) {
+                boxEl.style.display = 'none';
+                endEl.setCustomValidity('');
+                return;
+            }
+
+            var s = parseInt(sVal, 10);
+            var e = parseInt(eVal, 10);
+
+            boxEl.style.display = 'flex';
+
+            if (!isNaN(s) && isNaN(e)) {
+                // Giáo án 1 tiết
+                boxEl.style.background = '#f0fdf4';
+                boxEl.style.borderColor = '#bbf7d0';
+                boxEl.style.color = '#15803d';
+                textEl.innerHTML = '<strong>Giáo án 1 tiết:</strong> Tiết ' + s + ' (1 tiết)';
+                endEl.setCustomValidity('');
+            } else if (!isNaN(s) && !isNaN(e)) {
+                if (e < s) {
+                    boxEl.style.background = '#fef2f2';
+                    boxEl.style.borderColor = '#fecaca';
+                    boxEl.style.color = '#b91c1c';
+                    textEl.innerHTML = '<strong>Lỗi:</strong> Đến tiết (' + e + ') không được nhỏ hơn Từ tiết (' + s + ').';
+                    endEl.setCustomValidity('Đến tiết phải lớn hơn hoặc bằng Từ tiết.');
+                } else if (e === s) {
+                    boxEl.style.background = '#f0fdf4';
+                    boxEl.style.borderColor = '#bbf7d0';
+                    boxEl.style.color = '#15803d';
+                    textEl.innerHTML = '<strong>Giáo án 1 tiết:</strong> Tiết ' + s + ' (1 tiết)';
+                    endEl.setCustomValidity('');
+                } else {
+                    var count = e - s + 1;
+                    boxEl.style.background = '#eff6ff';
+                    boxEl.style.borderColor = '#bfdbfe';
+                    boxEl.style.color = '#1e40af';
+                    textEl.innerHTML = '<strong>Giáo án ' + count + ' tiết:</strong> Tiết ' + s + ' – ' + e + ' (' + count + ' tiết)';
+                    endEl.setCustomValidity('');
+                }
+            } else if (isNaN(s) && !isNaN(e)) {
+                boxEl.style.background = '#fffbeb';
+                boxEl.style.borderColor = '#fde68a';
+                boxEl.style.color = '#b45309';
+                textEl.innerHTML = 'Vui lòng nhập <strong>Từ tiết</strong> trước khi nhập Đến tiết.';
+                endEl.setCustomValidity('');
+            }
+        }
+
+        startEl.addEventListener('input', update);
+        endEl.addEventListener('input', update);
+        startEl.addEventListener('change', update);
+        endEl.addEventListener('change', update);
+        update();
+    };
+
     /* ==========================================================================
        AUTO INITIALIZATION
        ========================================================================== */
     NVL.autoInit = function () {
         NVL.setupPageTransitions();
+        NVL.setupPeriodHelper('startPeriod', 'endPeriod', 'periodHelperBox', 'periodHelperText');
+        NVL.setupPeriodHelper('startPeriod', 'endPeriod', 'periodHelperBoxEdit', 'periodHelperTextEdit');
         if (NVL.$('uplRoot')) NVL.initPlanUpload();
         if (NVL.$('plansRoot')) NVL.initPlanList();
         if (NVL.$('admRoot')) NVL.initAdminPlans();

@@ -2,6 +2,8 @@ package com.school.lessonplan.lessonplan.dto;
 
 import com.school.lessonplan.common.validation.FormatGroup;
 import jakarta.validation.GroupSequence;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -28,7 +30,17 @@ public class PlanCreateForm {
     @NotNull
     private Integer semester;
 
+    @Min(value = 1, message = "Tuần học từ 1 trở lên.")
+    @Max(value = 35, message = "Tuần học tối đa là 35.")
     private Integer weekNo;
+
+    @Min(value = 1, message = "Từ tiết phải từ 1 trở lên.")
+    @Max(value = 200, message = "Tiết học không hợp lệ.")
+    private Integer startPeriod;
+
+    @Min(value = 1, message = "Đến tiết phải từ 1 trở lên.")
+    @Max(value = 200, message = "Tiết học không hợp lệ.")
+    private Integer endPeriod;
 
     @Size(max = 1000, groups = FormatGroup.class)
     private String description;
@@ -81,6 +93,22 @@ public class PlanCreateForm {
 
     public void setWeekNo(Integer weekNo) {
         this.weekNo = weekNo;
+    }
+
+    public Integer getStartPeriod() {
+        return startPeriod;
+    }
+
+    public void setStartPeriod(Integer startPeriod) {
+        this.startPeriod = startPeriod;
+    }
+
+    public Integer getEndPeriod() {
+        return endPeriod;
+    }
+
+    public void setEndPeriod(Integer endPeriod) {
+        this.endPeriod = endPeriod;
     }
 
     public String getDescription() {

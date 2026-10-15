@@ -14,7 +14,9 @@ import com.school.lessonplan.security.CurrentUser;
 import com.school.lessonplan.user.User;
 import com.school.lessonplan.user.UserRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +61,15 @@ public class ShareService {
     }
 
     public Page<LessonPlanShare> getSharedWithMe(CurrentUser user, Pageable pageable) {
+        if (pageable != null && pageable.getSort().isSorted()) {
+            boolean hasCreatedAt = pageable.getSort().stream().anyMatch(o -> "createdAt".equals(o.getProperty()));
+            if (hasCreatedAt) {
+                List<Sort.Order> safeOrders = pageable.getSort().stream()
+                    .map(o -> "createdAt".equals(o.getProperty()) ? new Sort.Order(o.getDirection(), "grantedAt") : o)
+                    .toList();
+                pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(safeOrders));
+            }
+        }
         return shareRepository.findSharedWithUser(user.getId(), pageable);
     }
 

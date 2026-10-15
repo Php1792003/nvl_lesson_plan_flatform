@@ -46,13 +46,27 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
     /**
      * Tất cả giáo án (cho BGH) - có filter
      */
-    @Query("""
+    @Query(value = """
         SELECT lp FROM LessonPlan lp
         LEFT JOIN FETCH lp.department
         LEFT JOIN FETCH lp.owner
-        WHERE (:search IS NULL OR lp.title LIKE CONCAT('%', :search, '%'))
+        WHERE (:search IS NULL OR :search = '' 
+               OR lp.title LIKE CONCAT('%', :search, '%') 
+               OR lp.department.name LIKE CONCAT('%', :search, '%') 
+               OR lp.ownerSnapshotName LIKE CONCAT('%', :search, '%'))
           AND (:departmentId IS NULL OR lp.department.id = :departmentId)
-          AND (:schoolYear IS NULL OR lp.schoolYear = :schoolYear)
+          AND (:schoolYear IS NULL OR :schoolYear = '' OR lp.schoolYear = :schoolYear)
+          AND (:semester IS NULL OR lp.semester = :semester)
+          AND (:favorite IS NULL OR lp.favorite = :favorite)
+    """,
+    countQuery = """
+        SELECT COUNT(lp) FROM LessonPlan lp
+        WHERE (:search IS NULL OR :search = '' 
+               OR lp.title LIKE CONCAT('%', :search, '%') 
+               OR lp.department.name LIKE CONCAT('%', :search, '%') 
+               OR lp.ownerSnapshotName LIKE CONCAT('%', :search, '%'))
+          AND (:departmentId IS NULL OR lp.department.id = :departmentId)
+          AND (:schoolYear IS NULL OR :schoolYear = '' OR lp.schoolYear = :schoolYear)
           AND (:semester IS NULL OR lp.semester = :semester)
           AND (:favorite IS NULL OR lp.favorite = :favorite)
     """)
@@ -64,6 +78,9 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
         @Param("favorite") Boolean favorite,
         Pageable pageable
     );
+
+    @Query("SELECT DISTINCT lp.schoolYear FROM LessonPlan lp WHERE lp.schoolYear IS NOT NULL AND lp.schoolYear <> '' ORDER BY lp.schoolYear DESC")
+    List<String> findDistinctSchoolYears();
 
     /**
      * Danh sách giáo án yêu thích mà user có quyền truy cập
@@ -87,6 +104,11 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
           AND lp.favorite = true
     """)
     Page<LessonPlan> findFavoriteAccessiblePlans(@Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * Danh sách tất cả giáo án yêu thích (dành cho Admin / BGH)
+     */
+    Page<LessonPlan> findByFavoriteTrue(Pageable pageable);
 
     /**
      * Tìm tất cả giáo án theo năm học và học kỳ (dùng cho BGH dọn dẹp sau học kỳ)

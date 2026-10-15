@@ -43,18 +43,22 @@ public class AdminLessonPlanController {
             @RequestParam(name = "size", defaultValue = "20") int size,
             Model model) {
 
+        String cleanSearch = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
+        String cleanSchoolYear = (schoolYear != null && !schoolYear.trim().isEmpty()) ? schoolYear.trim() : null;
+
         Page<LessonPlan> plansPage = lessonPlanService.searchAllForAdmin(
-            search, departmentId, schoolYear, semester, favorite,
+            cleanSearch, departmentId, cleanSchoolYear, semester, favorite,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
 
         model.addAttribute("plansPage", plansPage);
-        model.addAttribute("search", search);
+        model.addAttribute("search", cleanSearch);
         model.addAttribute("departmentId", departmentId);
-        model.addAttribute("schoolYear", schoolYear);
+        model.addAttribute("schoolYear", cleanSchoolYear);
         model.addAttribute("semester", semester);
         model.addAttribute("favorite", favorite);
         model.addAttribute("departments", departmentRepository.findAll());
+        model.addAttribute("schoolYears", lessonPlanService.getDistinctSchoolYears());
 
         return "admin/plans/admin-plan-catalog";
     }

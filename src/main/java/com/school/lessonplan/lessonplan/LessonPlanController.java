@@ -75,7 +75,8 @@ public class LessonPlanController {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         if ("shared".equals(tab)) {
-            Page<LessonPlanShare> sharedPage = shareService.getSharedWithMe(currentUser, pageRequest);
+            PageRequest sharePageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "grantedAt"));
+            Page<LessonPlanShare> sharedPage = shareService.getSharedWithMe(currentUser, sharePageRequest);
             model.addAttribute("sharedPage", sharedPage);
         } else if ("favorite".equals(tab)) {
             Page<LessonPlan> favoritePage = lessonPlanService.getFavoriteAccessiblePlans(currentUser, pageRequest);
@@ -105,12 +106,13 @@ public class LessonPlanController {
     public String newPlanForm(Model model) {
         if (!model.containsAttribute("planForm")) {
             PlanCreateForm form = new PlanCreateForm();
-            form.setSchoolYear("2025-2026");
+            form.setSchoolYear("2026-2027");
             form.setSemester(1);
             form.setGrade("6");
             model.addAttribute("planForm", form);
         }
         model.addAttribute("departments", departmentRepository.findAll());
+        model.addAttribute("schoolYears", lessonPlanService.getAvailableSchoolYears());
         return "plans/plan-builder";
     }
 
@@ -145,6 +147,8 @@ public class LessonPlanController {
                     planForm.getSchoolYear(),
                     planForm.getSemester(),
                     planForm.getWeekNo(),
+                    planForm.getStartPeriod(),
+                    planForm.getEndPeriod(),
                     planForm.getDescription(),
                     planForm.getFile()
                 );
@@ -160,6 +164,7 @@ public class LessonPlanController {
         }
 
         model.addAttribute("departments", departmentRepository.findAll());
+        model.addAttribute("schoolYears", lessonPlanService.getAvailableSchoolYears());
         return "plans/plan-builder";
     }
 
@@ -213,12 +218,15 @@ public class LessonPlanController {
             form.setSchoolYear(plan.getSchoolYear());
             form.setSemester(plan.getSemester());
             form.setWeekNo(plan.getWeekNo());
+            form.setStartPeriod(plan.getStartPeriod());
+            form.setEndPeriod(plan.getEndPeriod());
             form.setDescription(plan.getDescription());
             model.addAttribute("planForm", form);
         }
 
         model.addAttribute("plan", plan);
         model.addAttribute("departments", departmentRepository.findAll());
+        model.addAttribute("schoolYears", lessonPlanService.getSchoolYearsForPlan(plan.getSchoolYear()));
         return "plans/plan-editor";
     }
 
@@ -236,7 +244,8 @@ public class LessonPlanController {
                 lessonPlanService.updateMetadata(
                     id, currentUser, planForm.getTitle(), planForm.getDepartmentId(),
                     planForm.getGrade(), planForm.getSchoolYear(), planForm.getSemester(),
-                    planForm.getWeekNo(), planForm.getDescription());
+                    planForm.getWeekNo(), planForm.getStartPeriod(), planForm.getEndPeriod(),
+                    planForm.getDescription());
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin giáo án thành công!");
                 return "redirect:/plans/" + id;
             } catch (FieldValidationException e) {
@@ -249,6 +258,7 @@ public class LessonPlanController {
         LessonPlan plan = lessonPlanService.getPlanById(id, currentUser);
         model.addAttribute("plan", plan);
         model.addAttribute("departments", departmentRepository.findAll());
+        model.addAttribute("schoolYears", lessonPlanService.getSchoolYearsForPlan(plan.getSchoolYear()));
         return "plans/plan-editor";
     }
 
