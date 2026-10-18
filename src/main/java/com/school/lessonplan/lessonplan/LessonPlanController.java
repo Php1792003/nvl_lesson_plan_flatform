@@ -372,10 +372,26 @@ public class LessonPlanController {
         }
 
         String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isBlank() && !referer.contains("/favorite")) {
+        if (referer != null && !referer.isBlank() && !referer.contains("/favorite") && isSafeRedirectUrl(referer, request)) {
             return "redirect:" + referer;
         }
         return "redirect:/plans/" + id;
+    }
+
+    private boolean isSafeRedirectUrl(String url, HttpServletRequest request) {
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        if (url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\")) {
+            return true;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(url);
+            String host = uri.getHost();
+            return host != null && host.equalsIgnoreCase(request.getServerName());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @PostMapping("/{id}/delete")

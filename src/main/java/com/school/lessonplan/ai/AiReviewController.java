@@ -54,7 +54,7 @@ public class AiReviewController {
         }
 
         try {
-            AiReviewResponse response = aiReviewService.reviewPlan(planId, versionId);
+            AiReviewResponse response = aiReviewService.reviewPlan(planId, versionId, currentUser);
             return ResponseEntity.ok(response);
 
         } catch (ResourceNotFoundException e) {

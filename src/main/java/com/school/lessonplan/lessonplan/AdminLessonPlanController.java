@@ -163,9 +163,10 @@ public class AdminLessonPlanController {
     @ResponseBody
     public org.springframework.http.ResponseEntity<com.school.lessonplan.ai.dto.AiReviewResponse> getAiReview(
             @PathVariable("id") Long id,
-            @RequestParam(name = "versionId", required = false) Long versionId) {
+            @RequestParam(name = "versionId", required = false) Long versionId,
+            @AuthenticationPrincipal CurrentUser currentUser) {
         try {
-            com.school.lessonplan.ai.dto.AiReviewResponse review = aiReviewService.reviewPlan(id, versionId);
+            com.school.lessonplan.ai.dto.AiReviewResponse review = aiReviewService.reviewPlan(id, versionId, currentUser);
             return org.springframework.http.ResponseEntity.ok(review);
         } catch (Exception e) {
             return org.springframework.http.ResponseEntity.badRequest().body(

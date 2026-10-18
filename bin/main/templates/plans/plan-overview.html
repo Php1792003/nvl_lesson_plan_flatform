@@ -832,7 +832,12 @@
                         })
                         .catch(function (err) {
                             loader.style.display = 'none';
-                            docxPaper.innerHTML = '<div style="color: var(--danger); padding: 20px;">Lỗi khi tải bản xem trước Word: ' + err.message + '</div>';
+                            docxPaper.innerHTML = '';
+                            var errBox = document.createElement('div');
+                            errBox.style.color = 'var(--danger)';
+                            errBox.style.padding = '20px';
+                            errBox.textContent = 'Lỗi khi tải bản xem trước Word: ' + (err && err.message ? err.message : 'Không xác định');
+                            docxPaper.appendChild(errBox);
                             docxWrapper.style.display = 'flex';
                         });
                 } else {
