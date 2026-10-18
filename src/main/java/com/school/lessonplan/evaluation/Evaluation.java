@@ -64,6 +64,7 @@ public class Evaluation {
     public void setContent(String content) { this.content = content; }
 
     public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
     public Instant getEditedAt() { return editedAt; }
     public void setEditedAt(Instant editedAt) { this.editedAt = editedAt; }

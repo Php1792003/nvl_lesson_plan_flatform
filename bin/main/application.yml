@@ -133,6 +133,21 @@ app:
     email: ${INITIAL_ADMIN_EMAIL:admin@school.edu.vn}
     password: ${INITIAL_ADMIN_PASSWORD:Admin@123456}
 
+ai:
+  review:
+    min-chars: 100
+    max-chars: 30000
+    source-label: "Bộ thẩm định Chuẩn Sư phạm"
+    legal-basis-path: "classpath:legal-basis.md"
+    timeout-seconds: 60
+    cache-expire-minutes: 30
+    rate-limit-per-minute: 10
+    gemini:
+      api-key: ${GEMINI_API_KEY:AQ.Ab8RN6JL-bkqmhHDrD_SZLyKJXwAjlZWSPUZ7TnoJnHdMLPLDQ}
+      model: ${GEMINI_MODEL:gemini-3.8-flash}
+      api-url: https://generativelanguage.googleapis.com/v1beta/models
+
+
 logging:
   level:
     root: INFO

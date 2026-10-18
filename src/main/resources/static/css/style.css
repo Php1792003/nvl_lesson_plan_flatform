@@ -2445,3 +2445,163 @@ html, body {
   gap: 12px;
 }
 
+/* Checklist Item Styles */
+.ai-checklist-item {
+  list-style: none !important;
+  margin-bottom: 10px !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.ai-checklist-item.loi_nghiem_trong {
+  border-left: 4px solid #ef4444 !important;
+}
+.ai-checklist-item.can_bo_sung {
+  border-left: 4px solid #f97316 !important;
+}
+.ai-checklist-item.goi_y {
+  border-left: 4px solid #3b82f6 !important;
+}
+.ai-level-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.ai-level-badge.level-LOI_NGHIEM_TRONG {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.ai-level-badge.level-CAN_BO_SUNG {
+  background: #ffedd5;
+  color: #c2410c;
+}
+.ai-level-badge.level-GOI_Y {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.ai-checklist-issue {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 4px;
+  font-size: 0.83rem;
+}
+.ai-checklist-fix {
+  font-size: 0.8rem;
+  color: #475569;
+  background: #f8fafc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 2px solid #cbd5e1;
+}
+
+/* ================= BGH EVALUATION MESSAGE & HOVER ACTIONS ================= */
+.eval-card-item {
+  position: relative;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eval-message-row {
+  position: relative;
+  margin-top: 4px;
+}
+
+.eval-message-bubble {
+  position: relative;
+  font-size: 14px;
+  line-height: 1.6;
+  background: #fdf2f8;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm, 8px);
+  border-left: 4px solid var(--purple, #8b5cf6);
+  color: #1e293b;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.eval-message-row:hover .eval-message-bubble,
+.eval-card-item:hover .eval-message-bubble {
+  background: #fbf0f7;
+  box-shadow: 0 1px 3px rgba(139, 92, 246, 0.08);
+}
+
+/* Floating Hover Action Toolbar */
+.eval-hover-actions {
+  position: absolute;
+  top: -12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-radius: 20px;
+  padding: 2px 5px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(3px);
+  transition: opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.18s;
+  z-index: 10;
+}
+
+/* Hover on row makes toolbar appear */
+.eval-message-row:hover .eval-hover-actions,
+.eval-card-item:hover .eval-hover-actions,
+.eval-hover-actions:focus-within {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Action buttons inside toolbar */
+.eval-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.eval-action-btn.edit {
+  color: #475569;
+}
+.eval-action-btn.edit:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+}
+
+.eval-action-btn.recall {
+  color: #64748b;
+}
+.eval-action-btn.recall:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Inline Edit Box */
+.eval-edit-box {
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm, 8px);
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+

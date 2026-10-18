@@ -160,6 +160,36 @@ public class EvaluationService {
     }
 
     /**
+     * BGH thu hồi nhận xét của chính mình (hoặc Admin thu hồi)
+     */
+    @Transactional
+    public void deleteEvaluation(Long evaluationId, CurrentUser reviewerUser) {
+        Evaluation eval = evaluationRepository.findById(evaluationId)
+            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhận xét."));
+
+        boolean isAdmin = reviewerUser != null && reviewerUser.getAuthorities() != null &&
+            reviewerUser.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ADMIN".equals(a.getAuthority()));
+
+        // Chỉ người viết nhận xét hoặc admin mới thu hồi được
+        if (!isAdmin && eval.getReviewer() != null && reviewerUser != null && !eval.getReviewer().getId().equals(reviewerUser.getId())) {
+            throw new BusinessException("Bạn chỉ có thể thu hồi nhận xét của chính mình.");
+        }
+
+        LessonPlan plan = eval.getPlan();
+        String planTitle = plan != null ? plan.getTitle() : ("ID " + evaluationId);
+
+        // Xoá các replies liên quan trước nếu có
+        if (eval.getReplies() != null && !eval.getReplies().isEmpty()) {
+            replyRepository.deleteAll(eval.getReplies());
+        }
+
+        evaluationRepository.delete(eval);
+
+        auditService.log("EVALUATION_DELETE", "EVALUATION", evaluationId,
+            "Thu hồi nhận xét trên giáo án: " + planTitle);
+    }
+
+    /**
      * Chủ giáo án trả lời nhận xét của BGH
      */
     @Transactional

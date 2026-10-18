@@ -42,8 +42,11 @@ dependencies {
     // Rate limiting
     implementation 'com.bucket4j:bucket4j-core:8.10.1'
 
-    // File type detection
+    // File type detection and text extraction
     implementation 'org.apache.tika:tika-core:2.9.2'
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
+    implementation 'org.apache.poi:poi:5.3.0'
+    implementation 'org.apache.poi:poi-ooxml:5.3.0'
 
     // Lombok (optional but reduces boilerplate)
     compileOnly 'org.projectlombok:lombok'
