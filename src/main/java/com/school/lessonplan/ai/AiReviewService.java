@@ -14,6 +14,7 @@ import com.school.lessonplan.lessonplan.LessonPlanVersion;
 import com.school.lessonplan.lessonplan.LessonPlanVersionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,7 @@ public class AiReviewService {
     // Concurrency control: 1 running review per planId
     private final Map<Long, Boolean> activeReviews = new ConcurrentHashMap<>();
 
+    @Autowired
     public AiReviewService(LessonPlanRepository lessonPlanRepository,
                            LessonPlanVersionRepository versionRepository,
                            EvaluationRepository evaluationRepository,
