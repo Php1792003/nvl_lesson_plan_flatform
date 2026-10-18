@@ -97,7 +97,7 @@ public class LessonPlanService {
     public Page<LessonPlan> getFavoriteAccessiblePlans(CurrentUser user, Pageable pageable) {
         boolean isAdmin = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(a -> a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.equals("PLAN_FAVORITE_VIEW") || a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
 
         if (isAdmin) {
             return lessonPlanRepository.findByFavoriteTrue(pageable);

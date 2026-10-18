@@ -3,142 +3,353 @@
     th:replace="~{layout/layout-base :: layout('Chi tiết Giáo viên: ' + ${user.fullName}, ~{::contentBlock})}">
 
 <body>
-    <div th:fragment="contentBlock">
+    <div th:fragment="contentBlock">        <div class="user-detail-container">
 
-        <div style="max-width: 900px; margin: 0 auto;">
+            <!-- Breadcrumb Navigation -->
+            <nav class="user-breadcrumb" aria-label="Breadcrumb">
+                <a th:href="@{/admin/users}" class="user-breadcrumb-link">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Quản lý giáo viên</span>
+                </a>
+                <span class="user-breadcrumb-sep">/</span>
+                <span class="user-breadcrumb-current" th:text="${user.fullName}">Nguyễn Văn An</span>
+            </nav>
 
-            <!-- Status / Profile Card -->
-            <div class="card profile-card">
-                <div class="profile-card__main">
-                    <div class="profile-card__avatar" th:text="${#strings.substring(user.lastName, 0, 1)}">N</div>
-                    <div class="profile-card__info">
-                        <h2 class="profile-card__name" th:text="${user.fullName}">Nguyễn Văn An</h2>
-                        <p class="profile-card__email" th:text="${user.email}">an.nguyen@school.edu.vn</p>
-                    </div>
+            <!-- Page Header with Title and Quick Actions -->
+            <div class="user-detail-header">
+                <div class="user-detail-title-group">
+                    <h1>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary, #2563eb);">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span th:text="${'Chi tiết Giáo viên: ' + user.fullName}">Chi tiết Giáo viên</span>
+                    </h1>
+                    <p>Xem thông tin chi tiết, phân công chuyên môn, điểm trường và quản lý trạng thái tài khoản</p>
                 </div>
 
-                <div class="profile-card__actions">
-                    <span th:if="${user.status.name() == 'ACTIVE'}" class="badge badge-success">Đang hoạt động</span>
-                    <span th:if="${user.status.name() == 'PENDING_APPROVAL'}" class="badge badge-warning">Chờ BGH duyệt</span>
-                    <span th:if="${user.status.name() == 'PENDING_EMAIL'}" class="badge badge-secondary">Chưa xác thực email</span>
-                    <span th:if="${user.status.name() == 'LOCKED'}" class="badge badge-danger">Tài khoản bị khoá</span>
-
-                    <!-- Action buttons based on status -->
+                <div class="user-detail-actions">
+                    <!-- Duyệt tài khoản (nếu chờ duyệt) -->
                     <form th:if="${user.status.name() == 'PENDING_APPROVAL'}"
-                        th:action="@{/admin/users/{id}/approve(id=${user.id})}" method="post">
-                        <button type="submit" class="btn btn-success btn-sm">Duyệt</button>
+                          th:action="@{/admin/users/{id}/approve(id=${user.id})}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Duyệt tài khoản</span>
+                        </button>
                     </form>
 
-                    <button th:if="${user.status.name() == 'ACTIVE'}" class="btn btn-danger btn-sm"
-                        data-modal-target="lockModal">Khoá</button>
+                    <!-- Khoá tài khoản (nếu đang hoạt động) -->
+                    <button th:if="${user.status.name() == 'ACTIVE'}" class="btn btn-outline-warning btn-sm"
+                            data-modal-target="lockModal">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <span>Khoá tài khoản</span>
+                    </button>
 
+                    <!-- Mở khoá tài khoản (nếu bị khoá) -->
                     <form th:if="${user.status.name() == 'LOCKED'}"
-                        th:action="@{/admin/users/{id}/unlock(id=${user.id})}" method="post">
-                        <button type="submit" class="btn btn-success btn-sm">Mở khoá</button>
+                          th:action="@{/admin/users/{id}/unlock(id=${user.id})}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                            <span>Mở khoá tài khoản</span>
+                        </button>
                     </form>
 
-                    <button class="btn btn-outline btn-sm" style="color: var(--danger); border-color: #fca5a5;"
-                        data-modal-target="deleteModal">Xoá</button>
+                    <!-- Xoá tài khoản -->
+                    <button class="btn btn-outline-danger btn-sm" data-modal-target="deleteModal">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <span>Xoá</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Lock details if locked -->
-            <div th:if="${user.status.name() == 'LOCKED'}" class="alert alert-danger" role="alert">
-                <div>
-                    <strong>Tài khoản đang bị khoá:</strong><br>
-                    <span>Lý do: <span th:text="${user.lockReason}">Vi phạm quy định</span></span><br>
-                    <span style="font-size: 12px;">Thời điểm khoá: <span
-                            th:text="${#temporals.format(user.lockedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</span></span>
+            <!-- Banner cảnh báo nếu tài khoản đang bị khoá -->
+            <div th:if="${user.status.name() == 'LOCKED'}" class="user-locked-banner" role="alert">
+                <div class="user-locked-banner-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <div class="user-locked-banner-content">
+                    <div class="user-locked-banner-title">Tài khoản này hiện đang bị khoá</div>
+                    <div class="user-locked-banner-desc">
+                        <span><strong>Lý do khoá:</strong> <span th:text="${user.lockReason}">Vi phạm quy chế chuyên môn</span></span>
+                        <span style="margin: 0 8px; opacity: 0.5;">•</span>
+                        <span><strong>Thời điểm khoá:</strong> <span th:text="${#temporals.format(user.lockedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</span></span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Edit Profile Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Cập nhật thông tin giảng viên</h3>
-                </div>
+            <!-- Main Layout: 2 Columns Grid -->
+            <div class="user-detail-layout">
 
-                <form th:action="@{/admin/users/{id}(id=${user.id})}" th:object="${userForm}" method="post" data-validate novalidate>
-                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
-
-                    <div class="form-grid">
-                        <div class="form-group" th:classappend="${#fields.hasErrors('lastName')} ? 'has-error'">
-                            <label class="form-label" for="lastName">Họ <span class="req" aria-hidden="true">*</span></label>
-                            <input type="text" id="lastName" th:field="*{lastName}" class="form-control"
-                                   maxlength="50" required autocomplete="family-name"
-                                   data-pattern="^[\p{L}][\p{L} .'’-]*$"
-                                   data-msg-required="Vui lòng nhập họ."
-                                   data-msg-pattern="Họ chỉ gồm chữ cái và khoảng trắng."
-                                   th:attr="aria-invalid=${#fields.hasErrors('lastName')},aria-describedby='lastName-error'">
-                            <p class="field-error" id="lastName-error" role="alert"
-                               th:if="${#fields.hasErrors('lastName')}" th:text="${#fields.errors('lastName')[0]}"></p>
+                <!-- Left Column: Profile Summary & Stats -->
+                <aside class="user-profile-summary-card">
+                    <div class="user-profile-summary-header">
+                        <div class="user-profile-avatar-wrapper">
+                            <div class="user-profile-avatar" th:text="${#strings.substring(user.lastName, 0, 1)}">N</div>
+                            <span class="user-profile-status-dot"
+                                  th:classappend="${user.status.name() == 'ACTIVE'} ? 'active' : (${user.status.name() == 'LOCKED'} ? 'locked' : 'pending')"
+                                  th:title="${user.status.name() == 'ACTIVE' ? 'Đang hoạt động' : (user.status.name() == 'LOCKED' ? 'Bị khoá' : 'Chờ xử lý')}"></span>
                         </div>
-                        <div class="form-group" th:classappend="${#fields.hasErrors('givenName')} ? 'has-error'">
-                            <label class="form-label" for="givenName">Tên đệm & Tên <span class="req" aria-hidden="true">*</span></label>
-                            <input type="text" id="givenName" th:field="*{givenName}" class="form-control"
-                                   maxlength="80" required autocomplete="given-name"
-                                   data-pattern="^[\p{L}][\p{L} .'’-]*$"
-                                   data-msg-required="Vui lòng nhập tên đệm và tên."
-                                   data-msg-pattern="Tên đệm và tên chỉ gồm chữ cái và khoảng trắng."
-                                   th:attr="aria-invalid=${#fields.hasErrors('givenName')},aria-describedby='givenName-error'">
-                            <p class="field-error" id="givenName-error" role="alert"
-                               th:if="${#fields.hasErrors('givenName')}" th:text="${#fields.errors('givenName')[0]}"></p>
+                        <h2 class="user-profile-name" th:text="${user.fullName}">Nguyễn Văn An</h2>
+                        <div class="user-profile-email" th:text="${user.email}">an.nguyen@school.edu.vn</div>
+
+                        <span th:if="${user.status.name() == 'ACTIVE'}" class="user-status-pill active">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
+                            <span>Đang hoạt động</span>
+                        </span>
+                        <span th:if="${user.status.name() == 'PENDING_APPROVAL'}" class="user-status-pill pending">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
+                            <span>Chờ BGH duyệt</span>
+                        </span>
+                        <span th:if="${user.status.name() == 'PENDING_EMAIL'}" class="user-status-pill pending">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
+                            <span>Chưa xác thực email</span>
+                        </span>
+                        <span th:if="${user.status.name() == 'LOCKED'}" class="user-status-pill locked">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
+                            <span>Tài khoản bị khoá</span>
+                        </span>
+                    </div>
+
+                    <!-- Profile Key Facts -->
+                    <div class="user-profile-facts">
+                        <div class="user-fact-item">
+                            <span class="user-fact-label">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                                <span>Điểm trường / Cơ sở</span>
+                            </span>
+                            <span class="user-fact-val" th:text="${user.campus != null ? user.campus.name : 'Chưa phân công'}">Điểm trường chính</span>
+                        </div>
+
+                        <div class="user-fact-item">
+                            <span class="user-fact-label">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                <span>Tổ bộ môn</span>
+                            </span>
+                            <span class="user-fact-val" th:text="${user.department != null ? user.department.name : 'Chưa phân công'}">Toán học</span>
+                        </div>
+
+                        <div class="user-fact-item">
+                            <span class="user-fact-label">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                <span>Giáo án đã đăng</span>
+                            </span>
+                            <span class="user-fact-val">
+                                <a th:href="@{/admin/plans(search=${user.fullName})}" title="Xem danh sách giáo án của giáo viên này">
+                                    <strong th:text="${planCount != null ? planCount : 0}">0</strong> giáo án
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </a>
+                            </span>
+                        </div>
+
+                        <div class="user-fact-item">
+                            <span class="user-fact-label">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <span>Ngày tham gia</span>
+                            </span>
+                            <span class="user-fact-val" th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy') : '---'}">01/01/2026</span>
+                        </div>
+
+                        <div class="user-fact-item">
+                            <span class="user-fact-label">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span>Cập nhật gần nhất</span>
+                            </span>
+                            <span class="user-fact-val" th:text="${user.updatedAt != null ? #temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm') : '---'}">01/01/2026 12:00</span>
                         </div>
                     </div>
 
-                    <div class="form-grid">
-                        <div class="form-group" th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
-                            <label class="form-label" for="departmentId">Môn học <span class="req" aria-hidden="true">*</span></label>
-                            <select id="departmentId" th:field="*{departmentId}" class="form-select" required
-                                    data-msg-required="Vui lòng chọn môn học."
-                                    th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby='departmentId-error'">
-                                <option value="">-- Chọn môn học --</option>
-                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
-                                    th:selected="${user.department != null && dept.id == user.department.id}"></option>
-                            </select>
-                            <p class="field-error" id="departmentId-error" role="alert"
-                               th:if="${#fields.hasErrors('departmentId')}" th:text="${#fields.errors('departmentId')[0]}"></p>
-                        </div>
-
-                        <div class="form-group" th:classappend="${#fields.hasErrors('campusId')} ? 'has-error'">
-                            <label class="form-label" for="campusId">Phân hiệu <span class="req" aria-hidden="true">*</span></label>
-                            <select id="campusId" th:field="*{campusId}" class="form-select" required
-                                    data-msg-required="Vui lòng chọn phân hiệu."
-                                    th:attr="aria-invalid=${#fields.hasErrors('campusId')},aria-describedby='campusId-error'">
-                                <option value="">-- Chọn phân hiệu --</option>
-                                <option th:each="c : ${campuses}" th:value="${c.id}" th:text="${c.name}"
-                                    th:selected="${user.campus != null && c.id == user.campus.id}"></option>
-                            </select>
-                            <p class="field-error" id="campusId-error" role="alert"
-                               th:if="${#fields.hasErrors('campusId')}" th:text="${#fields.errors('campusId')[0]}"></p>
+                    <!-- Profile Current Roles -->
+                    <div class="user-profile-roles-widget">
+                        <div class="user-profile-roles-title">Vai trò hiện tại</div>
+                        <div class="user-profile-roles-list">
+                            <th:block th:each="r : ${user.roles}">
+                                <span class="user-role-badge" th:classappend="${r.code == 'ADMIN'} ? 'admin' : 'teacher'">
+                                    <svg th:if="${r.code == 'ADMIN'}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 4v6c0 5.25-3.5 10-7 10S5 17.25 5 12V6l7-4z"></path></svg>
+                                    <svg th:if="${r.code != 'ADMIN'}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                    <span th:text="${r.name}">Giáo viên</span>
+                                </span>
+                            </th:block>
                         </div>
                     </div>
+                </aside>
 
-                    <div class="form-group">
-                        <label class="form-label">Vai trò & Quyền hạn</label>
-                        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px;">
-                            <label th:each="r : ${allRoles}"
-                                style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
-                                <input type="checkbox" name="roleIds" th:value="${r.id}"
-                                    th:checked="${userForm.roleIds != null ? userForm.roleIds.contains(r.id) : user.roles.contains(r)}">
-                                <span th:text="${r.name}">Giáo viên</span>
-                            </label>
+                <!-- Right Column: Edit Profile Form -->
+                <main class="user-form-card">
+                    <form th:action="@{/admin/users/{id}(id=${user.id})}" th:object="${userForm}" method="post" data-validate novalidate>
+                        <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+
+                        <!-- Section 1: Thông tin cá nhân & Tài khoản -->
+                        <div class="user-form-section">
+                            <div class="user-form-section-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>1. Thông tin cá nhân & Tài khoản</span>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group" th:classappend="${#fields.hasErrors('lastName')} ? 'has-error'">
+                                    <label class="form-label" for="lastName">Họ <span class="req" aria-hidden="true">*</span></label>
+                                    <input type="text" id="lastName" th:field="*{lastName}" class="form-control"
+                                           maxlength="50" required autocomplete="family-name"
+                                           data-pattern="^[\p{L}][\p{L} .'’-]*$"
+                                           data-msg-required="Vui lòng nhập họ."
+                                           data-msg-pattern="Họ chỉ gồm chữ cái và khoảng trắng."
+                                           th:attr="aria-invalid=${#fields.hasErrors('lastName')},aria-describedby='lastName-error'">
+                                    <p class="field-error" id="lastName-error" role="alert"
+                                       th:if="${#fields.hasErrors('lastName')}" th:text="${#fields.errors('lastName')[0]}"></p>
+                                </div>
+                                <div class="form-group" th:classappend="${#fields.hasErrors('givenName')} ? 'has-error'">
+                                    <label class="form-label" for="givenName">Tên đệm & Tên <span class="req" aria-hidden="true">*</span></label>
+                                    <input type="text" id="givenName" th:field="*{givenName}" class="form-control"
+                                           maxlength="80" required autocomplete="given-name"
+                                           data-pattern="^[\p{L}][\p{L} .'’-]*$"
+                                           data-msg-required="Vui lòng nhập tên đệm và tên."
+                                           data-msg-pattern="Tên đệm và tên chỉ gồm chữ cái và khoảng trắng."
+                                           th:attr="aria-invalid=${#fields.hasErrors('givenName')},aria-describedby='givenName-error'">
+                                    <p class="field-error" id="givenName-error" role="alert"
+                                       th:if="${#fields.hasErrors('givenName')}" th:text="${#fields.errors('givenName')[0]}"></p>
+                                </div>
+                            </div>
+
+                            <!-- Email Readonly Display -->
+                            <div class="form-group" style="margin-top: 14px;">
+                                <label class="form-label">Email tài khoản</label>
+                                <div class="readonly-email-box">
+                                    <div class="email-text">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #64748b;">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                            <polyline points="22,6 12,13 2,6"></polyline>
+                                        </svg>
+                                        <span th:text="${user.email}">user@school.edu.vn</span>
+                                    </div>
+                                    <span class="email-badge">Tài khoản đăng nhập cố định</span>
+                                </div>
+                                <div class="form-hint">Địa chỉ email là mã định danh duy nhất trên hệ thống và không thể thay đổi tại màn hình này.</div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="form-actions">
-                        <a th:href="@{/admin/users}" class="btn btn-secondary">Quay lại</a>
-                        <button type="submit" class="btn btn-primary">Lưu</button>
-                    </div>
-                </form>
+                        <!-- Section 2: Phân công Chuyên môn & Điểm trường -->
+                        <div class="user-form-section">
+                            <div class="user-form-section-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                <span>2. Phân công Đơn vị & Điểm trường công tác</span>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group" th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
+                                    <label class="form-label" for="departmentId">Tổ bộ môn <span class="req" aria-hidden="true">*</span></label>
+                                    <select id="departmentId" th:field="*{departmentId}" class="form-select" required
+                                            data-msg-required="Vui lòng chọn môn học."
+                                            th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby='departmentId-error'">
+                                        <option value="">-- Chọn môn học --</option>
+                                        <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
+                                                th:selected="${user.department != null && dept.id == user.department.id}"></option>
+                                    </select>
+                                    <p class="field-error" id="departmentId-error" role="alert"
+                                       th:if="${#fields.hasErrors('departmentId')}" th:text="${#fields.errors('departmentId')[0]}"></p>
+                                </div>
+
+                                <div class="form-group" th:classappend="${#fields.hasErrors('campusId')} ? 'has-error'">
+                                    <label class="form-label" for="campusId">Điểm trường / Phân hiệu <span class="req" aria-hidden="true">*</span></label>
+                                    <select id="campusId" th:field="*{campusId}" class="form-select" required
+                                            data-msg-required="Vui lòng chọn điểm trường/phân hiệu."
+                                            th:attr="aria-invalid=${#fields.hasErrors('campusId')},aria-describedby='campusId-error'">
+                                        <option value="">-- Chọn điểm trường --</option>
+                                        <option th:each="c : ${campuses}" th:value="${c.id}" th:text="${c.name}"
+                                                th:selected="${user.campus != null && c.id == user.campus.id}"></option>
+                                    </select>
+                                    <p class="field-error" id="campusId-error" role="alert"
+                                       th:if="${#fields.hasErrors('campusId')}" th:text="${#fields.errors('campusId')[0]}"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Phân quyền & Vai trò hệ thống -->
+                        <div class="user-form-section">
+                            <div class="user-form-section-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                                <span>3. Vai trò & Phân quyền truy cập</span>
+                            </div>
+
+                            <div class="role-cards-grid">
+                                <label th:each="r : ${allRoles}"
+                                       class="role-select-card"
+                                       th:classappend="${userForm.roleIds != null ? (userForm.roleIds.contains(r.id) ? 'is-checked' : '') : (user.roles.contains(r) ? 'is-checked' : '')}">
+                                    <input type="checkbox" name="roleIds" th:value="${r.id}"
+                                           th:checked="${userForm.roleIds != null ? userForm.roleIds.contains(r.id) : user.roles.contains(r)}">
+                                    <div class="role-card-info">
+                                        <div class="role-card-name">
+                                            <span th:if="${r.code == 'ADMIN'}">🏛️</span>
+                                            <span th:if="${r.code != 'ADMIN'}">📖</span>
+                                            <span th:text="${r.name}">Giáo viên</span>
+                                        </div>
+                                        <div class="role-card-desc" th:if="${r.code == 'ADMIN'}">
+                                            Quyền quản trị toàn diện: Duyệt tài khoản, duyệt và nhận xét giáo án toàn trường, quản lý phân hiệu và bảo trì hệ thống.
+                                        </div>
+                                        <div class="role-card-desc" th:if="${r.code != 'ADMIN'}">
+                                            Quyền giảng dạy: Soạn thảo, tải lên giáo án cá nhân, chia sẻ tài liệu với đồng nghiệp và xem nhận xét chuyên môn.
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="form-hint" style="margin-top: 10px;">
+                                Giáo viên có thể được cấp đồng thời quyền Ban Giám Hiệu và Giáo viên tuỳ theo phân công nhiệm vụ của nhà trường.
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions" style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 12px;">
+                            <a th:href="@{/admin/users}" class="btn btn-secondary">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                                <span>Quay lại</span>
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                <span>Lưu thay đổi</span>
+                            </button>
+                        </div>
+                    </form>
+                </main>
+
             </div>
 
         </div>
 
+        <script>
+            // Highlight role cards on checkbox toggle
+            document.addEventListener('DOMContentLoaded', function() {
+                const roleCards = document.querySelectorAll('.role-select-card');
+                roleCards.forEach(function(card) {
+                    const cb = card.querySelector('input[type="checkbox"]');
+                    if (cb) {
+                        cb.addEventListener('change', function() {
+                            card.classList.toggle('is-checked', cb.checked);
+                        });
+                    }
+                });
+            });
+        </script>
+
         <!-- Modal Lock User -->
-        <div id="lockModal" class="modal-overlay" th:classappend="${showLockModal} ? 'active' : ''">
+        <div id="lockModal" class="modal-overlay" th:classappend="${showLockModal} ? 'open active' : ''">
             <div class="modal-box">
-                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--danger);">Khoá tài khoản giáo viên</h3>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--danger);">Khoá tài khoản giáo viên</h3>
+                    <button type="button" class="alert-close" data-modal-close style="margin: 0; font-size: 22px;" aria-label="Đóng">&times;</button>
+                </div>
                 <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
                     Tài khoản bị khoá sẽ mất hiệu lực ngay lập tức, kể cả khi token chưa hết hạn.
                 </p>
@@ -166,20 +377,61 @@
         </div>
 
         <!-- Modal Delete User (Rule 4.5a) -->
-        <div id="deleteModal" class="modal-overlay" th:classappend="${showDeleteModal} ? 'active' : ''">
-            <div class="modal-box">
-                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--danger);">Xác nhận xoá tài khoản giáo viên</h3>
-
-                <div class="alert alert-warning" style="font-size: 13px; line-height: 1.5; margin-bottom: 16px;" role="note">
-                    <strong>LƯU Ý QUAN TRỌNG (Quy tắc 4.5a):</strong><br>
-                    - Toàn bộ giáo án của giáo viên này sẽ được <strong>GIỮ LẠI ĐẦY ĐỦ</strong> (cả file và các phiên bản) dưới dạng giáo án mồ côi làm hồ sơ lưu trữ của nhà trường.<br>
-                    - Mọi đánh giá, nhận xét của Ban Giám Hiệu trên các giáo án này <strong>KHÔNG BỊ XOÁ</strong>.
+        <div id="deleteModal" class="modal-overlay" th:classappend="${showDeleteModal} ? 'open active' : ''">
+            <div class="modal-box" style="max-width: 560px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: #fee2e2; color: #dc2626; flex-shrink: 0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </span>
+                        <h3 style="font-size: 17px; font-weight: 700; margin: 0; color: #dc2626;">Xác nhận xoá tài khoản giáo viên</h3>
+                    </div>
+                    <button type="button" class="alert-close" data-modal-close style="margin: 0; font-size: 22px;" aria-label="Đóng">&times;</button>
                 </div>
 
-                <p style="font-size: 13px; margin-bottom: 14px;">
-                    Để xác nhận thao tác, vui lòng nhập chính xác địa chỉ email của giáo viên này:<br>
-                    <strong style="color: var(--dark);" th:text="${user.email}">user@school.edu.vn</strong>
-                </p>
+                <!-- Box lưu ý quy tắc 4.5a rõ ràng, dễ hiểu -->
+                <div class="rule-warning-box" role="note">
+                    <div class="rule-warning-header">
+                        <svg class="rule-warning-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span class="rule-warning-title">LƯU Ý QUAN TRỌNG (Quy tắc lưu trữ 4.5a):</span>
+                    </div>
+                    <div class="rule-warning-body">
+                        <div class="rule-warning-item">
+                            <span class="rule-warning-bullet">📁</span>
+                            <div class="rule-warning-text">
+                                <strong>Giữ lại toàn bộ giáo án:</strong> Toàn bộ giáo án của giáo viên này sẽ được <span class="badge-text-highlight">GIỮ LẠI ĐẦY ĐỦ</span> (cả file đính kèm và các phiên bản đã tải) dưới dạng <em>giáo án mồ côi</em> làm hồ sơ lưu trữ của nhà trường.
+                            </div>
+                        </div>
+                        <div class="rule-warning-item">
+                            <span class="rule-warning-bullet">🛡️</span>
+                            <div class="rule-warning-text">
+                                <strong>Bảo toàn đánh giá & nhận xét:</strong> Mọi đánh giá, nhận xét của Ban Giám Hiệu trên các giáo án này <span class="badge-text-highlight">KHÔNG BỊ XOÁ</span>.
+                            </div>
+                        </div>
+                        <div class="rule-warning-item">
+                            <span class="rule-warning-bullet">⛔</span>
+                            <div class="rule-warning-text">
+                                <strong>Xoá tài khoản vĩnh viễn:</strong> Thông tin đăng nhập và quyền truy cập của tài khoản này sẽ bị xoá khỏi hệ thống và không thể khôi phục.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+                    <div style="font-size: 13px; color: #475569; margin-bottom: 6px;">
+                        Để xác nhận thao tác, vui lòng nhập chính xác địa chỉ email của giáo viên này:
+                    </div>
+                    <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13.5px; font-weight: 700; color: #0f172a; background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-block; user-select: all;" th:text="${user.email}">user@school.edu.vn</div>
+                </div>
 
                 <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" th:object="${deleteUserForm}" method="post" data-validate novalidate>
                     <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
@@ -197,7 +449,7 @@
                     </div>
                     <div class="form-actions" style="margin-top: 20px;">
                         <button type="button" class="btn btn-secondary" data-modal-close>Huỷ</button>
-                        <button type="submit" class="btn btn-danger">Xoá</button>
+                        <button type="submit" class="btn btn-danger">Xoá vĩnh viễn</button>
                     </div>
                 </form>
             </div>

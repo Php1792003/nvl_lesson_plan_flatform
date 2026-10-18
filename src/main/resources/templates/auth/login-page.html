@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập — Hệ thống Quản lý Giáo án THCS Nguyễn Văn Linh</title>
     <link rel="icon" type="image/x-icon" th:href="@{/img/nvl_logo.png}" style="width: 100px; height: 100px;">
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('nvl_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <script th:src="@{/js/form-validation.js}" defer></script>
 </head>

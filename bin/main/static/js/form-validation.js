@@ -62,10 +62,11 @@
 
     function show(field, msg) {
         var box = errorBox(field);
-        var group = field.closest('.form-group');
+        var group = field.closest('.form-group') || field.closest('.rl-field') || field.parentNode;
         if (msg) {
             box.textContent = msg;
             box.hidden = false;
+            box.style.display = '';
             field.setAttribute('aria-invalid', 'true');
             if (group) group.classList.add('has-error');
         } else {
@@ -114,6 +115,18 @@
             if (firstBad) {
                 e.preventDefault();
                 firstBad.focus();
+
+                // Phục hồi lại trạng thái nút gửi biểu mẫu nếu đã bị các handler khác đổi thành "Đang lưu..."
+                form.__busy = false;
+                var submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitBtn.dataset.originalText) {
+                        submitBtn.textContent = submitBtn.dataset.originalText;
+                    }
+                }
+                var pb = document.getElementById('navProgress');
+                if (pb) pb.classList.remove('run');
             }
         });
 

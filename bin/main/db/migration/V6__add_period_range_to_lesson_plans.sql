@@ -1,6 +1,6 @@
 -- ============================================================
 -- V6__add_period_range_to_lesson_plans.sql
--- Tách riêng thông tin Tuần học và Tiết học (PPCT)
+-- Tách riêng thông tin Tuần học và Tiết học 
 -- Hỗ trợ giáo án 1 tiết, khoảng tiết (1-3, 1-10, ...)
 -- ============================================================
 

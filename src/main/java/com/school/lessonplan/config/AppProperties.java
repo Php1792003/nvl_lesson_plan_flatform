@@ -18,8 +18,17 @@ public class AppProperties {
     private RateLimit rateLimit = new RateLimit();
     private Security security = new Security();
     private InitialAdmin initialAdmin = new InitialAdmin();
+    private Ai ai = new Ai();
 
     // Getters and Setters
+    public Ai getAi() {
+        return ai;
+    }
+
+    public void setAi(Ai ai) {
+        this.ai = ai;
+    }
+
     public String getBaseUrl() {
         return baseUrl;
     }
@@ -410,4 +419,56 @@ public class AppProperties {
             this.password = password;
         }
     }
+
+    public static class Ai {
+        private Gemini gemini = new Gemini();
+
+        public Gemini getGemini() {
+            return gemini;
+        }
+
+        public void setGemini(Gemini gemini) {
+            this.gemini = gemini;
+        }
+
+        public static class Gemini {
+            private String apiKey;
+            private String model = "gemini-1.5-flash";
+            private String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models";
+            private int timeoutSeconds = 30;
+
+            public String getApiKey() {
+                return apiKey;
+            }
+
+            public void setApiKey(String apiKey) {
+                this.apiKey = apiKey;
+            }
+
+            public String getModel() {
+                return model;
+            }
+
+            public void setModel(String model) {
+                this.model = model;
+            }
+
+            public String getApiUrl() {
+                return apiUrl;
+            }
+
+            public void setApiUrl(String apiUrl) {
+                this.apiUrl = apiUrl;
+            }
+
+            public int getTimeoutSeconds() {
+                return timeoutSeconds;
+            }
+
+            public void setTimeoutSeconds(int timeoutSeconds) {
+                this.timeoutSeconds = timeoutSeconds;
+            }
+        }
+    }
 }
+

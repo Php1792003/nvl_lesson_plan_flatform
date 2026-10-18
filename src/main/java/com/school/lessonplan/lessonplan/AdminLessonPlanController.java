@@ -23,13 +23,16 @@ public class AdminLessonPlanController {
     private final LessonPlanService lessonPlanService;
     private final EvaluationService evaluationService;
     private final DepartmentRepository departmentRepository;
+    private final com.school.lessonplan.ai.AiReviewService aiReviewService;
 
     public AdminLessonPlanController(LessonPlanService lessonPlanService,
                                     EvaluationService evaluationService,
-                                    DepartmentRepository departmentRepository) {
+                                    DepartmentRepository departmentRepository,
+                                    com.school.lessonplan.ai.AiReviewService aiReviewService) {
         this.lessonPlanService = lessonPlanService;
         this.evaluationService = evaluationService;
         this.departmentRepository = departmentRepository;
+        this.aiReviewService = aiReviewService;
     }
 
     @GetMapping
@@ -136,4 +139,21 @@ public class AdminLessonPlanController {
 
         return "redirect:/plans/" + id;
     }
+
+    @GetMapping("/{id}/ai-review")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<com.school.lessonplan.ai.dto.AiReviewResponse> getAiReview(
+            @PathVariable("id") Long id,
+            @RequestParam(name = "versionId", required = false) Long versionId) {
+        try {
+            com.school.lessonplan.ai.dto.AiReviewResponse review = aiReviewService.generateReview(id, versionId);
+            return org.springframework.http.ResponseEntity.ok(review);
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.badRequest().body(
+                com.school.lessonplan.ai.dto.AiReviewResponse.error("Không thể tạo nhận xét AI: " + e.getMessage())
+            );
+        }
+    }
 }
+

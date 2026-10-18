@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -72,13 +73,22 @@ public class LessonPlanController {
             @RequestParam(name = "size", defaultValue = "12") int size,
             Model model) {
 
+        boolean canViewFavorites = currentUser.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("PLAN_FAVORITE_VIEW") || a.equals("ROLE_ADMIN") || a.equals("PLAN_VIEW_ALL"));
+        model.addAttribute("canViewFavorites", canViewFavorites);
+
+        if ("favorite".equals(tab) && !canViewFavorites) {
+            tab = "my";
+        }
+
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         if ("shared".equals(tab)) {
             PageRequest sharePageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "grantedAt"));
             Page<LessonPlanShare> sharedPage = shareService.getSharedWithMe(currentUser, sharePageRequest);
             model.addAttribute("sharedPage", sharedPage);
-        } else if ("favorite".equals(tab)) {
+        } else if ("favorite".equals(tab) && canViewFavorites) {
             Page<LessonPlan> favoritePage = lessonPlanService.getFavoriteAccessiblePlans(currentUser, pageRequest);
             model.addAttribute("favoritePage", favoritePage);
         } else if ("orphan".equals(tab)) {
@@ -94,9 +104,11 @@ public class LessonPlanController {
             model.addAttribute("plansPage", plansPage);
         }
 
-        // Lấy số lượng giáo án yêu thích để hiển thị badge trên tab
-        long favCount = lessonPlanService.getFavoriteAccessiblePlans(currentUser, PageRequest.of(0, 1)).getTotalElements();
-        model.addAttribute("favoriteCount", favCount);
+        // Lấy số lượng giáo án yêu thích để hiển thị badge trên tab (chỉ khi có quyền)
+        if (canViewFavorites) {
+            long favCount = lessonPlanService.getFavoriteAccessiblePlans(currentUser, PageRequest.of(0, 1)).getTotalElements();
+            model.addAttribute("favoriteCount", favCount);
+        }
 
         model.addAttribute("currentTab", tab);
         return "plans/plan-catalog";
@@ -189,6 +201,10 @@ public class LessonPlanController {
             .map(e -> e.getVersion().getId())
             .collect(Collectors.toSet());
 
+        boolean canViewFavorites = currentUser.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(a -> a.equals("PLAN_FAVORITE_VIEW") || a.equals("ROLE_ADMIN") || a.equals("PLAN_VIEW_ALL"));
+
         model.addAttribute("plan", plan);
         model.addAttribute("versions", versions);
         model.addAttribute("evaluations", evaluations);
@@ -196,6 +212,7 @@ public class LessonPlanController {
         model.addAttribute("activeShares", activeShares);
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("canViewFavorites", canViewFavorites);
         model.addAttribute("canManage", accessService.canManage(currentUser, plan));
 
         return "plans/plan-overview";
@@ -317,6 +334,13 @@ public class LessonPlanController {
             @AuthenticationPrincipal CurrentUser currentUser,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
+
+        boolean canViewFavorites = currentUser.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("PLAN_FAVORITE_VIEW") || a.equals("ROLE_ADMIN") || a.equals("PLAN_VIEW_ALL"));
+        if (!canViewFavorites) {
+            throw new AccessDeniedException("Bạn không có quyền quản lý danh sách giáo án yêu thích.");
+        }
 
         try {
             boolean isFavorite = lessonPlanService.toggleFavorite(id, currentUser);

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-    th:replace="~{layout/layout-base :: layout('Quản lý Giáo viên (Ban Giám Hiệu)', ~{::contentBlock})}">
+    th:replace="~{layout/layout-base :: layout(#{users.admin.title}, ~{::contentBlock})}">
 
 <body>
     <div th:fragment="contentBlock">
@@ -72,9 +72,9 @@
                         </div>
 
                         <div class="us-field">
-                            <label class="us-label" for="fCampus">Phân hiệu</label>
+                            <label class="us-label" for="fCampus">Điểm trường</label>
                             <select id="fCampus" name="campusId" class="us-control">
-                                <option value="">Tất cả phân hiệu</option>
+                                <option value="">Tất cả điểm trường</option>
                                 <option th:each="c : ${campuses}" th:value="${c.id}" th:text="${c.name}"
                                     th:selected="${c.id == campusId}"></option>
                             </select>
@@ -125,7 +125,7 @@
                                 <tr>
                                     <th>Họ và tên</th>
                                     <th>Môn học</th>
-                                    <th>Phân hiệu</th>
+                                    <th>Điểm trường</th>
                                     <th>Vai trò</th>
                                     <th>Trạng thái</th>
                                     <th class="right">Thao tác</th>
@@ -148,8 +148,8 @@
                                         <span th:if="${u.department != null}" th:text="${u.department.name}">Toán</span>
                                         <span th:if="${u.department == null}" class="us-muted">Chưa phân</span>
                                     </td>
-                                    <td data-label="Phân hiệu"
-                                        th:text="${u.campus != null ? u.campus.name : 'Nguyễn Văn Linh'}">NVL</td>
+                                    <td data-label="Điểm trường"
+                                        th:text="${u.campus != null ? u.campus.name : 'Điểm trường chính'}">Điểm trường chính</td>
                                     <td data-label="Vai trò">
                                         <div class="us-roles">
                                             <span th:each="r : ${u.roles}" class="us-badge role"

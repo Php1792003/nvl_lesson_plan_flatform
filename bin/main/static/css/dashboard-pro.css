@@ -3139,6 +3139,49 @@
                 color: var(--blue);
             }
 
+            .rl-btn.ghost-danger {
+                background: transparent;
+                color: #ef4444;
+                border-color: #fca5a5;
+            }
+
+            .rl-btn.ghost-danger:hover {
+                background: rgba(239, 68, 68, 0.08);
+                border-color: #ef4444;
+                color: #dc2626;
+                transform: translateY(-1px);
+            }
+
+            .rl-btn.danger {
+                background: #ef4444;
+                color: #ffffff;
+                border-color: transparent;
+            }
+
+            .rl-btn.danger:hover {
+                background: #dc2626;
+                transform: translateY(-1px);
+            }
+
+            .rl-card-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .rl-system-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px;
+                border-radius: 8px;
+                background: rgba(148, 163, 184, 0.12);
+                border: 1px solid rgba(148, 163, 184, 0.25);
+                color: var(--muted);
+                font-size: .76rem;
+                font-weight: 600;
+            }
+
             .rl-btn.sm {
                 height: 34px;
                 padding: 0 12px;
@@ -3547,12 +3590,20 @@
 
             .rl-dfoot {
                 display: flex;
-                justify-content: flex-end;
+                align-items: center;
+                justify-content: space-between;
                 gap: 10px;
                 padding: 14px 24px;
                 border-top: 1px solid var(--line);
                 background: #fafbfd;
             }
+
+            .rl-dfoot-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+            }
+
 
             .rl-field {
                 display: flex;

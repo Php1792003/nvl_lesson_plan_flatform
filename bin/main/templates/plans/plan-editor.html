@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-base :: layout('Chỉnh sửa Giáo án', ~{::contentBlock})}">
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout/layout-base :: layout('Chỉnh sửa Giáo án', ~{::contentBlock})}">
 
 <body>
     <div th:fragment="contentBlock">
@@ -10,17 +11,18 @@
                     <h3 class="card-title">Chỉnh sửa thông tin Giáo án</h3>
                 </div>
 
-                <form th:action="@{/plans/{id}(id=${plan.id})}" th:object="${planForm}" method="post" data-validate novalidate>
-                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+                <form th:action="@{/plans/{id}(id=${plan.id})}" th:object="${planForm}" method="post" data-validate
+                    novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}"
+                        th:text="${#fields.globalErrors()[0]}"></div>
 
                     <div class="form-group" th:classappend="${#fields.hasErrors('title')} ? 'has-error'">
                         <label class="form-label" for="title">Tiêu đề giáo án <span class="req">*</span></label>
-                        <input type="text" id="title" th:field="*{title}" class="form-control"
-                            maxlength="200" required autofocus
-                            data-msg-required="Vui lòng nhập tiêu đề giáo án."
+                        <input type="text" id="title" th:field="*{title}" class="form-control" maxlength="200" required
+                            autofocus data-msg-required="Vui lòng nhập tiêu đề giáo án."
                             th:attr="aria-invalid=${#fields.hasErrors('title')},aria-describedby='title-error'">
-                        <p class="field-error" id="title-error" role="alert"
-                           th:if="${#fields.hasErrors('title')}" th:text="${#fields.errors('title')[0]}"></p>
+                        <p class="field-error" id="title-error" role="alert" th:if="${#fields.hasErrors('title')}"
+                            th:text="${#fields.errors('title')[0]}"></p>
                     </div>
 
                     <div class="form-grid">
@@ -34,7 +36,8 @@
                                     th:selected="${dept.id == planForm.departmentId}"></option>
                             </select>
                             <p class="field-error" id="departmentId-error" role="alert"
-                               th:if="${#fields.hasErrors('departmentId')}" th:text="${#fields.errors('departmentId')[0]}"></p>
+                                th:if="${#fields.hasErrors('departmentId')}"
+                                th:text="${#fields.errors('departmentId')[0]}"></p>
                         </div>
 
                         <div class="form-group" th:classappend="${#fields.hasErrors('grade')} ? 'has-error'">
@@ -47,8 +50,8 @@
                                 <option value="8">Khối 8</option>
                                 <option value="9">Khối 9</option>
                             </select>
-                            <p class="field-error" id="grade-error" role="alert"
-                               th:if="${#fields.hasErrors('grade')}" th:text="${#fields.errors('grade')[0]}"></p>
+                            <p class="field-error" id="grade-error" role="alert" th:if="${#fields.hasErrors('grade')}"
+                                th:text="${#fields.errors('grade')[0]}"></p>
                         </div>
                     </div>
 
@@ -61,7 +64,8 @@
                                 <option th:each="yr : ${schoolYears}" th:value="${yr}" th:text="${yr}"></option>
                             </select>
                             <p class="field-error" id="schoolYear-error" role="alert"
-                               th:if="${#fields.hasErrors('schoolYear')}" th:text="${#fields.errors('schoolYear')[0]}"></p>
+                                th:if="${#fields.hasErrors('schoolYear')}" th:text="${#fields.errors('schoolYear')[0]}">
+                            </p>
                         </div>
 
                         <div class="form-group" th:classappend="${#fields.hasErrors('semester')} ? 'has-error'">
@@ -73,7 +77,7 @@
                                 <option value="2">Học kỳ 2</option>
                             </select>
                             <p class="field-error" id="semester-error" role="alert"
-                               th:if="${#fields.hasErrors('semester')}" th:text="${#fields.errors('semester')[0]}"></p>
+                                th:if="${#fields.hasErrors('semester')}" th:text="${#fields.errors('semester')[0]}"></p>
                         </div>
 
                         <div class="form-group" th:classappend="${#fields.hasErrors('weekNo')} ? 'has-error'">
@@ -81,33 +85,38 @@
                             <input type="number" id="weekNo" th:field="*{weekNo}" class="form-control" min="1" max="35"
                                 placeholder="Ví dụ: 3 (Tuần 1-35)"
                                 th:attr="aria-invalid=${#fields.hasErrors('weekNo')},aria-describedby='weekNo-error'">
-                            <p class="field-error" id="weekNo-error" role="alert"
-                               th:if="${#fields.hasErrors('weekNo')}" th:text="${#fields.errors('weekNo')[0]}"></p>
+                            <p class="field-error" id="weekNo-error" role="alert" th:if="${#fields.hasErrors('weekNo')}"
+                                th:text="${#fields.errors('weekNo')[0]}"></p>
                         </div>
                     </div>
 
                     <div class="form-grid" style="margin-top: 20px;">
                         <div class="form-group" th:classappend="${#fields.hasErrors('startPeriod')} ? 'has-error'">
-                            <label class="form-label" for="startPeriod">Từ tiết <span class="opt">(PPCT)</span></label>
-                            <input type="number" id="startPeriod" th:field="*{startPeriod}" class="form-control" min="1" max="200"
-                                placeholder="Ví dụ: 1 hoặc 5"
+                            <label class="form-label" for="startPeriod">Từ tiết <span class="opt"></span></label>
+                            <input type="number" id="startPeriod" th:field="*{startPeriod}" class="form-control" min="1"
+                                max="200" placeholder="Ví dụ: 1 hoặc 5"
                                 th:attr="aria-invalid=${#fields.hasErrors('startPeriod')},aria-describedby='startPeriod-error'">
                             <p class="field-error" id="startPeriod-error" role="alert"
-                               th:if="${#fields.hasErrors('startPeriod')}" th:text="${#fields.errors('startPeriod')[0]}"></p>
+                                th:if="${#fields.hasErrors('startPeriod')}"
+                                th:text="${#fields.errors('startPeriod')[0]}"></p>
                         </div>
 
                         <div class="form-group" th:classappend="${#fields.hasErrors('endPeriod')} ? 'has-error'">
-                            <label class="form-label" for="endPeriod">Đến tiết <span class="opt">(để trống nếu giáo án 1 tiết)</span></label>
-                            <input type="number" id="endPeriod" th:field="*{endPeriod}" class="form-control" min="1" max="200"
-                                placeholder="Ví dụ: 3 hoặc 10 (để trống nếu 1 tiết)"
+                            <label class="form-label" for="endPeriod">Đến tiết <span class="opt">(để trống nếu giáo án 1
+                                    tiết)</span></label>
+                            <input type="number" id="endPeriod" th:field="*{endPeriod}" class="form-control" min="1"
+                                max="200" placeholder="Ví dụ: 3 hoặc 10 (để trống nếu 1 tiết)"
                                 th:attr="aria-invalid=${#fields.hasErrors('endPeriod')},aria-describedby='endPeriod-error'">
                             <p class="field-error" id="endPeriod-error" role="alert"
-                               th:if="${#fields.hasErrors('endPeriod')}" th:text="${#fields.errors('endPeriod')[0]}"></p>
+                                th:if="${#fields.hasErrors('endPeriod')}" th:text="${#fields.errors('endPeriod')[0]}">
+                            </p>
                         </div>
                     </div>
 
-                    <div id="periodHelperBoxEdit" style="margin-top: 16px; margin-bottom: 20px; padding: 12px 16px; border-radius: 8px; font-size: 13.5px; line-height: 1.5; display: none; align-items: center; gap: 10px; border: 1px solid transparent; transition: all 0.2s ease;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                    <div id="periodHelperBoxEdit"
+                        style="margin-top: 16px; margin-bottom: 20px; padding: 12px 16px; border-radius: 8px; font-size: 13.5px; line-height: 1.5; display: none; align-items: center; gap: 10px; border: 1px solid transparent; transition: all 0.2s ease;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" style="flex-shrink: 0;">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="12" y1="16" x2="12" y2="12"></line>
                             <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -121,7 +130,8 @@
                             maxlength="1000"
                             th:attr="aria-invalid=${#fields.hasErrors('description')},aria-describedby='description-error'"></textarea>
                         <p class="field-error" id="description-error" role="alert"
-                           th:if="${#fields.hasErrors('description')}" th:text="${#fields.errors('description')[0]}"></p>
+                            th:if="${#fields.hasErrors('description')}" th:text="${#fields.errors('description')[0]}">
+                        </p>
                     </div>
 
                     <div class="form-actions">

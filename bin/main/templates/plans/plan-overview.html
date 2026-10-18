@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    th:replace="~{layout/layout-base :: layout(${plan.title}, ~{::contentBlock})}">
+    th:replace="~{layout/layout-base :: layout('Chi tiết Giáo án', ~{::contentBlock})}">
 
 <body>
     <div th:fragment="contentBlock">
@@ -55,7 +55,8 @@
 
             <div class="detail-header-actions">
                 <!-- Nút Yêu thích (Bảo vệ khỏi dọn dẹp học kỳ) -->
-                <form th:action="@{/plans/{id}/favorite(id=${plan.id})}" method="post" style="margin: 0;">
+                <form th:if="${canViewFavorites}" th:action="@{/plans/{id}/favorite(id=${plan.id})}" method="post"
+                    style="margin: 0;">
                     <button type="submit" class="btn btn-sm"
                         th:classappend="${plan.favorite} ? 'btn-warning-fav' : 'btn-outline'"
                         th:title="${plan.favorite} ? 'Bỏ đánh dấu yêu thích' : 'Đánh dấu yêu thích (giữ lại, không bị BGH xoá sau mỗi học kỳ)'"
@@ -83,7 +84,9 @@
                     data-modal-target="shareModal">Chia sẻ</button>
                 <form th:if="${canManage && !plan.isOrphan()}" th:action="@{/plans/{id}/delete(id=${plan.id})}"
                     method="post"
-                    onsubmit="return confirm('Bạn có chắc chắn muốn xoá giáo án này? Nếu đã có nhận xét từ BGH thì giáo án sẽ không thể xoá.');">
+                    data-confirm="Bạn có chắc chắn muốn xoá giáo án này? Nếu đã có nhận xét từ BGH thì giáo án sẽ không thể xoá."
+                    data-confirm-title="Xác nhận xoá giáo án" data-confirm-btn="Xác nhận xoá"
+                    data-confirm-type="danger">
                     <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
                 </form>
             </div>
@@ -214,7 +217,9 @@
                                                     th:if="${evaluatedVersionIds == null || !evaluatedVersionIds.contains(ver.id)}"
                                                     th:action="@{/plans/{id}/versions/{vid}/delete(id=${plan.id}, vid=${ver.id})}"
                                                     method="post" style="margin: 0;"
-                                                    th:onsubmit="'return confirm(\\'Bạn có chắc chắn muốn xoá file phiên bản v' + ${ver.versionNo} + '? File sẽ bị xoá vĩnh viễn khỏi hệ thống để tiết kiệm dung lượng.\\')'">
+                                                    th:attr="data-confirm='Bạn có chắc chắn muốn xoá file phiên bản v' + ${ver.versionNo} + '? File sẽ bị xoá vĩnh viễn khỏi hệ thống để tiết kiệm dung lượng.'"
+                                                    data-confirm-title="Xác nhận xoá file phiên bản"
+                                                    data-confirm-btn="Xoá file" data-confirm-type="danger">
                                                     <button type="submit" class="btn btn-danger btn-sm"
                                                         title="Xoá file vĩnh viễn để tiết kiệm dung lượng"
                                                         style="font-size: 12px;">
@@ -281,9 +286,16 @@
 
                     <!-- BGH Add Evaluation Form (Only for BGH) -->
                     <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
-                        style="margin-bottom: 24px; background: var(--surface-alt); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--dark);">Gửi nhận
-                            xét đánh giá</h4>
+                        style="margin-bottom: 24px; background: var(--surface-alt); padding: 18px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                            <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: var(--dark);">Gửi nhận xét đánh giá</h4>
+                            <button type="button" class="btn btn-ai-sparkle btn-sm" onclick="triggerAiReview('evalVersionId', 'evalContent')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                </svg>
+                                <span>✨ AI gợi ý nhận xét</span>
+                            </button>
+                        </div>
                         <form th:action="@{/admin/plans/{id}/evaluations(id=${plan.id})}" method="post" data-validate
                             novalidate>
                             <div class="form-group">
@@ -431,7 +443,7 @@
                             <strong th:text="'Tuần ' + ${plan.weekNo}">Tuần 3</strong>
                         </div>
                         <div th:if="${plan.startPeriod != null}">
-                            <span style="color: var(--text-muted);">Tiết học (PPCT):</span><br>
+                            <span style="color: var(--text-muted);">Tiết học :</span><br>
                             <strong th:text="${plan.displayPeriodText}">Tiết 1 - 3 (3 tiết)</strong>
                         </div>
                         <div>
@@ -459,7 +471,10 @@
                                 th:text="${share.sharedWithUser.email}">binh@school.edu.vn</div>
                         </div>
                         <form th:action="@{/plans/{id}/shares/{sid}/revoke(id=${plan.id}, sid=${share.id})}"
-                            method="post">
+                            method="post"
+                            data-confirm="Bạn có chắc chắn muốn thu hồi quyền chia sẻ giáo án này với đồng nghiệp?"
+                            data-confirm-title="Xác nhận thu hồi chia sẻ" data-confirm-btn="Thu hồi"
+                            data-confirm-type="danger">
                             <button type="submit" class="btn btn-outline btn-sm"
                                 style="font-size: 11px; color: var(--danger);">Thu hồi</button>
                         </form>
@@ -627,17 +642,22 @@
                             <!-- Quick Evaluation Form for BGH -->
                             <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
                                 class="preview-review-form-box">
-                                <h5 class="preview-review-form-title">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                    <span>Gửi nhận xét cho phiên bản này</span>
-                                </h5>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                                    <h5 class="preview-review-form-title" style="margin: 0;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                        <span>Gửi nhận xét phiên bản này</span>
+                                    </h5>
+                                    <button type="button" class="btn btn-ai-sparkle btn-sm" onclick="triggerAiReview('previewModalVersionInput', 'previewModalContentTextarea')" style="font-size: 11px; padding: 4px 10px;">
+                                        <span>✨ AI gợi ý</span>
+                                    </button>
+                                </div>
                                 <form th:action="@{/admin/plans/{id}/evaluations(id=${plan.id})}" method="post">
                                     <input type="hidden" name="versionId" id="previewModalVersionInput" value="">
-                                    <textarea name="content" rows="4" class="form-control"
+                                    <textarea id="previewModalContentTextarea" name="content" rows="4" class="form-control"
                                         style="font-size: 13px; margin-bottom: 10px; resize: vertical;"
                                         placeholder="Nhập nhận xét đóng góp ý kiến cho giáo viên..."
                                         required></textarea>
@@ -839,7 +859,284 @@
             /*]]>*/
         </script>
 
+        <!-- ================= AI REVIEW ASSISTANT MODAL ================= -->
+        <div id="aiReviewModal" class="ai-modal-overlay" aria-hidden="true">
+            <div class="ai-modal-box" role="dialog" aria-modal="true" aria-labelledby="aiModalTitle">
+                <div class="ai-modal-header">
+                    <div class="ai-modal-title-wrap">
+                        <div class="ai-modal-icon-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="ai-modal-title" id="aiModalTitle">Trợ lý AI — Thẩm định & Gợi ý Nhận xét</h4>
+                            <p class="ai-modal-subtitle">Thẩm định theo Thông tư 15/2026/TT-BGDĐT &amp; Thông tư 17/2025/TT-BGDĐT</p>
+                        </div>
+                    </div>
+                    <button type="button" class="ai-modal-close-btn" onclick="closeAiReviewModal()" aria-label="Đóng">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="ai-modal-body" id="aiModalBody">
+                    <!-- Loading State -->
+                    <div id="aiLoadingState" class="ai-loading-container">
+                        <div class="ai-orb-pulse">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                        </div>
+                        <div class="ai-loading-text">AI đang phân tích kế hoạch bài dạy...</div>
+                        <div class="ai-loading-subtext">Đang đối chiếu YCCĐ, năng lực số, chuỗi hoạt động thực chất theo TT 15/2026 &amp; TT 17/2025</div>
+                    </div>
+
+                    <!-- Result State -->
+                    <div id="aiResultState" style="display: none;">
+                        <div class="ai-meta-bar">
+                            <div class="ai-rating-pill" id="aiOverallRating">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span id="aiRatingText">Đạt chuẩn TT 15/2026 &amp; TT 17/2025</span>
+                            </div>
+                            <div class="ai-source-tag">
+                                Nguồn phân tích: <b id="aiSourceModel">Google Gemini 1.5 Flash</b>
+                            </div>
+                        </div>
+
+                        <div class="ai-summary-box" id="aiSummaryText">
+                            Kế hoạch bài dạy được phân tích và đánh giá toàn diện.
+                        </div>
+
+                        <div class="ai-grid-sections">
+                            <div class="ai-section-card strengths">
+                                <div class="ai-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    Điểm đạt chuẩn kỹ thuật (TT 15/2026 &amp; TT 17/2025)
+                                </div>
+                                <ul class="ai-list" id="aiStrengthsList"></ul>
+                            </div>
+                            <div class="ai-section-card improvements">
+                                <div class="ai-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    Checklist kỹ thuật BGH cần kiểm tra / nhắc nhở
+                                </div>
+                                <ul class="ai-list" id="aiImprovementsList"></ul>
+                            </div>
+                        </div>
+
+                        <div class="ai-draft-container">
+                            <div class="ai-draft-header">
+                                <span>📋 Biên bản kết luận chuyên môn của Ban Giám Hiệu</span>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCopyAiDraft" onclick="copyAiDraftText()" style="padding: 2px 8px; font-size: 11px;">
+                                    📋 Sao chép
+                                </button>
+                            </div>
+                            <textarea class="ai-draft-content" id="aiDraftFeedback" rows="8"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="aiErrorState" style="display: none; text-align: center; padding: 30px 20px;">
+                        <div style="width: 50px; height: 50px; margin: 0 auto 12px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        </div>
+                        <h5 style="color: #991b1b; font-weight: 600; margin-bottom: 6px;">Không thể tạo nhận xét AI</h5>
+                        <p id="aiErrorMsg" style="font-size: 13px; color: #64748b; margin-bottom: 16px;">Đã xảy ra sự cố trong quá trình phân tích.</p>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="retryAiReview()">Thử lại</button>
+                    </div>
+                </div>
+
+                <div class="ai-modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="closeAiReviewModal()">Đóng</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnApplyAiFeedback" onclick="applyAiDraftToForm()" style="display: none;">
+                        ✍️ Điền vào ô nhận xét
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            var currentAiTargetVersionSelectId = null;
+            var currentAiTargetTextareaId = null;
+            var lastAiDraftContent = '';
+
+            function triggerAiReview(versionInputOrSelectId, targetTextareaId) {
+                currentAiTargetVersionSelectId = versionInputOrSelectId;
+                currentAiTargetTextareaId = targetTextareaId;
+
+                var modal = document.getElementById('aiReviewModal');
+                if (!modal) return;
+
+                var loading = document.getElementById('aiLoadingState');
+                var result = document.getElementById('aiResultState');
+                var error = document.getElementById('aiErrorState');
+                var applyBtn = document.getElementById('btnApplyAiFeedback');
+
+                loading.style.display = 'block';
+                result.style.display = 'none';
+                error.style.display = 'none';
+                if (applyBtn) applyBtn.style.display = 'none';
+
+                modal.classList.add('open');
+                modal.setAttribute('aria-hidden', 'false');
+
+                // Determine versionId
+                var versionId = null;
+                if (versionInputOrSelectId) {
+                    var el = document.getElementById(versionInputOrSelectId);
+                    if (el && el.value) {
+                        versionId = el.value;
+                    }
+                }
+
+                var planId = /*[[${plan.id}]]*/ '0';
+                var url = '/portal/admin/plans/' + planId + '/ai-review' + (versionId ? '?versionId=' + encodeURIComponent(versionId) : '');
+
+                fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('Mã lỗi mạng: ' + res.status);
+                    return res.json();
+                })
+                .then(function(data) {
+                    if (!data.success) {
+                        throw new Error(data.errorMessage || 'Lỗi khi nhận xét giáo án');
+                    }
+                    renderAiReviewData(data);
+                })
+                .catch(function(err) {
+                    loading.style.display = 'none';
+                    result.style.display = 'none';
+                    error.style.display = 'block';
+                    document.getElementById('aiErrorMsg').textContent = err.message || 'Không thể kết nối dịch vụ AI';
+                });
+            }
+
+            function renderAiReviewData(data) {
+                document.getElementById('aiLoadingState').style.display = 'none';
+                document.getElementById('aiErrorState').style.display = 'none';
+                document.getElementById('aiResultState').style.display = 'block';
+
+                var applyBtn = document.getElementById('btnApplyAiFeedback');
+                if (applyBtn) applyBtn.style.display = 'inline-block';
+
+                var ratingText = data.overallRating || 'Đạt chuẩn CV 5512';
+                var ratingPill = document.getElementById('aiOverallRating');
+                document.getElementById('aiRatingText').textContent = ratingText;
+
+                if (ratingText.indexOf('Không đạt') >= 0) {
+                    ratingPill.style.background = '#fee2e2';
+                    ratingPill.style.color = '#dc2626';
+                    ratingPill.style.borderColor = '#fca5a5';
+                } else if (ratingText.indexOf('Chưa đạt') >= 0) {
+                    ratingPill.style.background = '#fef3c7';
+                    ratingPill.style.color = '#b45309';
+                    ratingPill.style.borderColor = '#fcd34d';
+                } else if (ratingText.indexOf('Đạt yêu cầu') >= 0) {
+                    ratingPill.style.background = '#e0e7ff';
+                    ratingPill.style.color = '#4338ca';
+                    ratingPill.style.borderColor = '#c7d2fe';
+                } else {
+                    ratingPill.style.background = 'rgba(34, 197, 94, 0.12)';
+                    ratingPill.style.color = '#16a34a';
+                    ratingPill.style.borderColor = 'rgba(34, 197, 94, 0.25)';
+                }
+
+                document.getElementById('aiSourceModel').textContent = data.modelName || (data.source === 'GEMINI_AI' ? 'Google Gemini' : 'Bộ chuẩn Sư phạm TT 15/2026 & TT 17/2025');
+                document.getElementById('aiSummaryText').textContent = data.summary || 'Kế hoạch bài dạy được phân tích và đánh giá toàn diện.';
+
+                // Strengths
+                var strList = document.getElementById('aiStrengthsList');
+                strList.innerHTML = '';
+                if (data.strengths && data.strengths.length > 0) {
+                    data.strengths.forEach(function(s) {
+                        var li = document.createElement('li');
+                        li.textContent = s;
+                        strList.appendChild(li);
+                    });
+                }
+
+                // Improvements
+                var impList = document.getElementById('aiImprovementsList');
+                impList.innerHTML = '';
+                if (data.improvements && data.improvements.length > 0) {
+                    data.improvements.forEach(function(imp) {
+                        var li = document.createElement('li');
+                        li.textContent = imp;
+                        impList.appendChild(li);
+                    });
+                }
+
+                // Draft
+                lastAiDraftContent = data.suggestedFeedback || '';
+                document.getElementById('aiDraftFeedback').value = lastAiDraftContent;
+            }
+
+            function closeAiReviewModal() {
+                var modal = document.getElementById('aiReviewModal');
+                if (modal) {
+                    modal.classList.remove('open');
+                    modal.setAttribute('aria-hidden', 'true');
+                }
+            }
+
+            function copyAiDraftText() {
+                var txt = document.getElementById('aiDraftFeedback').value;
+                if (!txt) return;
+                navigator.clipboard.writeText(txt).then(function() {
+                    var btn = document.getElementById('btnCopyAiDraft');
+                    var old = btn.textContent;
+                    btn.textContent = '✅ Đã sao chép!';
+                    setTimeout(function() { btn.textContent = old; }, 2000);
+                });
+            }
+
+            function applyAiDraftToForm() {
+                var draft = document.getElementById('aiDraftFeedback').value || lastAiDraftContent;
+                if (currentAiTargetTextareaId) {
+                    var textarea = document.getElementById(currentAiTargetTextareaId);
+                    if (textarea) {
+                        textarea.value = draft;
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        textarea.focus();
+                        textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+                closeAiReviewModal();
+            }
+
+            function retryAiReview() {
+                triggerAiReview(currentAiTargetVersionSelectId, currentAiTargetTextareaId);
+            }
+
+            // Close AI modal on ESC or backdrop click
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeAiReviewModal();
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                var aiModalEl = document.getElementById('aiReviewModal');
+                if (aiModalEl) {
+                    aiModalEl.addEventListener('click', function(e) {
+                        if (e.target === aiModalEl) {
+                            closeAiReviewModal();
+                        }
+                    });
+                }
+            });
+            /*]]>*/
+        </script>
     </div>
+
 </body>
 
 </html>
