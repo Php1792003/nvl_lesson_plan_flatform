@@ -140,6 +140,24 @@ public class AdminLessonPlanController {
         return "redirect:/plans/" + id;
     }
 
+    @PostMapping("/{id}/evaluations/{eid}/delete")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')")
+    public String deleteEvaluation(
+            @PathVariable("id") Long id,
+            @PathVariable("eid") Long evaluationId,
+            @AuthenticationPrincipal CurrentUser currentUser,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            evaluationService.deleteEvaluation(evaluationId, currentUser);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã thu hồi nhận xét thành công!");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/plans/" + id;
+    }
+
     @GetMapping("/{id}/ai-review")
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')")
     @ResponseBody
@@ -147,7 +165,7 @@ public class AdminLessonPlanController {
             @PathVariable("id") Long id,
             @RequestParam(name = "versionId", required = false) Long versionId) {
         try {
-            com.school.lessonplan.ai.dto.AiReviewResponse review = aiReviewService.generateReview(id, versionId);
+            com.school.lessonplan.ai.dto.AiReviewResponse review = aiReviewService.reviewPlan(id, versionId);
             return org.springframework.http.ResponseEntity.ok(review);
         } catch (Exception e) {
             return org.springframework.http.ResponseEntity.badRequest().body(

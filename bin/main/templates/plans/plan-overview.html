@@ -328,8 +328,7 @@
                         Chưa có nhận xét nào từ Ban Giám Hiệu.
                     </div>
 
-                    <div th:each="eval : ${evaluations}"
-                        style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+                    <div th:each="eval : ${evaluations}" class="eval-card-item">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div>
@@ -345,36 +344,70 @@
                                 th:text="${#temporals.format(eval.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
                         </div>
 
-                        <!-- Escaped text per Rule 4.6 -->
-                        <div style="font-size: 14px; line-height: 1.6; background: #fdf2f8; padding: 12px 16px; border-radius: var(--radius-sm); border-left: 4px solid var(--purple); color: #1e293b;"
-                            th:text="${eval.content}">
-                            Nội dung nhận xét...
-                        </div>
+                        <!-- Message Row with Floating Hover Actions -->
+                        <div class="eval-message-row">
+                            <!-- Message Content Bubble -->
+                            <div th:id="'eval-content-display-' + ${eval.id}" class="eval-message-bubble">
+                                <div th:text="${eval.content}" style="white-space: pre-wrap; word-break: break-word;">
+                                    Nội dung nhận xét...
+                                </div>
 
-                        <!-- BGH Edit Evaluation Form Trigger (if reviewer matches or admin) -->
-                        <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
-                            style="margin-top: 6px; text-align: right;">
-                            <button type="button" class="btn btn-outline btn-sm"
-                                style="font-size: 11px; padding: 2px 8px;"
-                                th:onclick="'document.getElementById(\'edit-eval-' + ${eval.id} + '\').style.display = (document.getElementById(\'edit-eval-' + ${eval.id} + '\').style.display === \'none\' ? \'block\' : \'none\')'">Sửa</button>
+                                <!-- Floating Hover Action Toolbar (Sửa & Thu hồi) -->
+                                <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
+                                     class="eval-hover-actions">
+                                    <!-- Nút Sửa -->
+                                    <button type="button" class="eval-action-btn edit"
+                                        title="Chỉnh sửa nhận xét"
+                                        th:onclick="'toggleEditEval(' + ${eval.id} + ')'">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                        <span>Sửa</span>
+                                    </button>
 
-                            <div th:id="'edit-eval-' + ${eval.id}"
-                                style="display: none; margin-top: 10px; text-align: left;">
-                                <form
-                                    th:action="@{/admin/plans/{id}/evaluations/{eid}/edit(id=${plan.id}, eid=${eval.id})}"
-                                    method="post" data-validate novalidate>
-                                    <div class="form-group">
-                                        <textarea th:id="'editEvalContent-' + ${eval.id}" name="content" rows="2"
+                                    <!-- Nút Thu hồi -->
+                                    <form th:action="@{/admin/plans/{id}/evaluations/{eid}/delete(id=${plan.id}, eid=${eval.id})}"
+                                          method="post" style="margin: 0; display: inline;"
+                                          data-confirm="Bạn có chắc chắn muốn thu hồi nhận xét này? Toàn bộ trao đổi phản hồi (nếu có) cũng sẽ bị gỡ bỏ."
+                                          data-confirm-title="Xác nhận thu hồi nhận xét"
+                                          data-confirm-btn="Thu hồi"
+                                          data-confirm-type="danger">
+                                        <button type="submit" class="eval-action-btn recall" title="Thu hồi nhận xét">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                            <span>Thu hồi</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Inline Edit Box -->
+                            <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
+                                 th:id="'edit-eval-' + ${eval.id}"
+                                 class="eval-edit-box" style="display: none;">
+                                <form th:action="@{/admin/plans/{id}/evaluations/{eid}/edit(id=${plan.id}, eid=${eval.id})}"
+                                      method="post" data-validate novalidate>
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <textarea th:id="'editEvalContent-' + ${eval.id}" name="content" rows="3"
                                             class="form-control" th:text="${eval.content}" minlength="5"
-                                            maxlength="2000" required data-minlength="5" data-maxlength="2000"
+                                            maxlength="4000" required data-minlength="5" data-maxlength="4000"
                                             data-msg-required="Nội dung nhận xét không được để trống."
                                             data-msg-minlength="Nội dung nhận xét cần ít nhất 5 ký tự."
+                                            style="font-size: 13.5px; line-height: 1.5; resize: vertical;"
                                             th:attr="aria-describedby='editEvalContent-' + ${eval.id} + '-error'"></textarea>
                                         <p class="field-error" th:id="'editEvalContent-' + ${eval.id} + '-error'"
                                             role="alert" hidden></p>
                                     </div>
-                                    <button type="submit" class="btn btn-primary btn-sm"
-                                        style="margin-top: 6px;">Lưu</button>
+                                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                        <button type="button" class="btn btn-secondary btn-sm"
+                                            th:onclick="'toggleEditEval(' + ${eval.id} + ')'"
+                                            style="padding: 4px 10px; font-size: 12px;">Hủy</button>
+                                        <button type="submit" class="btn btn-primary btn-sm"
+                                            style="padding: 4px 12px; font-size: 12px;">Lưu thay đổi</button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -871,7 +904,7 @@
                         </div>
                         <div>
                             <h4 class="ai-modal-title" id="aiModalTitle">Trợ lý AI — Thẩm định & Gợi ý Nhận xét</h4>
-                            <p class="ai-modal-subtitle">Thẩm định theo Thông tư 15/2026/TT-BGDĐT &amp; Thông tư 17/2025/TT-BGDĐT</p>
+                            <p class="ai-modal-subtitle" id="aiModalSubtitle">Thẩm định theo chuẩn sư phạm &amp; quy định chuyên môn hiện hành</p>
                         </div>
                     </div>
                     <button type="button" class="ai-modal-close-btn" onclick="closeAiReviewModal()" aria-label="Đóng">
@@ -890,19 +923,19 @@
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                             </svg>
                         </div>
-                        <div class="ai-loading-text">AI đang phân tích kế hoạch bài dạy...</div>
-                        <div class="ai-loading-subtext">Đang đối chiếu YCCĐ, năng lực số, chuỗi hoạt động thực chất theo TT 15/2026 &amp; TT 17/2025</div>
+                        <div class="ai-loading-text">Đang thẩm định...</div>
+                        <div class="ai-loading-subtext">Đang đối chiếu mục tiêu, chuỗi hoạt động dạy học và căn cứ chuyên môn...</div>
                     </div>
 
                     <!-- Result State -->
                     <div id="aiResultState" style="display: none;">
                         <div class="ai-meta-bar">
                             <div class="ai-rating-pill" id="aiOverallRating">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                <span id="aiRatingText">Đạt chuẩn TT 15/2026 &amp; TT 17/2025</span>
+                                <span id="aiRatingIcon" style="display: inline-flex; align-items: center;"></span>
+                                <span id="aiRatingText">Đang tải...</span>
                             </div>
                             <div class="ai-source-tag">
-                                Nguồn phân tích: <b id="aiSourceModel">Google Gemini 1.5 Flash</b>
+                                Nguồn phân tích: <b id="aiSourceModel">Bộ thẩm định Chuẩn Sư phạm</b>
                             </div>
                         </div>
 
@@ -910,20 +943,29 @@
                             Kế hoạch bài dạy được phân tích và đánh giá toàn diện.
                         </div>
 
-                        <div class="ai-grid-sections">
-                            <div class="ai-section-card strengths">
+                        <!-- Theo dõi & Tiếp thu ý kiến Ban Giám Hiệu -->
+                        <div class="ai-bgh-study-box" id="aiBghFollowUpBox" style="display: none; background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #2563eb; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; line-height: 1.5; color: #1e40af;">
+                            <div style="font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; color: #1d4ed8;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <span>Đối chiếu &amp; Tiếp thu ý kiến Ban Giám Hiệu</span>
+                            </div>
+                            <div id="aiBghFollowUpText" style="color: #1e3a8a;"></div>
+                        </div>
+
+                        <div class="ai-grid-sections" id="aiGridSections">
+                            <div class="ai-section-card strengths" id="aiStrengthsCard">
                                 <div class="ai-section-title">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                    Điểm đạt chuẩn kỹ thuật (TT 15/2026 &amp; TT 17/2025)
+                                    Điểm đạt chuẩn chuyên môn
                                 </div>
                                 <ul class="ai-list" id="aiStrengthsList"></ul>
                             </div>
-                            <div class="ai-section-card improvements">
+                            <div class="ai-section-card improvements" id="aiImprovementsCard">
                                 <div class="ai-section-title">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                    Checklist kỹ thuật BGH cần kiểm tra / nhắc nhở
+                                    Checklist chuyên môn &amp; Lưu ý cần hoàn thiện
                                 </div>
-                                <ul class="ai-list" id="aiImprovementsList"></ul>
+                                <ul class="ai-list" id="aiImprovementsList" style="padding-left: 0;"></ul>
                             </div>
                         </div>
 
@@ -964,6 +1006,13 @@
             var currentAiTargetTextareaId = null;
             var lastAiDraftContent = '';
 
+            function getCookie(name) {
+                var value = "; " + document.cookie;
+                var parts = value.split("; " + name + "=");
+                if (parts.length === 2) return parts.pop().split(";").shift();
+                return null;
+            }
+
             function triggerAiReview(versionInputOrSelectId, targetTextareaId) {
                 currentAiTargetVersionSelectId = versionInputOrSelectId;
                 currentAiTargetTextareaId = targetTextareaId;
@@ -979,12 +1028,15 @@
                 loading.style.display = 'block';
                 result.style.display = 'none';
                 error.style.display = 'none';
-                if (applyBtn) applyBtn.style.display = 'none';
+                if (applyBtn) {
+                    applyBtn.style.display = 'none';
+                    applyBtn.disabled = true;
+                }
 
                 modal.classList.add('open');
                 modal.setAttribute('aria-hidden', 'false');
 
-                // Determine versionId
+                // Determine versionId if available
                 var versionId = null;
                 if (versionInputOrSelectId) {
                     var el = document.getElementById(versionInputOrSelectId);
@@ -994,20 +1046,35 @@
                 }
 
                 var planId = /*[[${plan.id}]]*/ '0';
-                var url = '/portal/admin/plans/' + planId + '/ai-review' + (versionId ? '?versionId=' + encodeURIComponent(versionId) : '');
+                var apiBaseUrl = /*[[@{/api/plans/}]]*/ '/api/plans/';
+                var url = apiBaseUrl + planId + '/ai-review' + (versionId ? '?versionId=' + encodeURIComponent(versionId) : '');
+
+                var headers = {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                };
+                var xsrfToken = getCookie('XSRF-TOKEN');
+                if (xsrfToken) {
+                    headers['X-XSRF-TOKEN'] = decodeURIComponent(xsrfToken);
+                }
 
                 fetch(url, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: headers
                 })
                 .then(function(res) {
-                    if (!res.ok) throw new Error('Mã lỗi mạng: ' + res.status);
-                    return res.json();
+                    return res.json().then(function(data) {
+                        if (!res.ok) {
+                            var errMsg = (data && data.message) ? data.message : ('Lỗi máy chủ (HTTP ' + res.status + ')');
+                            throw new Error(errMsg);
+                        }
+                        return data;
+                    });
                 })
                 .then(function(data) {
-                    if (!data.success) {
-                        throw new Error(data.errorMessage || 'Lỗi khi nhận xét giáo án');
+                    if (data.success === false && data.errorMessage) {
+                        throw new Error(data.errorMessage);
                     }
                     renderAiReviewData(data);
                 })
@@ -1025,57 +1092,111 @@
                 document.getElementById('aiResultState').style.display = 'block';
 
                 var applyBtn = document.getElementById('btnApplyAiFeedback');
-                if (applyBtn) applyBtn.style.display = 'inline-block';
+                if (applyBtn) {
+                    applyBtn.style.display = 'inline-block';
+                    applyBtn.disabled = false;
+                }
 
-                var ratingText = data.overallRating || 'Đạt chuẩn CV 5512';
+                // 1. Render Verdict Badge & Icon
                 var ratingPill = document.getElementById('aiOverallRating');
-                document.getElementById('aiRatingText').textContent = ratingText;
+                var ratingIcon = document.getElementById('aiRatingIcon');
+                var ratingText = document.getElementById('aiRatingText');
+                
+                var displayBadge = data.badgeText || (data.verdict === 'DUYET' ? 'Đạt chuẩn' : (data.verdict === 'DUYET_CO_DIEU_KIEN' ? 'Đạt có điều kiện' : 'Không đạt yêu cầu'));
+                ratingText.textContent = displayBadge;
 
-                if (ratingText.indexOf('Không đạt') >= 0) {
-                    ratingPill.style.background = '#fee2e2';
-                    ratingPill.style.color = '#dc2626';
-                    ratingPill.style.borderColor = '#fca5a5';
-                } else if (ratingText.indexOf('Chưa đạt') >= 0) {
-                    ratingPill.style.background = '#fef3c7';
-                    ratingPill.style.color = '#b45309';
-                    ratingPill.style.borderColor = '#fcd34d';
-                } else if (ratingText.indexOf('Đạt yêu cầu') >= 0) {
-                    ratingPill.style.background = '#e0e7ff';
-                    ratingPill.style.color = '#4338ca';
-                    ratingPill.style.borderColor = '#c7d2fe';
-                } else {
+                if (data.verdict === 'DUYET') {
                     ratingPill.style.background = 'rgba(34, 197, 94, 0.12)';
                     ratingPill.style.color = '#16a34a';
                     ratingPill.style.borderColor = 'rgba(34, 197, 94, 0.25)';
+                    ratingIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+                } else if (data.verdict === 'DUYET_CO_DIEU_KIEN') {
+                    ratingPill.style.background = '#fef3c7';
+                    ratingPill.style.color = '#b45309';
+                    ratingPill.style.borderColor = '#fcd34d';
+                    ratingIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+                } else {
+                    // KHONG_DUYET -> Tuyệt đối dùng icon ✗, KHÔNG dùng ✓
+                    ratingPill.style.background = '#fee2e2';
+                    ratingPill.style.color = '#dc2626';
+                    ratingPill.style.borderColor = '#fca5a5';
+                    ratingIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
                 }
 
-                document.getElementById('aiSourceModel').textContent = data.modelName || (data.source === 'GEMINI_AI' ? 'Google Gemini' : 'Bộ chuẩn Sư phạm TT 15/2026 & TT 17/2025');
-                document.getElementById('aiSummaryText').textContent = data.summary || 'Kế hoạch bài dạy được phân tích và đánh giá toàn diện.';
+                // 2. Render Source Label
+                document.getElementById('aiSourceModel').textContent = data.sourceLabel || 'Bộ thẩm định Chuẩn Sư phạm';
 
-                // Strengths
+                // 3. Render Summary Text & BGH Follow-Up Box
+                document.getElementById('aiSummaryText').textContent = data.summary || '';
+
+                var bghBox = document.getElementById('aiBghFollowUpBox');
+                var bghText = document.getElementById('aiBghFollowUpText');
+                if (bghBox && bghText) {
+                    if (data.bghFollowUp && data.bghFollowUp.trim().length > 0) {
+                        bghText.textContent = data.bghFollowUp;
+                        bghBox.style.display = 'block';
+                    } else {
+                        bghBox.style.display = 'none';
+                    }
+                }
+
+                // 4. Render Strengths (Passed Points) - Ẩn hẳn khối khi rỗng
+                var grid = document.getElementById('aiGridSections');
+                var strengthsCard = document.getElementById('aiStrengthsCard');
                 var strList = document.getElementById('aiStrengthsList');
                 strList.innerHTML = '';
-                if (data.strengths && data.strengths.length > 0) {
-                    data.strengths.forEach(function(s) {
+
+                if (data.passedPoints && data.passedPoints.length > 0) {
+                    strengthsCard.style.display = 'block';
+                    grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+                    data.passedPoints.forEach(function(s) {
                         var li = document.createElement('li');
                         li.textContent = s;
                         strList.appendChild(li);
                     });
+                } else {
+                    strengthsCard.style.display = 'none';
+                    grid.style.gridTemplateColumns = '1fr';
                 }
 
-                // Improvements
+                // 5. Render Checklist Items by Level
                 var impList = document.getElementById('aiImprovementsList');
                 impList.innerHTML = '';
-                if (data.improvements && data.improvements.length > 0) {
-                    data.improvements.forEach(function(imp) {
+                if (data.checklist && data.checklist.length > 0) {
+                    data.checklist.forEach(function(item) {
                         var li = document.createElement('li');
-                        li.textContent = imp;
+                        var lvl = item.level ? item.level.toUpperCase() : 'GOI_Y';
+                        li.className = 'ai-checklist-item ' + lvl.toLowerCase();
+
+                        var badge = document.createElement('span');
+                        badge.className = 'ai-level-badge level-' + lvl;
+                        if (lvl === 'LOI_NGHIEM_TRONG') {
+                            badge.textContent = 'Lỗi nghiêm trọng';
+                        } else if (lvl === 'CAN_BO_SUNG') {
+                            badge.textContent = 'Cần bổ sung';
+                        } else {
+                            badge.textContent = 'Gợi ý';
+                        }
+                        li.appendChild(badge);
+
+                        var issueDiv = document.createElement('div');
+                        issueDiv.className = 'ai-checklist-issue';
+                        issueDiv.textContent = item.issue || '';
+                        li.appendChild(issueDiv);
+
+                        if (item.fix) {
+                            var fixDiv = document.createElement('div');
+                            fixDiv.className = 'ai-checklist-fix';
+                            fixDiv.textContent = 'Cách sửa: ' + item.fix;
+                            li.appendChild(fixDiv);
+                        }
+
                         impList.appendChild(li);
                     });
                 }
 
-                // Draft
-                lastAiDraftContent = data.suggestedFeedback || '';
+                // 6. Draft Conclusion
+                lastAiDraftContent = data.conclusionText || '';
                 document.getElementById('aiDraftFeedback').value = lastAiDraftContent;
             }
 
@@ -1114,6 +1235,21 @@
 
             function retryAiReview() {
                 triggerAiReview(currentAiTargetVersionSelectId, currentAiTargetTextareaId);
+            }
+
+            function toggleEditEval(evalId) {
+                var editBox = document.getElementById('edit-eval-' + evalId);
+                var bubble = document.getElementById('eval-content-display-' + evalId);
+                if (!editBox) return;
+                if (editBox.style.display === 'none' || editBox.style.display === '') {
+                    editBox.style.display = 'block';
+                    if (bubble) bubble.style.display = 'none';
+                    var textarea = document.getElementById('editEvalContent-' + evalId);
+                    if (textarea) textarea.focus();
+                } else {
+                    editBox.style.display = 'none';
+                    if (bubble) bubble.style.display = 'block';
+                }
             }
 
             // Close AI modal on ESC or backdrop click

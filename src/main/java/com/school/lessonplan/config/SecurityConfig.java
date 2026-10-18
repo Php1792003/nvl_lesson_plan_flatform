@@ -47,7 +47,7 @@ public class SecurityConfig {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(csrfHandler)
                         .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
-                        .ignoringRequestMatchers("/auth/refresh") // refresh dùng cookie, không cần CSRF
+                        .ignoringRequestMatchers("/auth/refresh", "/api/**") // API dùng JWT, không cần CSRF
                 )
 
                 // Headers bảo mật
