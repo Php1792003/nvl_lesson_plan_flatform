@@ -141,7 +141,7 @@
                             <div class="up-row c2">
                                 <div class="form-group up-field"
                                     th:classappend="${#fields.hasErrors('startPeriod')} ? 'has-error'">
-                                    <label class="up-label" for="startPeriod">Từ tiết</label>
+                                    <label class="up-label" for="startPeriod">Từ tiết <span class="opt"></span></label>
                                     <input type="number" id="startPeriod" th:field="*{startPeriod}" class="up-control"
                                         placeholder="Ví dụ: 1 hoặc 5" min="1" max="200"
                                         th:attr="aria-invalid=${#fields.hasErrors('startPeriod')},aria-describedby='startPeriod-error'">

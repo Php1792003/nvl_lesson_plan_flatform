@@ -92,4 +92,20 @@ public class RoleController {
         model.addAttribute("activeEditRoleId", id);
         return "admin/roles/role-permission-manager";
     }
+
+    @PostMapping("/{id}/delete")
+    public String deleteRole(
+            @PathVariable("id") Long id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            roleService.deleteRole(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Xoá vai trò thành công!");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xoá vai trò: " + e.getMessage());
+        }
+        return "redirect:/admin/roles";
+    }
 }
+

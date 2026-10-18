@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-    th:replace="~{layout/layout-base :: layout('Danh sách Giáo án', ~{::contentBlock})}">
+    th:replace="~{layout/layout-base :: layout(#{catalog.teacher.title}, ~{::contentBlock})}">
 
 <body>
     <div th:fragment="contentBlock">
@@ -12,19 +12,19 @@
                 <div class="pl-tabs" role="tablist">
                     <a th:href="@{/plans(tab='my')}" class="pl-tab" role="tab"
                         th:classappend="${currentTab == 'my'} ? 'on'">
-                        <span>Giáo án của tôi</span>
+                        <span data-i18n="catalog.tab.my_plans" th:text="#{catalog.tab.my_plans}">Giáo án của tôi</span>
                         <span class="cnt" th:if="${currentTab == 'my'}" th:text="${plansPage.totalElements}">0</span>
                     </a>
                     <a th:href="@{/plans(tab='shared')}" class="pl-tab" role="tab"
                         th:classappend="${currentTab == 'shared'} ? 'on'">
-                        <span>Được chia sẻ với tôi</span>
+                        <span data-i18n="catalog.tab.shared_plans" th:text="#{catalog.tab.shared_plans}">Được chia sẻ với tôi</span>
                         <span class="cnt" th:if="${currentTab == 'shared'}"
                             th:text="${sharedPage.totalElements}">0</span>
                     </a>
-                    <a th:href="@{/plans(tab='favorite')}" class="pl-tab" role="tab"
+                    <a th:if="${canViewFavorites}" th:href="@{/plans(tab='favorite')}" class="pl-tab" role="tab"
                         th:classappend="${currentTab == 'favorite'} ? 'on'"
                         title="Danh sách các giáo án được yêu thích — BGH sẽ không xoá sau mỗi học kỳ">
-                        <span>⭐ Yêu thích</span>
+                        <span data-i18n="catalog.tab.favorite_plans" th:text="#{catalog.tab.favorite_plans}">⭐ Yêu thích</span>
                         <span class="cnt" th:text="${favoriteCount != null ? favoriteCount : 0}">0</span>
                     </a>
                 </div>
@@ -34,7 +34,7 @@
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    <span>Tải lên</span>
+                    <span data-i18n="action.upload" th:text="#{action.upload}">Tải lên</span>
                 </a>
             </div>
 
@@ -51,9 +51,9 @@
                             <polyline points="9 15 12 12 15 15" />
                         </svg>
                     </div>
-                    <h4>Chưa có giáo án nào</h4>
-                    <p>Hãy tải lên giáo án đầu tiên của bạn để bắt đầu quản lý và chia sẻ.</p>
-                    <a th:href="@{/plans/new}" class="pl-btn primary">Tải lên</a>
+                    <h4 data-i18n="catalog.teacher.empty_my_title" th:text="#{catalog.teacher.empty_my_title}">Chưa có giáo án nào</h4>
+                    <p data-i18n="catalog.teacher.empty_my_desc" th:text="#{catalog.teacher.empty_my_desc}">Hãy tải lên giáo án đầu tiên của bạn để bắt đầu quản lý và chia sẻ.</p>
+                    <a th:href="@{/plans/new}" class="pl-btn primary" data-i18n="action.upload" th:text="#{action.upload}">Tải lên</a>
                 </div>
 
                 <th:block th:unless="${plansPage.empty}">
@@ -65,27 +65,26 @@
                                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
                             </svg>
                             <input type="search" class="pl-input" id="plSearch"
-                                placeholder="Tìm theo tiêu đề, bộ môn, khối..." autocomplete="off"
+                                th:placeholder="#{filter.search_placeholder}" placeholder="Tìm theo tiêu đề, bộ môn, khối..." autocomplete="off"
                                 aria-label="Tìm giáo án">
                         </div>
                         <select class="pl-select" id="plDept" aria-label="Lọc theo bộ môn">
-                            <option value="">Tất cả bộ môn</option>
+                            <option value="" data-i18n="filter.all_departments" th:text="#{filter.all_departments}">Tất cả bộ môn</option>
                         </select>
-                        <div class="pl-meta">Hiển thị <b id="plShown">0</b> / <span id="plTotalPage">0</span> trên trang
-                            này</div>
+                        <div class="pl-meta"><span data-i18n="table.showing" th:text="#{table.showing}">Hiển thị</span> <b id="plShown">0</b> / <span id="plTotalPage">0</span> <span data-i18n="catalog.on_this_page" th:text="'trên trang này'">trên trang này</span></div>
                     </div>
 
                     <div class="pl-scroll">
                         <table class="pl-table" id="plTable">
                             <thead>
                                 <tr>
-                                    <th>Tiêu đề giáo án</th>
-                                    <th>Bộ môn</th>
-                                    <th>Khối</th>
-                                    <th>Năm học</th>
-                                    <th>Phiên bản</th>
-                                    <th>Cập nhật</th>
-                                    <th class="right">Thao tác</th>
+                                    <th data-i18n="table.title" th:text="#{table.title}">Tiêu đề giáo án</th>
+                                    <th data-i18n="table.department" th:text="#{table.department}">Bộ môn</th>
+                                    <th data-i18n="table.grade" th:text="#{table.grade}">Khối</th>
+                                    <th data-i18n="table.school_year" th:text="#{table.school_year}">Năm học</th>
+                                    <th data-i18n="table.version" th:text="#{table.version}">Phiên bản</th>
+                                    <th data-i18n="table.updated_at" th:text="#{table.updated_at}">Cập nhật</th>
+                                    <th class="right" data-i18n="table.actions" th:text="#{table.actions}">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -106,29 +105,29 @@
                                                 <div style="display: flex; align-items: center; gap: 6px;">
                                                     <a class="t" th:href="@{/plans/{id}(id=${plan.id})}"
                                                         th:text="${plan.title}">Tiêu đề</a>
-                                                    <span th:if="${plan.favorite}" class="badge"
-                                                        style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 999px;"
-                                                        title="Giáo án yêu thích — Được bảo vệ sau mỗi học kỳ">⭐ Yêu
-                                                        thích</span>
+                                                    <span th:if="${canViewFavorites and plan.favorite}" class="badge ad-badge-fav"
+                                                        title="Giáo án yêu thích — Được bảo vệ sau mỗi học kỳ"
+                                                        data-i18n="badge.favorite_protected" th:text="'⭐ ' + #{badge.favorite_protected}">⭐
+                                                        Yêu thích</span>
                                                 </div>
                                                 <div th:if="${plan.weekNo != null or plan.startPeriod != null}" style="display: flex; gap: 6px; font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                                                    <span th:if="${plan.weekNo != null}" th:text="'Tuần ' + ${plan.weekNo}">Tuần 1</span>
+                                                    <span th:if="${plan.weekNo != null}" th:text="#{table.week_prefix} + ' ' + ${plan.weekNo}">Tuần 1</span>
                                                     <span th:if="${plan.weekNo != null and plan.startPeriod != null}">•</span>
                                                     <span th:if="${plan.startPeriod != null}" th:text="${plan.displayPeriodText}">Tiết 1 - 3 (3 tiết)</span>
                                                 </div>
                                                 <div th:if="${plan.isOrphan()}">
                                                     <span class="pl-badge orphan"
-                                                        th:text="${plan.displayOwnerName}">Giáo viên đã bị xoá</span>
+                                                        data-i18n="badge.orphan_teacher" th:text="#{badge.orphan_teacher}">Giáo viên đã bị xoá</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td data-label="Bộ môn"><span class="pl-dept"><i></i><span
                                                 th:text="${plan.department.name}">Toán học</span></span></td>
-                                    <td data-label="Khối" th:text="'Khối ' + ${plan.grade}">Khối 10</td>
+                                    <td data-label="Khối" th:text="#{table.grade_prefix} + ' ' + ${plan.grade}">Khối 10</td>
                                     <td data-label="Năm học">
                                         <div class="pl-two"><span th:text="${plan.schoolYear}">2025-2026</span><small
-                                                th:text="'Học kỳ ' + ${plan.semester}">Học kỳ 1</small></div>
+                                                th:text="#{table.semester_prefix} + ' ' + ${plan.semester}">Học kỳ 1</small></div>
                                     </td>
                                     <td data-label="Phiên bản"><span class="pl-badge ver"
                                             th:text="'v' + ${plan.currentVersionNo}">v1</span></td>
@@ -141,17 +140,16 @@
                                     <td class="right">
                                         <div
                                             style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-                                            <form th:action="@{/plans/{id}/favorite(id=${plan.id})}" method="post"
+                                            <form th:if="${canViewFavorites}" th:action="@{/plans/{id}/favorite(id=${plan.id})}" method="post"
                                                 style="margin: 0;" onclick="event.stopPropagation();">
                                                 <button type="submit" class="pl-btn ghost"
                                                     th:style="${plan.favorite} ? 'color: #d97706; padding: 5px 8px;' : 'color: #9ca3af; padding: 5px 8px;'"
                                                     th:title="${plan.favorite} ? 'Bỏ yêu thích' : 'Đánh dấu yêu thích (Bảo vệ khỏi dọn dẹp học kỳ)'">
-                                                    <span th:text="${plan.favorite} ? '⭐ Đã thích' : '☆ Thích'">☆
-                                                        Thích</span>
+                                                    <span th:text="${plan.favorite} ? ('⭐ ' + #{action.liked}) : ('☆ ' + #{action.like})">☆ Thích</span>
                                                 </button>
                                             </form>
                                             <a th:href="@{/plans/{id}(id=${plan.id})}" class="pl-btn ghost">
-                                                <span>Xem</span>
+                                                <span data-i18n="action.view" th:text="#{action.view}">Xem</span>
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                                                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
                                                     stroke-linejoin="round">
@@ -167,22 +165,23 @@
                     </div>
 
                     <div class="pl-nomatch" id="plNoMatch">
-                        <strong>Không tìm thấy giáo án phù hợp</strong>
-                        Thử đổi từ khoá hoặc chọn lại bộ môn.
+                        <strong data-i18n="catalog.empty.title" th:text="#{catalog.empty.title}">Không tìm thấy giáo án phù hợp</strong>
+                        <span data-i18n="catalog.empty.desc" th:text="#{catalog.empty.desc}">Thử đổi từ khoá hoặc chọn lại bộ môn.</span>
                     </div>
 
                     <div class="pl-foot">
-                        <span>Tổng cộng <b th:text="${plansPage.totalElements}">0</b> giáo án</span>
+                        <span><span data-i18n="catalog.total_plans_text" th:text="#{catalog.total_plans_text}">Tổng cộng</span> <b th:text="${plansPage.totalElements}">0</b> <span data-i18n="table.plans" th:text="#{table.plans}">giáo án</span></span>
                         <nav class="pl-pager" th:if="${plansPage.totalPages > 1}" aria-label="Phân trang">
                             <a th:if="${!plansPage.first}" class="pl-pg"
-                                th:href="@{/plans(tab='my',page=${plansPage.number - 1})}">‹ Trước</a>
-                            <span th:if="${plansPage.first}" class="pl-pg off">‹ Trước</span>
+                                th:href="@{/plans(tab='my',page=${plansPage.number - 1})}"
+                                th:text="'‹ ' + #{action.previous}">‹ Trước</a>
+                            <span th:if="${plansPage.first}" class="pl-pg off" th:text="'‹ ' + #{action.previous}">‹ Trước</span>
                             <span class="cur"
-                                th:text="'Trang ' + ${plansPage.number + 1} + ' / ' + ${plansPage.totalPages}">Trang 1 /
-                                1</span>
+                                th:text="#{table.page_prefix} + ' ' + ${plansPage.number + 1} + ' / ' + ${plansPage.totalPages}">Trang 1 / 1</span>
                             <a th:if="${!plansPage.last}" class="pl-pg"
-                                th:href="@{/plans(tab='my',page=${plansPage.number + 1})}">Sau ›</a>
-                            <span th:if="${plansPage.last}" class="pl-pg off">Sau ›</span>
+                                th:href="@{/plans(tab='my',page=${plansPage.number + 1})}"
+                                th:text="#{action.next} + ' ›'">Sau ›</a>
+                            <span th:if="${plansPage.last}" class="pl-pg off" th:text="#{action.next} + ' ›'">Sau ›</span>
                         </nav>
                     </div>
                 </th:block>
@@ -202,8 +201,8 @@
                             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                         </svg>
                     </div>
-                    <h4>Chưa có giáo án được chia sẻ</h4>
-                    <p>Khi đồng nghiệp chia sẻ giáo án cho bạn, chúng sẽ xuất hiện tại đây.</p>
+                    <h4 data-i18n="catalog.teacher.empty_shared_title" th:text="#{catalog.teacher.empty_shared_title}">Chưa có giáo án được chia sẻ</h4>
+                    <p data-i18n="catalog.teacher.empty_shared_desc" th:text="#{catalog.teacher.empty_shared_desc}">Khi đồng nghiệp chia sẻ giáo án cho bạn, chúng sẽ xuất hiện tại đây.</p>
                 </div>
 
                 <th:block th:unless="${sharedPage.empty}">
@@ -215,27 +214,26 @@
                                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
                             </svg>
                             <input type="search" class="pl-input" id="plSearch"
-                                placeholder="Tìm theo tiêu đề, người chia sẻ, bộ môn..." autocomplete="off"
+                                th:placeholder="#{filter.search_placeholder}" placeholder="Tìm theo tiêu đề, người chia sẻ, bộ môn..." autocomplete="off"
                                 aria-label="Tìm giáo án">
                         </div>
                         <select class="pl-select" id="plDept" aria-label="Lọc theo bộ môn">
-                            <option value="">Tất cả bộ môn</option>
+                            <option value="" data-i18n="filter.all_departments" th:text="#{filter.all_departments}">Tất cả bộ môn</option>
                         </select>
-                        <div class="pl-meta">Hiển thị <b id="plShown">0</b> / <span id="plTotalPage">0</span> trên trang
-                            này</div>
+                        <div class="pl-meta"><span data-i18n="table.showing" th:text="#{table.showing}">Hiển thị</span> <b id="plShown">0</b> / <span id="plTotalPage">0</span> <span data-i18n="catalog.on_this_page" th:text="'trên trang này'">trên trang này</span></div>
                     </div>
 
                     <div class="pl-scroll">
                         <table class="pl-table" id="plTable">
                             <thead>
                                 <tr>
-                                    <th>Tiêu đề giáo án</th>
-                                    <th>Người chia sẻ</th>
-                                    <th>Bộ môn</th>
-                                    <th>Khối</th>
-                                    <th>Ngày chia sẻ</th>
-                                    <th>Thời hạn</th>
-                                    <th class="right">Thao tác</th>
+                                    <th data-i18n="table.title" th:text="#{table.title}">Tiêu đề giáo án</th>
+                                    <th data-i18n="table.shared_by" th:text="#{table.shared_by}">Người chia sẻ</th>
+                                    <th data-i18n="table.department" th:text="#{table.department}">Bộ môn</th>
+                                    <th data-i18n="table.grade" th:text="#{table.grade}">Khối</th>
+                                    <th data-i18n="table.shared_date" th:text="#{table.shared_date}">Ngày chia sẻ</th>
+                                    <th data-i18n="table.expiry" th:text="#{table.expiry}">Thời hạn</th>
+                                    <th class="right" data-i18n="table.actions" th:text="#{table.actions}">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -256,7 +254,7 @@
                                                 <a class="t" th:href="@{/plans/{id}(id=${share.plan.id})}"
                                                     th:text="${share.plan.title}">Tiêu đề</a>
                                                 <div th:if="${share.plan.weekNo != null or share.plan.startPeriod != null}" style="display: flex; gap: 6px; font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                                                    <span th:if="${share.plan.weekNo != null}" th:text="'Tuần ' + ${share.plan.weekNo}">Tuần 1</span>
+                                                    <span th:if="${share.plan.weekNo != null}" th:text="#{table.week_prefix} + ' ' + ${share.plan.weekNo}">Tuần 1</span>
                                                     <span th:if="${share.plan.weekNo != null and share.plan.startPeriod != null}">•</span>
                                                     <span th:if="${share.plan.startPeriod != null}" th:text="${share.plan.displayPeriodText}">Tiết 1 - 3 (3 tiết)</span>
                                                 </div>
@@ -268,20 +266,21 @@
                                         Thầy Bình</td>
                                     <td data-label="Bộ môn"><span class="pl-dept"><i></i><span
                                                 th:text="${share.plan.department.name}">Vật lý</span></span></td>
-                                    <td data-label="Khối" th:text="'Khối ' + ${share.plan.grade}">Khối 11</td>
+                                    <td data-label="Khối" th:text="#{table.grade_prefix} + ' ' + ${share.plan.grade}">Khối 11</td>
                                     <td data-label="Ngày chia sẻ"
                                         th:text="${#temporals.format(share.grantedAt, 'dd/MM/yyyy')}">01/01/2026</td>
                                     <td data-label="Thời hạn">
                                         <span th:if="${share.expiresAt != null}" class="pl-two"
-                                            th:attr="data-expires=${share.expiresAt}">
+                                             th:attr="data-expires=${share.expiresAt}">
                                             <span
                                                 th:text="${#temporals.format(share.expiresAt, 'dd/MM/yyyy')}">31/12/2026</span>
                                         </span>
-                                        <span th:if="${share.expiresAt == null}" class="pl-badge ok">Vô thời hạn</span>
+                                        <span th:if="${share.expiresAt == null}" class="pl-badge ok"
+                                            data-i18n="badge.unlimited" th:text="#{badge.unlimited}">Vô thời hạn</span>
                                     </td>
                                     <td class="right">
                                         <a th:href="@{/plans/{id}(id=${share.plan.id})}" class="pl-btn ghost">
-                                            <span>Xem</span>
+                                            <span data-i18n="action.view" th:text="#{action.view}">Xem</span>
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                                                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
                                                 stroke-linejoin="round">
@@ -296,22 +295,23 @@
                     </div>
 
                     <div class="pl-nomatch" id="plNoMatch">
-                        <strong>Không tìm thấy giáo án phù hợp</strong>
-                        Thử đổi từ khoá hoặc chọn lại bộ môn.
+                        <strong data-i18n="catalog.empty.title" th:text="#{catalog.empty.title}">Không tìm thấy giáo án phù hợp</strong>
+                        <span data-i18n="catalog.empty.desc" th:text="#{catalog.empty.desc}">Thử đổi từ khoá hoặc chọn lại bộ môn.</span>
                     </div>
 
                     <div class="pl-foot">
-                        <span>Tổng cộng <b th:text="${sharedPage.totalElements}">0</b> giáo án được chia sẻ</span>
+                        <span><span data-i18n="catalog.total_plans_text" th:text="#{catalog.total_plans_text}">Tổng cộng</span> <b th:text="${sharedPage.totalElements}">0</b> <span data-i18n="catalog.shared_plans_text" th:text="#{catalog.shared_plans_text}">giáo án được chia sẻ</span></span>
                         <nav class="pl-pager" th:if="${sharedPage.totalPages > 1}" aria-label="Phân trang">
                             <a th:if="${!sharedPage.first}" class="pl-pg"
-                                th:href="@{/plans(tab='shared',page=${sharedPage.number - 1})}">‹ Trước</a>
-                            <span th:if="${sharedPage.first}" class="pl-pg off">‹ Trước</span>
+                                th:href="@{/plans(tab='shared',page=${sharedPage.number - 1})}"
+                                th:text="'‹ ' + #{action.previous}">‹ Trước</a>
+                            <span th:if="${sharedPage.first}" class="pl-pg off" th:text="'‹ ' + #{action.previous}">‹ Trước</span>
                             <span class="cur"
-                                th:text="'Trang ' + ${sharedPage.number + 1} + ' / ' + ${sharedPage.totalPages}">Trang 1
-                                / 1</span>
+                                th:text="#{table.page_prefix} + ' ' + ${sharedPage.number + 1} + ' / ' + ${sharedPage.totalPages}">Trang 1 / 1</span>
                             <a th:if="${!sharedPage.last}" class="pl-pg"
-                                th:href="@{/plans(tab='shared',page=${sharedPage.number + 1})}">Sau ›</a>
-                            <span th:if="${sharedPage.last}" class="pl-pg off">Sau ›</span>
+                                th:href="@{/plans(tab='shared',page=${sharedPage.number + 1})}"
+                                th:text="#{action.next} + ' ›'">Sau ›</a>
+                            <span th:if="${sharedPage.last}" class="pl-pg off" th:text="#{action.next} + ' ›'">Sau ›</span>
                         </nav>
                     </div>
                 </th:block>
@@ -328,11 +328,9 @@
                                 points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                         </svg>
                     </div>
-                    <h4>Chưa có giáo án yêu thích nào</h4>
-                    <p>Bấm vào nút <strong>☆ Thích</strong> trên bất kỳ giáo án nào để đưa vào danh sách yêu thích.<br>
-                        Các giáo án yêu thích sẽ được <strong>bảo vệ tuyệt đối</strong> và không bị Ban Giám Hiệu xoá
-                        trong các đợt dọn dẹp học kỳ.</p>
-                    <a th:href="@{/plans(tab='my')}" class="pl-btn primary">Xem giáo án của tôi</a>
+                    <h4 data-i18n="catalog.teacher.empty_fav_title" th:text="#{catalog.teacher.empty_fav_title}">Chưa có giáo án yêu thích nào</h4>
+                    <p data-i18n="catalog.teacher.empty_fav_desc" th:text="#{catalog.teacher.empty_fav_desc}">Bấm vào nút ☆ Thích trên bất kỳ giáo án nào để đưa vào danh sách yêu thích. Các giáo án yêu thích sẽ được bảo vệ tuyệt đối và không bị Ban Giám Hiệu xoá trong các đợt dọn dẹp học kỳ.</p>
+                    <a th:href="@{/plans(tab='my')}" class="pl-btn primary" data-i18n="catalog.tab.my_plans" th:text="#{catalog.tab.my_plans}">Xem giáo án của tôi</a>
                 </div>
 
                 <th:block th:unless="${favoritePage.empty}">
@@ -344,28 +342,27 @@
                                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
                             </svg>
                             <input type="search" class="pl-input" id="plSearch"
-                                placeholder="Tìm theo tiêu đề, bộ môn, khối..." autocomplete="off"
+                                th:placeholder="#{filter.search_placeholder}" placeholder="Tìm theo tiêu đề, bộ môn, khối..." autocomplete="off"
                                 aria-label="Tìm giáo án">
                         </div>
                         <select class="pl-select" id="plDept" aria-label="Lọc theo bộ môn">
-                            <option value="">Tất cả bộ môn</option>
+                            <option value="" data-i18n="filter.all_departments" th:text="#{filter.all_departments}">Tất cả bộ môn</option>
                         </select>
-                        <div class="pl-meta">Hiển thị <b id="plShown">0</b> / <span id="plTotalPage">0</span> trên trang
-                            này</div>
+                        <div class="pl-meta"><span data-i18n="table.showing" th:text="#{table.showing}">Hiển thị</span> <b id="plShown">0</b> / <span id="plTotalPage">0</span> <span data-i18n="catalog.on_this_page" th:text="'trên trang này'">trên trang này</span></div>
                     </div>
 
                     <div class="pl-scroll">
                         <table class="pl-table" id="plTable">
                             <thead>
                                 <tr>
-                                    <th>Tiêu đề giáo án</th>
-                                    <th>Người soạn</th>
-                                    <th>Bộ môn</th>
-                                    <th>Khối</th>
-                                    <th>Năm học</th>
-                                    <th>Phiên bản</th>
-                                    <th>Bảo vệ học kỳ</th>
-                                    <th class="right">Thao tác</th>
+                                    <th data-i18n="table.title" th:text="#{table.title}">Tiêu đề giáo án</th>
+                                    <th data-i18n="table.author" th:text="#{table.author}">Người soạn</th>
+                                    <th data-i18n="table.department" th:text="#{table.department}">Bộ môn</th>
+                                    <th data-i18n="table.grade" th:text="#{table.grade}">Khối</th>
+                                    <th data-i18n="table.school_year" th:text="#{table.school_year}">Năm học</th>
+                                    <th data-i18n="table.version" th:text="#{table.version}">Phiên bản</th>
+                                    <th data-i18n="table.semester_protection" th:text="#{table.semester_protection}">Bảo vệ học kỳ</th>
+                                    <th class="right" data-i18n="table.actions" th:text="#{table.actions}">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -386,13 +383,13 @@
                                                 <a class="t" th:href="@{/plans/{id}(id=${plan.id})}"
                                                     th:text="${plan.title}">Tiêu đề</a>
                                                 <div th:if="${plan.weekNo != null or plan.startPeriod != null}" style="display: flex; gap: 6px; font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                                                    <span th:if="${plan.weekNo != null}" th:text="'Tuần ' + ${plan.weekNo}">Tuần 1</span>
+                                                    <span th:if="${plan.weekNo != null}" th:text="#{table.week_prefix} + ' ' + ${plan.weekNo}">Tuần 1</span>
                                                     <span th:if="${plan.weekNo != null and plan.startPeriod != null}">•</span>
                                                     <span th:if="${plan.startPeriod != null}" th:text="${plan.displayPeriodText}">Tiết 1 - 3 (3 tiết)</span>
                                                 </div>
                                                 <div style="margin-top: 3px;">
-                                                    <span class="badge"
-                                                        style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; font-size: 11px;">⭐
+                                                    <span class="badge ad-badge-fav"
+                                                        data-i18n="badge.favorite_protected" th:text="'⭐ ' + #{badge.favorite_protected}">⭐
                                                         Yêu thích</span>
                                                 </div>
                                             </div>
@@ -401,16 +398,17 @@
                                     <td data-label="Người soạn" th:text="${plan.displayOwnerName}">Thầy Tuấn</td>
                                     <td data-label="Bộ môn"><span class="pl-dept"><i></i><span
                                                 th:text="${plan.department.name}">Toán học</span></span></td>
-                                    <td data-label="Khối" th:text="'Khối ' + ${plan.grade}">Khối 10</td>
+                                    <td data-label="Khối" th:text="#{table.grade_prefix} + ' ' + ${plan.grade}">Khối 10</td>
                                     <td data-label="Năm học">
                                         <div class="pl-two"><span th:text="${plan.schoolYear}">2025-2026</span><small
-                                                th:text="'Học kỳ ' + ${plan.semester}">Học kỳ 1</small></div>
+                                                th:text="#{table.semester_prefix} + ' ' + ${plan.semester}">Học kỳ 1</small></div>
                                     </td>
                                     <td data-label="Phiên bản"><span class="pl-badge ver"
                                             th:text="'v' + ${plan.currentVersionNo}">v1</span></td>
                                     <td data-label="Bảo vệ học kỳ">
                                         <span class="badge badge-success" style="font-size: 11px; font-weight: 600;"
-                                            title="Giáo án được bảo vệ, BGH sẽ không xoá sau mỗi học kỳ">
+                                            title="Giáo án được bảo vệ, BGH sẽ không xoá sau mỗi học kỳ"
+                                            data-i18n="badge.protected" th:text="#{badge.protected}">
                                             ✓ Được bảo vệ
                                         </span>
                                     </td>
@@ -421,11 +419,11 @@
                                                 style="margin: 0;" onclick="event.stopPropagation();">
                                                 <button type="submit" class="pl-btn ghost" title="Bỏ đánh dấu yêu thích"
                                                     style="color: #d97706; padding: 5px 8px;">
-                                                    ⭐ Bỏ thích
+                                                    <span th:text="'⭐ ' + #{action.unlike}">⭐ Bỏ thích</span>
                                                 </button>
                                             </form>
                                             <a th:href="@{/plans/{id}(id=${plan.id})}" class="pl-btn ghost">
-                                                <span>Xem</span>
+                                                <span data-i18n="action.view" th:text="#{action.view}">Xem</span>
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                                                     stroke="currentColor" stroke-width="2.2">
                                                     <polyline points="9 18 15 12 9 6"></polyline>
@@ -439,17 +437,18 @@
                     </div>
 
                     <div class="pl-foot">
-                        <span>Tổng cộng <b th:text="${favoritePage.totalElements}">0</b> giáo án yêu thích</span>
+                        <span><span data-i18n="catalog.total_plans_text" th:text="#{catalog.total_plans_text}">Tổng cộng</span> <b th:text="${favoritePage.totalElements}">0</b> <span data-i18n="table.plans" th:text="#{table.plans}">giáo án</span></span>
                         <nav class="pl-pager" th:if="${favoritePage.totalPages > 1}" aria-label="Phân trang">
                             <a th:if="${!favoritePage.first}" class="pl-pg"
-                                th:href="@{/plans(tab='favorite',page=${favoritePage.number - 1})}">‹ Trước</a>
-                            <span th:if="${favoritePage.first}" class="pl-pg off">‹ Trước</span>
+                                th:href="@{/plans(tab='favorite',page=${favoritePage.number - 1})}"
+                                th:text="'‹ ' + #{action.previous}">‹ Trước</a>
+                            <span th:if="${favoritePage.first}" class="pl-pg off" th:text="'‹ ' + #{action.previous}">‹ Trước</span>
                             <span class="cur"
-                                th:text="'Trang ' + ${favoritePage.number + 1} + ' / ' + ${favoritePage.totalPages}">Trang
-                                1 / 1</span>
+                                th:text="#{table.page_prefix} + ' ' + ${favoritePage.number + 1} + ' / ' + ${favoritePage.totalPages}">Trang 1 / 1</span>
                             <a th:if="${!favoritePage.last}" class="pl-pg"
-                                th:href="@{/plans(tab='favorite',page=${favoritePage.number + 1})}">Sau ›</a>
-                            <span th:if="${favoritePage.last}" class="pl-pg off">Sau ›</span>
+                                th:href="@{/plans(tab='favorite',page=${favoritePage.number + 1})}"
+                                th:text="#{action.next} + ' ›'">Sau ›</a>
+                            <span th:if="${favoritePage.last}" class="pl-pg off" th:text="#{action.next} + ' ›'">Sau ›</span>
                         </nav>
                     </div>
                 </th:block>

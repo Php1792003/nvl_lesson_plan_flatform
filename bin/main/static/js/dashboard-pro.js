@@ -638,10 +638,12 @@
         /* Chip bộ lọc đang áp dụng */
         var host = NVL.$('chipHost');
         var items = [];
-        if (fSearch && fSearch.value.trim()) items.push({ el: fSearch, text: 'Từ khoá: ' + fSearch.value.trim() });
+        var isEn = (document.cookie.indexOf('nvl_lang=en') !== -1 || localStorage.getItem('nvl_lang') === 'en');
+        if (fSearch && fSearch.value.trim()) items.push({ el: fSearch, text: (isEn ? 'Keyword: ' : 'Từ khoá: ') + fSearch.value.trim() });
         if (fDept && fDept.value) items.push({ el: fDept, text: fDept.options[fDept.selectedIndex].text });
         if (fYear && fYear.value && fYear.value.trim()) {
-            var yText = (fYear.tagName === 'SELECT') ? ('Năm học ' + fYear.options[fYear.selectedIndex].text) : ('Năm học ' + fYear.value.trim());
+            var prefix = isEn ? 'School year ' : 'Năm học ';
+            var yText = (fYear.tagName === 'SELECT') ? (prefix + fYear.options[fYear.selectedIndex].text) : (prefix + fYear.value.trim());
             items.push({ el: fYear, text: yText });
         }
         if (fSem && fSem.value) items.push({ el: fSem, text: fSem.options[fSem.selectedIndex].text });
@@ -655,7 +657,7 @@
                 label.textContent = it.text;
                 var btn = document.createElement('button');
                 btn.type = 'button';
-                btn.setAttribute('aria-label', 'Bỏ bộ lọc ' + it.text);
+                btn.setAttribute('aria-label', (isEn ? 'Remove filter ' : 'Bỏ bộ lọc ') + it.text);
                 btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
                 btn.addEventListener('click', function () { it.el.value = ''; submitForm(); });
                 chip.appendChild(label);
@@ -864,26 +866,65 @@
             count();
         });
 
-        /* Mã vai trò: tự viết hoa và đổi khoảng trắng thành gạch dưới */
+        /* Mã vai trò: tự động bỏ dấu tiếng Việt, viết hoa và đổi khoảng trắng thành gạch dưới */
         var code = NVL.$('roleCode');
         if (code) {
-            code.addEventListener('input', function () {
-                var v = code.value.toUpperCase().replace(/\s+/g, '_');
-                if (v !== code.value) code.value = v;
+            function sanitizeCode() {
+                var raw = code.value || '';
+                var cleaned = NVL.norm(raw)
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9_]/g, '_')
+                    .replace(/_+/g, '_');
+                if (cleaned !== raw) {
+                    var pos = code.selectionStart;
+                    code.value = cleaned;
+                    if (pos !== null) {
+                        try { code.setSelectionRange(pos, pos); } catch (e) {}
+                    }
+                }
+            }
+            code.addEventListener('input', sanitizeCode);
+            code.addEventListener('blur', function () {
+                var v = NVL.norm(code.value).toUpperCase().replace(/[^A-Z0-9_]/g, '_').replace(/^_+|_+$/g, '');
+                code.value = v;
             });
         }
 
-        /* Gửi biểu mẫu: chống bấm đúp */
+        /* Gửi biểu mẫu: chống bấm đúp và ngăn chặn treo "Đang lưu..." khi validation lỗi */
         document.querySelectorAll('form.role-form').forEach(function (f) {
+            var btn = f.querySelector('button[type="submit"]');
+            if (btn && !btn.dataset.originalText) {
+                btn.dataset.originalText = btn.textContent.trim();
+            }
+
             f.addEventListener('submit', function (e) {
-                if (f.__busy) { e.preventDefault(); return; }
-                f.__busy = true;
-                var btn = f.querySelector('button[type="submit"]');
-                if (btn) {
-                    btn.textContent = 'Đang lưu...';
-                    setTimeout(function () { btn.disabled = true; }, 0);
+                // Tự động chuẩn hoá mã vai trò trước khi kiểm tra validation
+                var codeEl = f.querySelector('#roleCode');
+                if (codeEl && codeEl.value) {
+                    codeEl.value = NVL.norm(codeEl.value).toUpperCase().replace(/[^A-Z0-9_]/g, '_').replace(/^_+|_+$/g, '');
                 }
-                var pb = NVL.$('navProgress'); if (pb) pb.classList.add('run');
+
+                if (e.defaultPrevented) return;
+                if (f.__busy) { e.preventDefault(); return; }
+
+                // Kiểm tra sau khi tất cả các listener validation (như form-validation.js) chạy xong
+                setTimeout(function () {
+                    if (e.defaultPrevented) {
+                        f.__busy = false;
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = btn.dataset.originalText || (f.getAttribute('action') === '/admin/roles' ? 'Tạo vai trò' : 'Lưu');
+                        }
+                        var pb = NVL.$('navProgress'); if (pb) pb.classList.remove('run');
+                        return;
+                    }
+                    f.__busy = true;
+                    if (btn) {
+                        btn.textContent = 'Đang lưu...';
+                        btn.disabled = true;
+                    }
+                    var pb = NVL.$('navProgress'); if (pb) pb.classList.add('run');
+                }, 0);
             });
         });
 
@@ -894,14 +935,14 @@
                 var btn = f.querySelector('button[type="submit"]');
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = f.getAttribute('action') === '/admin/roles' ? 'Tạo vai trò' : 'Lưu thay đổi';
+                    btn.textContent = btn.dataset.originalText || (f.getAttribute('action') === '/admin/roles' ? 'Tạo vai trò' : 'Lưu thay đổi');
                 }
             });
         });
     };
 
     /**
-     * Hỗ trợ tự động tính toán và hiển thị số tiết học (PPCT)
+     * Hỗ trợ tự động tính toán và hiển thị số tiết học 
      * Khoảng tiết: Từ tiết ... Đến tiết ...
      */
     NVL.setupPeriodHelper = function (startId, endId, boxId, textId) {

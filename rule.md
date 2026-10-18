@@ -57,7 +57,7 @@ AUDIT_VIEW
 ## 4. Quy tắc nghiệp vụ (BẮT BUỘC)
 
 ### 4.1 Tài khoản và đăng ký
-- Form đăng ký: **Họ** (`last_name`), **Tên đệm và tên** (`given_name`), **Bộ môn** (select từ bảng `departments`), **Email**, **Phân hiệu** (select từ bảng `campuses`, mặc định **Phân hiệu 1**), **Mật khẩu**, **Xác nhận mật khẩu**.
+- Form đăng ký: **Họ** (`last_name`), **Tên đệm và tên** (`given_name`), **Bộ môn** (select từ bảng `departments`), **Email**, **Điểm trường / Phân hiệu** (select từ bảng `campuses`, mặc định **Điểm trường chính**), **Mật khẩu**, **Xác nhận mật khẩu**.
 - Email duy nhất (không phân biệt hoa thường), chuẩn hoá `lower(trim())`.
 - Trạng thái tài khoản: `PENDING_EMAIL → PENDING_APPROVAL → ACTIVE`, và `LOCKED`.
   - Đăng ký xong: `PENDING_EMAIL`, hệ thống gửi mã xác thực.
@@ -151,7 +151,7 @@ File Word/PowerPoint khá nặng và mỗi lần thay file tạo một version m
 Quy ước: cột chữ dùng `NVARCHAR` (có dấu tiếng Việt), thời gian dùng `DATETIME2` lưu **UTC**, khoá chính `BIGINT IDENTITY`, collation tìm kiếm `Vietnamese_CI_AI`.
 
 ```
-campuses(id, name UNIQUE, is_default BIT)               -- seed: "Phân hiệu 1" is_default=1, "Phân hiệu 2", "Phân hiệu 3"
+campuses(id, name UNIQUE, is_default BIT)               -- seed: "Điểm trường chính" is_default=1, "Phân hiệu 1", "Phân hiệu 2"
 departments(id, name UNIQUE)
 
 users(id, last_name, given_name, email UNIQUE, password_hash,

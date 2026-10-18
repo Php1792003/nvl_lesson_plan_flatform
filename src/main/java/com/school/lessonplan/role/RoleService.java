@@ -76,4 +76,27 @@ public class RoleService {
         auditService.log("ROLE_UPDATE", "ROLE", role.getId(), "Cập nhật vai trò: " + role.getCode());
         return role;
     }
+
+    @Transactional
+    public void deleteRole(Long id) {
+        Role role = getById(id);
+
+        if ("ADMIN".equalsIgnoreCase(role.getCode()) || "TEACHER".equalsIgnoreCase(role.getCode())) {
+            throw new BusinessException("Không thể xoá vai trò hệ thống mặc định (" + role.getCode() + ").");
+        }
+
+        long assignedUsers = roleRepository.countAssignedUsers(id);
+        if (assignedUsers > 0) {
+            throw new BusinessException("Không thể xoá vai trò '" + role.getName() + "' vì đang có " + assignedUsers + " tài khoản người dùng được gán vai trò này. Vui lòng chuyển vai trò của người dùng sang vai trò khác trước khi xoá.");
+        }
+
+        if (role.getPermissions() != null) {
+            role.getPermissions().clear();
+            roleRepository.saveAndFlush(role);
+        }
+
+        roleRepository.delete(role);
+        auditService.log("ROLE_DELETE", "ROLE", id, "Xoá vai trò: " + role.getCode() + " (" + role.getName() + ")");
+    }
 }
+

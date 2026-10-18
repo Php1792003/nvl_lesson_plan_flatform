@@ -36,6 +36,8 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    validate-on-migrate: false
+
 
   mail:
     # SMTP Server (Hỗ trợ Brevo, Resend, Gmail):
@@ -93,6 +95,11 @@ app:
     min-disk-mb: ${APP_UPLOAD_MIN_DISK_MB:500}
   keep-versions: ${APP_KEEP_VERSIONS:3}
   version-delete-days: ${APP_VERSION_DELETE_DAYS:30}
+  ai:
+    gemini:
+      api-key: ${GEMINI_API_KEY:AQ.Ab8RN6JL-bkqmhHDrD_SZLyKJXwAjlZWSPUZ7TnoJnHdMLPLDQ}
+      model: ${GEMINI_MODEL:gemini-3.8-flash}
+      timeout-seconds: 60
   jwt:
     secret: ${JWT_SECRET:DEFAULT_DEV_SECRET_MUST_BE_AT_LEAST_256_BITS_LONG_CHANGE_IN_PRODUCTION_PLEASE}
     access-token-expiry-minutes: 15

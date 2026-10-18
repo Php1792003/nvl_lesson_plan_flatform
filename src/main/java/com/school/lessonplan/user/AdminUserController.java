@@ -22,6 +22,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.school.lessonplan.lessonplan.LessonPlanRepository;
+
 import java.util.List;
 
 @Controller
@@ -33,15 +35,18 @@ public class AdminUserController {
     private final DepartmentRepository departmentRepository;
     private final CampusRepository campusRepository;
     private final RoleRepository roleRepository;
+    private final LessonPlanRepository lessonPlanRepository;
 
     public AdminUserController(UserService userService,
                                DepartmentRepository departmentRepository,
                                CampusRepository campusRepository,
-                               RoleRepository roleRepository) {
+                               RoleRepository roleRepository,
+                               LessonPlanRepository lessonPlanRepository) {
         this.userService = userService;
         this.departmentRepository = departmentRepository;
         this.campusRepository = campusRepository;
         this.roleRepository = roleRepository;
+        this.lessonPlanRepository = lessonPlanRepository;
     }
 
     @GetMapping
@@ -131,6 +136,7 @@ public class AdminUserController {
         model.addAttribute("departments", departmentRepository.findAll());
         model.addAttribute("campuses", campusRepository.findAll());
         model.addAttribute("allRoles", roleRepository.findAll());
+        model.addAttribute("planCount", lessonPlanRepository.countByOwnerId(id));
 
         if (!model.containsAttribute("userForm")) {
             AdminUserUpdateForm form = new AdminUserUpdateForm();
