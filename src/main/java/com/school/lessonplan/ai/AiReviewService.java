@@ -18,6 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.school.lessonplan.lessonplan.LessonPlanAccessService;
+import com.school.lessonplan.security.CurrentUser;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +40,7 @@ public class AiReviewService {
     private final AiClient aiClient;
     private final AiReviewResultParser resultParser;
     private final AiReviewProperties properties;
+    private final LessonPlanAccessService accessService;
 
     // In-memory cache: key = sha256 + "_" + planId -> CacheEntry
     private final Map<String, CacheEntry> reviewCache = new ConcurrentHashMap<>();
@@ -51,7 +55,8 @@ public class AiReviewService {
                            AiReviewPromptBuilder promptBuilder,
                            AiClient aiClient,
                            AiReviewResultParser resultParser,
-                           AiReviewProperties properties) {
+                           AiReviewProperties properties,
+                           LessonPlanAccessService accessService) {
         this.lessonPlanRepository = lessonPlanRepository;
         this.versionRepository = versionRepository;
         this.evaluationRepository = evaluationRepository;
@@ -60,13 +65,40 @@ public class AiReviewService {
         this.aiClient = aiClient;
         this.resultParser = resultParser;
         this.properties = properties;
+        this.accessService = accessService;
+    }
+
+    public AiReviewService(LessonPlanRepository lessonPlanRepository,
+                           LessonPlanVersionRepository versionRepository,
+                           EvaluationRepository evaluationRepository,
+                           PlanTextExtractor planTextExtractor,
+                           AiReviewPromptBuilder promptBuilder,
+                           AiClient aiClient,
+                           AiReviewResultParser resultParser,
+                           AiReviewProperties properties) {
+        this(lessonPlanRepository, versionRepository, evaluationRepository, planTextExtractor, promptBuilder, aiClient, resultParser, properties, null);
     }
 
     @Transactional(readOnly = true)
     public AiReviewResponse reviewPlan(Long planId, Long versionId) {
+        CurrentUser currentUser = null;
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof CurrentUser u) {
+            currentUser = u;
+        }
+        return reviewPlan(planId, versionId, currentUser);
+    }
+
+    @Transactional(readOnly = true)
+    public AiReviewResponse reviewPlan(Long planId, Long versionId, CurrentUser currentUser) {
         // [1] Kiểm tra planId tồn tại
         LessonPlan plan = lessonPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giáo án ID: " + planId));
+
+        // Kiểm tra quyền xem giáo án để chống tấn công IDOR
+        if (accessService != null && currentUser != null) {
+            accessService.requireViewAccess(currentUser, plan);
+        }
 
         // Lấy phiên bản mới nhất hoặc phiên bản được chỉ định
         LessonPlanVersion version;

@@ -47,21 +47,24 @@ public class SecurityConfig {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(csrfHandler)
                         .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
-                        .ignoringRequestMatchers("/auth/refresh", "/api/**") // API dùng JWT, không cần CSRF
+                        .ignoringRequestMatchers("/auth/refresh")
                 )
 
                 // Headers bảo mật
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.sameOrigin())
-                        .contentSecurityPolicy(csp -> csp
+                .headers(headers -> {
+                        headers.frameOptions(frame -> frame.sameOrigin());
+                        headers.contentTypeOptions(contentType -> {});
+                        headers.contentSecurityPolicy(csp -> csp
                                 .policyDirectives(
-                                        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'"))
-                        .referrerPolicy(referrer -> referrer
-                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
-                        .httpStrictTransportSecurity(hsts -> hsts
+                                        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'"));
+                        headers.referrerPolicy(referrer -> referrer
+                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN));
+                        headers.permissionsPolicy(permissions -> permissions.policy("camera=(), microphone=(), geolocation=()"));
+                        headers.httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
                                 .maxAgeInSeconds(31536000) // 1 năm
-                        ))
+                        );
+                })
 
                 // Phân quyền URL
                 .authorizeHttpRequests(auth -> auth
