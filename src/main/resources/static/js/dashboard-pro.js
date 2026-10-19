@@ -166,12 +166,30 @@
         }
         if (n > 1) NVL.setText('sparkTitle', n + ' tháng gần nhất');
 
+        /* Chart instances */
+        var mainChart = null;
+        var deptChart = null;
+
         /* Vào trang + hiệu ứng đếm số */
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {
                 root.classList.add('is-ready');
                 document.querySelectorAll('.dept-bar b').forEach(function (b) { b.style.width = b.getAttribute('data-w') + '%'; });
+                setTimeout(function () {
+                    if (mainChart) mainChart.resize();
+                    if (deptChart) deptChart.resize();
+                }, 100);
             });
+        });
+
+        /* Tự động cân chỉnh biểu đồ khi xoay màn hình hoặc đổi kích thước cửa sổ */
+        var rzTimer;
+        window.addEventListener('resize', function () {
+            clearTimeout(rzTimer);
+            rzTimer = setTimeout(function () {
+                if (mainChart) mainChart.resize();
+                if (deptChart) deptChart.resize();
+            }, 80);
         });
 
         function countUp(el) {
@@ -246,7 +264,6 @@
 
         /* Biểu đồ chính (Cột / Đường) */
         var mainCv = NVL.$('mainChart');
-        var mainChart = null;
         if (mainCv) ready(mainCv, series);
 
         function buildMain(type) {
@@ -272,17 +289,27 @@
                         pointBackgroundColor: '#fff', pointBorderColor: '#1d4ed8', pointBorderWidth: 2,
                         hoverBackgroundColor: '#1e40af',
                         borderRadius: isLine ? 0 : { topLeft: 7, topRight: 7 },
-                        borderSkipped: false, maxBarThickness: 36
+                        borderSkipped: false, maxBarThickness: 32
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, animation: anim,
+                    resizeDelay: 60,
                     interaction: { mode: 'index', intersect: false },
                     plugins: { legend: { display: false }, tooltip: tip },
                     scales: {
-                        x: { grid: { display: false }, border: { display: false } },
+                        x: {
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 6,
+                                maxRotation: 0,
+                                font: { size: 11 }
+                            }
+                        },
                         y: {
-                            beginAtZero: true, ticks: { precision: 0, padding: 8 },
+                            beginAtZero: true, ticks: { precision: 0, padding: 8, font: { size: 11 } },
                             grid: { color: 'rgba(107, 122, 150, .16)' }, border: { display: false }
                         }
                     }
@@ -311,6 +338,7 @@
                 afterDraw: function (chart) {
                     if (!hasDept) return;
                     var a = chart.chartArea, c = chart.ctx;
+                    if (!a) return;
                     var cx = (a.left + a.right) / 2, cy = (a.top + a.bottom) / 2;
                     c.save();
                     c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -322,7 +350,8 @@
                 }
             };
 
-            new Chart(deptCv, {
+            if (deptChart) deptChart.destroy();
+            deptChart = new Chart(deptCv, {
                 type: 'doughnut',
                 data: {
                     labels: deptLabels,
@@ -334,6 +363,7 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: '70%',
+                    resizeDelay: 60,
                     animation: NVL.reduceMotion ? false : { duration: 900, easing: 'easeOutQuart', animateRotate: true, animateScale: true },
                     plugins: {
                         legend: { display: false },

@@ -43,6 +43,10 @@
     color: var(--ink);
     font-size: 14px;
     line-height: 1.5;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     opacity: 0;
     transform: translateY(12px);
     transition: opacity .35s var(--ease), transform .35s var(--ease);
@@ -392,10 +396,14 @@
             }
 
             /* ---------- Panel ---------- */
+            /* ---------- Panel ---------- */
             .panels {
                 display: grid;
                 grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
                 gap: 16px;
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
             }
 
             .panels.single {
@@ -409,6 +417,11 @@
                 padding: 20px 22px;
                 display: flex;
                 flex-direction: column;
+                min-width: 0;
+                max-width: 100%;
+                width: 100%;
+                box-sizing: border-box;
+                overflow: hidden;
             }
 
             .panel-head {
@@ -418,6 +431,7 @@
                 gap: 12px;
                 flex-wrap: wrap;
                 margin-bottom: 14px;
+                min-width: 0;
             }
 
             .panel-title {
@@ -440,6 +454,7 @@
                 border-radius: 9px;
                 background: var(--canvas);
                 border: 1px solid var(--line);
+                flex-shrink: 0;
             }
 
             .seg button {
@@ -472,11 +487,28 @@
 
             .chart-box {
                 position: relative;
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
                 height: 300px;
+                overflow: hidden;
             }
 
             .chart-box.sm {
-                height: 210px;
+                height: 220px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                margin: 0 auto;
+            }
+
+            .chart-box canvas {
+                display: block;
+                max-width: 100% !important;
+                max-height: 100% !important;
             }
 
             .chart-box.loading::before {
@@ -527,11 +559,14 @@
                 margin-top: 16px;
                 padding-top: 14px;
                 border-top: 1px solid var(--line);
+                width: 100%;
+                min-width: 0;
             }
 
             .stat-strip>div {
                 padding: 0 16px;
                 border-left: 1px solid var(--line);
+                min-width: 0;
             }
 
             .stat-strip>div:first-child {
@@ -542,6 +577,9 @@
             .stat-strip .k {
                 color: var(--muted);
                 font-size: .78rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .stat-strip .v {
@@ -549,6 +587,9 @@
                 font-size: 1.05rem;
                 font-weight: 650;
                 font-variant-numeric: tabular-nums;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             /* Danh sách Môn học */
@@ -561,6 +602,8 @@
                 gap: 11px;
                 max-height: 250px;
                 overflow-y: auto;
+                width: 100%;
+                min-width: 0;
             }
 
             .dept-list li {
@@ -568,6 +611,8 @@
                 grid-template-columns: 1fr auto;
                 gap: 4px 10px;
                 align-items: center;
+                width: 100%;
+                min-width: 0;
             }
 
             .dept-name {
@@ -577,6 +622,7 @@
                 font-size: .85rem;
                 font-weight: 500;
                 min-width: 0;
+                overflow: hidden;
             }
 
             .dept-name i {
@@ -592,9 +638,12 @@
             }
 
             .dept-num {
+                flex-shrink: 0;
                 font-size: .83rem;
                 font-weight: 600;
                 font-variant-numeric: tabular-nums;
+                white-space: nowrap;
+                text-align: right;
             }
 
             .dept-num em {
@@ -610,6 +659,7 @@
                 border-radius: 3px;
                 background: var(--canvas);
                 overflow: hidden;
+                width: 100%;
             }
 
             .dept-bar b {
@@ -620,8 +670,6 @@
                 transition: width .9s var(--ease);
             }
 
-            
-
             /* ---------- Responsive ---------- */
             @media (max-width: 992px) {
                 .hero {
@@ -630,18 +678,69 @@
                 }
 
                 .panels {
-                    grid-template-columns: 1fr;
+                    grid-template-columns: minmax(0, 1fr) !important;
+                    width: 100% !important;
                 }
             }
 
-            @media (max-width: 576px) {
+            @media (max-width: 768px) {
+                .page-head {
+                    gap: 10px;
+                    margin-bottom: 16px;
+                }
+
+                .hero {
+                    padding: 20px 18px;
+                    border-radius: 14px;
+                    gap: 16px;
+                    margin-bottom: 16px;
+                }
+
                 .hero-value {
-                    font-size: 2.7rem;
+                    font-size: 2.5rem;
+                }
+
+                .hero-spark {
+                    min-height: 90px;
+                }
+
+                .kpis {
+                    grid-template-columns: 1fr;
+                    gap: 12px;
+                    margin-bottom: 16px;
+                }
+
+                .kpi {
+                    padding: 14px 16px;
+                    border-radius: 12px;
+                }
+
+                .panels {
+                    gap: 14px;
+                }
+
+                .panel {
+                    padding: 16px 14px;
+                    border-radius: 12px;
+                }
+
+                .panel-head {
+                    margin-bottom: 12px;
+                }
+
+                .chart-box {
+                    height: 240px;
+                }
+
+                .chart-box.sm {
+                    height: 210px;
                 }
 
                 .stat-strip {
                     grid-template-columns: 1fr;
-                    gap: 10px;
+                    gap: 8px;
+                    margin-top: 14px;
+                    padding-top: 12px;
                 }
 
                 .stat-strip>div {
@@ -649,8 +748,53 @@
                     border-left: 0;
                 }
 
-                .chart-box {
-                    height: 250px;
+                .stat-strip>div+div {
+                    padding-top: 8px;
+                    border-top: 1px dashed var(--line);
+                }
+
+                .dept-list {
+                    margin-top: 14px;
+                    gap: 10px;
+                }
+
+                .dept-list li {
+                    grid-template-columns: 1fr auto;
+                    gap: 4px 8px;
+                }
+
+                .dept-name {
+                    font-size: .82rem;
+                }
+
+                .dept-num {
+                    font-size: .8rem;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .panel-head {
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                }
+
+                .panel-title {
+                    font-size: .95rem;
+                }
+
+                .panel-sub {
+                    font-size: .75rem;
+                }
+
+                .seg button {
+                    padding: 4px 10px;
+                    font-size: .75rem;
+                }
+
+                .hero-value {
+                    font-size: 2.2rem;
                 }
             }
 
@@ -1876,6 +2020,79 @@
                 font-variant-numeric: tabular-nums;
             }
 
+            /* ---------- Nút Dọn dẹp giáo án học kỳ ---------- */
+            .ad-head-actions {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+
+            .ad-btn-cleanup {
+                display: inline-flex;
+                align-items: center;
+                gap: 9px;
+                height: 40px;
+                padding: 0 16px 0 10px;
+                border: 1px solid rgba(217, 119, 6, 0.28);
+                border-radius: 10px;
+                background: linear-gradient(180deg, #ffffff 0%, #fffbf2 100%);
+                color: #92400e;
+                font: inherit;
+                font-size: .84rem;
+                font-weight: 600;
+                letter-spacing: -.01em;
+                cursor: pointer;
+                box-shadow: 0 1px 3px rgba(180, 83, 9, 0.08), 0 1px 2px rgba(0, 0, 0, 0.03);
+                transition: all .2s cubic-bezier(.22, .8, .24, 1);
+                white-space: nowrap;
+                user-select: none;
+            }
+
+            .ad-btn-cleanup-ico {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 26px;
+                height: 26px;
+                border-radius: 7px;
+                background: rgba(245, 158, 11, 0.14);
+                color: #d97706;
+                flex-shrink: 0;
+                transition: all .22s cubic-bezier(.22, .8, .24, 1);
+            }
+
+            .ad-btn-cleanup-ico svg {
+                display: block;
+                color: currentColor;
+                transition: transform .25s ease;
+            }
+
+            .ad-btn-cleanup:hover {
+                background: linear-gradient(180deg, #fffdf8 0%, #fef3c7 100%);
+                border-color: #f59e0b;
+                color: #78350f;
+                box-shadow: 0 4px 14px rgba(217, 119, 6, 0.18), 0 1px 3px rgba(0, 0, 0, 0.04);
+                transform: translateY(-1px);
+            }
+
+            .ad-btn-cleanup:hover .ad-btn-cleanup-ico {
+                background: #f59e0b;
+                color: #ffffff;
+                box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+                transform: rotate(-8deg) scale(1.08);
+            }
+
+            .ad-btn-cleanup:active {
+                transform: translateY(0);
+                box-shadow: 0 1px 2px rgba(217, 119, 6, 0.1);
+            }
+
+            .ad-btn-cleanup:focus-visible {
+                outline: 2px solid #f59e0b;
+                outline-offset: 2px;
+            }
+
             /* ---------- Panel ---------- */
             .ad-panel {
                 background: var(--paper);
@@ -2410,9 +2627,42 @@
                 .ad-owner {
                     min-width: 0;
                 }
+
+                .ad-head {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 14px;
+                }
+
+                .ad-head-actions {
+                    justify-content: space-between;
+                    width: 100%;
+                }
+
+                .ad-btn-cleanup {
+                    height: 38px;
+                    padding: 0 13px 0 8px;
+                    font-size: .82rem;
+                }
             }
 
             @media (max-width: 480px) {
+                .ad-head-actions {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 10px;
+                }
+
+                .ad-btn-cleanup {
+                    justify-content: center;
+                    width: 100%;
+                }
+
+                .ad-count {
+                    justify-content: center;
+                    width: 100%;
+                }
+
                 .ad-filter form {
                     grid-template-columns: 1fr;
                 }
