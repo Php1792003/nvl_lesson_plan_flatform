@@ -123,14 +123,144 @@
                    th:if="${#fields.hasErrors('confirmPassword')}" th:text="${#fields.errors('confirmPassword')[0]}"></p>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px;">Đăng ký</button>
+            <!-- Đồng ý điều khoản và chính sách bảo mật -->
+            <div class="form-group" th:classappend="${#fields.hasErrors('agreeTerms')} ? 'has-error'" style="margin-top: 8px; margin-bottom: 20px;">
+                <label class="form-check" for="agreeTerms"
+                       style="display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--text-body, #334155); cursor: pointer; user-select: none; line-height: 1.45;">
+                    <input type="checkbox" id="agreeTerms" th:field="*{agreeTerms}" value="true" required
+                           style="width: 17px; height: 17px; margin-top: 2px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0;"
+                           data-msg-required="Vui lòng tích chọn đồng ý với Điều khoản sử dụng và Chính sách bảo mật."
+                           th:attr="aria-invalid=${#fields.hasErrors('agreeTerms')},aria-describedby='agreeTerms-error'">
+                    <span>
+                        Tôi đã đọc và đồng ý với
+                        <a th:href="@{/terms-and-privacy}" target="_blank" rel="noopener noreferrer"
+                           style="color: var(--primary); font-weight: 600; text-decoration: underline;">Điều khoản sử dụng</a>
+                        &amp;
+                        <a th:href="@{/terms-and-privacy(tab='privacy')}" target="_blank" rel="noopener noreferrer"
+                           style="color: var(--primary); font-weight: 600; text-decoration: underline;">Chính sách bảo mật</a>
+                        của nhà trường. <span class="req" aria-hidden="true">*</span>
+                    </span>
+                </label>
+                <div style="margin-left: 27px; margin-top: 4px;">
+                    <button type="button" id="btnOpenTermsModal"
+                            style="background: none; border: none; padding: 0; font-size: 12px; color: var(--primary); text-decoration: underline; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        Xem nhanh tóm tắt quy chế
+                    </button>
+                </div>
+                <p class="field-error" id="agreeTerms-error" role="alert"
+                   th:if="${#fields.hasErrors('agreeTerms')}" th:text="${#fields.errors('agreeTerms')[0]}"
+                   style="margin-left: 27px;"></p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 4px; padding: 12px;">Đăng ký</button>
         </form>
 
         <div style="text-align: center; margin-top: 24px; font-size: 13px; color: var(--text-muted);">
             Đã có tài khoản?
             <a th:href="@{/login}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Đăng nhập</a>
         </div>
+
+        <div style="text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-muted);">
+            <a th:href="@{/terms-and-privacy}" target="_blank" style="color: var(--text-muted); text-decoration: none;">Điều khoản sử dụng &amp; Chính sách bảo mật</a>
+        </div>
     </div>
+
+    <!-- Modal Xem nhanh Điều khoản & Chính sách -->
+    <div id="termsModalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
+        <div class="modal-box modal-box-xl" style="max-height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--radius-lg, 16px);">
+            <!-- Modal Header -->
+            <div style="padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface-alt);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img th:src="@{/img/nvl_logo.png}" alt="Logo" style="width: 32px; height: 32px; object-fit: contain;">
+                    <div>
+                        <h2 id="termsModalTitle" style="font-size: 16px; font-weight: 700; margin: 0; color: var(--dark);">Tóm tắt Điều khoản & Chính sách Bảo mật</h2>
+                        <p style="font-size: 12px; margin: 2px 0 0; color: var(--text-muted);">Trường THCS Nguyễn Văn Linh — Kế hoạch Bài dạy Điện tử</p>
+                    </div>
+                </div>
+                <button type="button" id="btnCloseTermsModal" style="background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 6px;" aria-label="Đóng cửa sổ">✕</button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div style="padding: 24px; overflow-y: auto; flex: 1; font-size: 14px; line-height: 1.6; color: var(--text-body);">
+                <div style="background: var(--primary-light, rgba(37, 99, 235, 0.08)); border-left: 4px solid var(--primary); padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
+                    <strong style="color: var(--primary);">Kính gửi Quý Thầy/Cô:</strong> Để hoàn tất đăng ký tài khoản giảng viên, Quý Thầy/Cô vui lòng nắm rõ các quy định cốt lõi về bản quyền giáo án, thời hạn nộp bài và nghĩa vụ bảo mật tài khoản.
+                </div>
+
+                <h3 style="font-size: 15px; font-weight: 700; color: var(--dark); margin: 16px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">1. Quy chế Quản lý & Tải lên Giáo án</h3>
+                <ul style="margin: 0 0 16px 20px; padding: 0;">
+                    <li><strong>Định dạng chấp nhận:</strong> Tệp Microsoft Word (.docx) hoặc PDF (.pdf), dung lượng tối đa 25MB.</li>
+                    <li><strong>Thời hạn nộp giáo án:</strong> Tải lên hệ thống trước thời điểm lên lớp tối thiểu <strong>03 ngày làm việc</strong> để Tổ trưởng chuyên môn thẩm định và ký duyệt.</li>
+                    <li><strong>Tính chuẩn mực:</strong> Bám sát chương trình GDPT 2018 và hướng dẫn Công văn 5512/BGDĐT.</li>
+                </ul>
+
+                <h3 style="font-size: 15px; font-weight: 700; color: var(--dark); margin: 16px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">2. Quyền Sở hữu & Trách nhiệm Sư phạm</h3>
+                <ul style="margin: 0 0 16px 20px; padding: 0;">
+                    <li>Giáo viên là tác giả giáo án và tự chịu trách nhiệm về bản quyền học liệu, hình ảnh, trích dẫn.</li>
+                    <li>Nhà trường được toàn quyền lưu trữ, khai thác nội bộ phục vụ kiểm tra chuyên môn và dự giờ.</li>
+                    <li>Nghiêm cấm tải lên nội dung sai trái, vi phạm pháp luật, thuần phong mỹ tục hoặc chứa mã độc.</li>
+                </ul>
+
+                <h3 style="font-size: 15px; font-weight: 700; color: var(--dark); margin: 16px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">3. Bảo mật Thông tin & Quyền Riêng tư</h3>
+                <ul style="margin: 0 0 16px 20px; padding: 0;">
+                    <li>Mật khẩu được mã hóa an toàn một chiều (BCrypt). Tài khoản xác thực danh tính qua email OTP.</li>
+                    <li>Thông tin giáo viên chỉ phục vụ phân công chuyên môn và kiểm tra của Ngành Giáo dục; cam kết <strong>không chia sẻ cho bất kỳ bên thứ ba nào</strong> vì mục đích thương mại.</li>
+                    <li>Giáo viên có trách nhiệm tự bảo mật mật khẩu và mã OTP, không cung cấp tài khoản cho người khác.</li>
+                </ul>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface-alt); flex-wrap: wrap;">
+                <a th:href="@{/terms-and-privacy}" target="_blank" rel="noopener noreferrer" style="font-size: 13px; color: var(--primary); text-decoration: underline; font-weight: 500;">
+                    Xem chi tiết Điều khoản &amp; Chính sách bảo mật ↗
+                </a>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="btnCancelTermsModal" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Đóng</button>
+                    <button type="button" id="btnAgreeFromModal" class="btn btn-primary" style="padding: 8px 20px; font-size: 13px; font-weight: 600;">
+                        Tôi đã hiểu & Đồng ý
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var modal = document.getElementById('termsModalOverlay');
+            var btnOpen = document.getElementById('btnOpenTermsModal');
+            var btnClose = document.getElementById('btnCloseTermsModal');
+            var btnCancel = document.getElementById('btnCancelTermsModal');
+            var btnAgree = document.getElementById('btnAgreeFromModal');
+            var chkAgree = document.getElementById('agreeTerms');
+
+            function openModal() {
+                if (modal) modal.classList.add('open');
+            }
+            function closeModal() {
+                if (modal) modal.classList.remove('open');
+            }
+
+            if (btnOpen) btnOpen.addEventListener('click', openModal);
+            if (btnClose) btnClose.addEventListener('click', closeModal);
+            if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) closeModal();
+                });
+            }
+
+            if (btnAgree && chkAgree) {
+                btnAgree.addEventListener('click', function() {
+                    chkAgree.checked = true;
+                    // Trigger change so client validation clears any error
+                    var event = new Event('change', { bubbles: true });
+                    chkAgree.dispatchEvent(event);
+                    closeModal();
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>

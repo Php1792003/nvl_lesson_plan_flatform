@@ -83,6 +83,11 @@ public class AuthService {
     public User register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
 
+        // Kiểm tra đồng ý điều khoản & chính sách bảo mật
+        if (!Boolean.TRUE.equals(request.getAgreeTerms())) {
+            throw new FieldValidationException("agreeTerms", "AssertTrue", "Vui lòng tích chọn đồng ý với Điều khoản sử dụng và Chính sách bảo mật.");
+        }
+
         // Kiểm tra mật khẩu khớp
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new BusinessException("Mật khẩu xác nhận không khớp.");
