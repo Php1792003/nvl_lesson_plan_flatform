@@ -150,6 +150,25 @@ public class AuthController {
         model.addAttribute("campuses", campusRepository.findAll());
     }
 
+    // ======================== TERMS & PRIVACY ========================
+
+    @GetMapping("/terms-and-privacy")
+    public String termsAndPrivacyPage(@RequestParam(name = "tab", required = false, defaultValue = "all") String tab,
+                                      Model model) {
+        model.addAttribute("activeTab", tab);
+        return "auth/terms-and-privacy";
+    }
+
+    @GetMapping("/terms")
+    public String termsPage() {
+        return "redirect:/terms-and-privacy?tab=terms";
+    }
+
+    @GetMapping("/privacy")
+    public String privacyPage() {
+        return "redirect:/terms-and-privacy?tab=privacy";
+    }
+
     // ======================== EMAIL OTP VERIFICATION ========================
 
     @GetMapping("/verify-email")

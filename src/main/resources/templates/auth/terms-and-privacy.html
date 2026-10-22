@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều khoản sử dụng & Chính sách bảo mật — THCS Nguyễn Văn Linh</title>
+    <meta name="description" content="Điều khoản sử dụng và chính sách bảo mật dành cho giáo viên trên Hệ thống Quản lý Kế hoạch Bài dạy Trường THCS Nguyễn Văn Linh.">
+    <link rel="icon" type="image/x-icon" th:href="@{/img/nvl_logo.png}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('nvl_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        :root {
+            --tp-bg: #f8fafc;
+            --tp-card-bg: #ffffff;
+            --tp-border: #e2e8f0;
+            --tp-text-title: #0f172a;
+            --tp-text-body: #334155;
+            --tp-text-muted: #64748b;
+            --tp-primary: #2563eb;
+            --tp-primary-light: #eff6ff;
+            --tp-primary-dark: #1d4ed8;
+            --tp-accent: #0ea5e9;
+            --tp-callout-bg: #eff6ff;
+            --tp-callout-border: #93c5fd;
+            --tp-callout-text: #1e40af;
+        }
+
+        [data-theme="dark"] {
+            --tp-bg: #0b1120;
+            --tp-card-bg: #1e293b;
+            --tp-border: #334155;
+            --tp-text-title: #f8fafc;
+            --tp-text-body: #cbd5e1;
+            --tp-text-muted: #94a3b8;
+            --tp-primary: #3b82f6;
+            --tp-primary-light: rgba(59, 130, 246, 0.15);
+            --tp-primary-dark: #60a5fa;
+            --tp-accent: #38bdf8;
+            --tp-callout-bg: rgba(59, 130, 246, 0.15);
+            --tp-callout-border: #3b82f6;
+            --tp-callout-text: #bfdbfe;
+        }
+
+        body.terms-page-body {
+            background-color: var(--tp-bg);
+            color: var(--tp-text-body);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header */
+        .terms-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--tp-border);
+            padding: 12px 24px;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        [data-theme="dark"] .terms-header {
+            background: rgba(30, 41, 59, 0.94);
+        }
+
+        .terms-header-inner {
+            max-width: 1060px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .terms-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .terms-brand img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .terms-brand-text h1 {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--tp-text-title);
+            letter-spacing: -0.2px;
+        }
+
+        .terms-brand-text p {
+            font-size: 12px;
+            color: var(--tp-text-muted);
+            margin: 2px 0 0 0;
+        }
+
+        .terms-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-theme-toggle {
+            background: var(--tp-primary-light);
+            border: 1px solid var(--tp-border);
+            color: var(--tp-primary);
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-theme-toggle:hover {
+            background: var(--tp-primary);
+            color: #ffffff;
+        }
+
+        .btn-outline-tp {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--tp-text-body);
+            background: var(--tp-card-bg);
+            border: 1px solid var(--tp-border);
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-outline-tp:hover {
+            border-color: var(--tp-primary);
+            color: var(--tp-primary);
+        }
+
+        .btn-primary-tp {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            background: var(--tp-primary);
+            border: 1px solid var(--tp-primary);
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary-tp:hover {
+            background: var(--tp-primary-dark);
+        }
+
+        /* Hero Container */
+        .terms-container {
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+
+        .terms-hero {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: var(--tp-primary-light);
+            color: var(--tp-primary);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .terms-hero h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--tp-text-title);
+            margin: 0 0 10px;
+            letter-spacing: -0.4px;
+        }
+
+        .terms-hero p {
+            max-width: 680px;
+            margin: 0 auto;
+            font-size: 14.5px;
+            color: var(--tp-text-muted);
+        }
+
+        /* Callout Box bám sát modal */
+        .greeting-callout {
+            background: var(--tp-callout-bg);
+            border-left: 4px solid var(--tp-primary);
+            padding: 16px 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 24px 0 32px;
+            font-size: 14.5px;
+            color: var(--tp-callout-text);
+            line-height: 1.6;
+        }
+
+        .greeting-callout strong {
+            color: var(--tp-primary);
+        }
+
+        /* Tab Pills */
+        .terms-tabs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            border: 1px solid var(--tp-border);
+            background: var(--tp-card-bg);
+            color: var(--tp-text-muted);
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            color: var(--tp-text-title);
+            border-color: var(--tp-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--tp-primary);
+            color: #ffffff;
+            border-color: var(--tp-primary);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        }
+
+        /* Content Blocks */
+        .content-card {
+            background: var(--tp-card-bg);
+            border: 1px solid var(--tp-border);
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: border-color 0.2s;
+        }
+
+        .content-card:hover {
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .card-header-line {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--tp-border);
+        }
+
+        .card-icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--tp-primary-light);
+            color: var(--tp-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .card-header-line h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--tp-text-title);
+            margin: 0;
+        }
+
+        .rule-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 14.5px;
+            line-height: 1.6;
+        }
+
+        .rule-bullet {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--tp-primary);
+            margin-top: 9px;
+            flex-shrink: 0;
+        }
+
+        .rule-text {
+            flex: 1;
+        }
+
+        .rule-text strong {
+            color: var(--tp-text-title);
+        }
+
+        /* Bottom Help Box */
+        .support-card {
+            background: var(--tp-primary-light);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 12px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 32px;
+        }
+
+        .support-card-text h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--tp-text-title);
+            margin: 0 0 4px;
+        }
+
+        .support-card-text p {
+            font-size: 13.5px;
+            color: var(--tp-text-muted);
+            margin: 0;
+        }
+
+        .support-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Footer */
+        .terms-footer {
+            border-top: 1px solid var(--tp-border);
+            padding: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--tp-text-muted);
+            background: var(--tp-card-bg);
+        }
+
+        .terms-footer a {
+            color: var(--tp-primary);
+            text-decoration: none;
+        }
+
+        .terms-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 767.98px) {
+            .terms-hero h2 {
+                font-size: 22px;
+            }
+
+            .content-card {
+                padding: 20px 16px;
+            }
+
+            .card-header-line h3 {
+                font-size: 16px;
+            }
+
+            .terms-tabs {
+                width: 100%;
+            }
+
+            .tab-btn {
+                flex: 1;
+                justify-content: center;
+                padding: 8px 12px;
+                font-size: 12.5px;
+            }
+
+            .support-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .support-card-actions {
+                width: 100%;
+            }
+
+            .support-card-actions a {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body class="terms-page-body">
+    <!-- Header -->
+    <header class="terms-header">
+        <div class="terms-header-inner">
+            <a th:href="@{/login}" class="terms-brand" title="Quay lại trang đăng nhập">
+                <img th:src="@{/img/nvl_logo.png}" alt="THCS Nguyễn Văn Linh">
+                <div class="terms-brand-text">
+                    <h1>THCS Nguyễn Văn Linh</h1>
+                    <p>Kế hoạch Bài dạy Điện tử</p>
+                </div>
+            </a>
+
+            <div class="terms-header-actions">
+                <button type="button" class="btn-theme-toggle" id="themeToggleBtn" aria-label="Đổi giao diện Sáng / Tối" title="Đổi giao diện Sáng / Tối">
+                    <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+
+                <a th:href="@{/login}" class="btn-outline-tp">Đăng nhập</a>
+                <a th:href="@{/register}" class="btn-primary-tp">Đăng ký</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="terms-container">
+        <!-- Hero -->
+        <section class="terms-hero">
+            <div class="hero-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Quy chế &amp; Chính sách Hệ thống
+            </div>
+            <h2>Điều khoản Sử dụng &amp; Chính sách Bảo mật</h2>
+            <p>Quy định dành cho cán bộ, giáo viên tham gia nộp, thẩm định và quản lý kế hoạch bài dạy điện tử tại Trường THCS Nguyễn Văn Linh.</p>
+        </section>
+
+        <!-- Greeting Callout (Bám sát nội dung tóm tắt) -->
+        <div class="greeting-callout">
+            <strong>Kính gửi Quý Thầy/Cô:</strong> Để hoàn tất đăng ký tài khoản giảng viên và sử dụng hệ thống hiệu quả, Quý Thầy/Cô vui lòng nắm rõ các quy định cốt lõi về bản quyền giáo án, thời hạn nộp bài và nghĩa vụ bảo mật tài khoản cá nhân dưới đây.
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="terms-tabs" role="tablist">
+            <button type="button" class="tab-btn" th:classappend="${activeTab == null or activeTab == 'all' ? 'active' : ''}" data-target-tab="all" role="tab">
+                <span>Tất cả nội dung</span>
+            </button>
+            <button type="button" class="tab-btn" th:classappend="${activeTab == 'terms' ? 'active' : ''}" data-target-tab="terms" role="tab">
+                <span>1 &amp; 2. Quy chế Giáo án</span>
+            </button>
+            <button type="button" class="tab-btn" th:classappend="${activeTab == 'privacy' ? 'active' : ''}" data-target-tab="privacy" role="tab">
+                <span>3. Bảo mật &amp; Quyền riêng tư</span>
+            </button>
+        </div>
+
+        <!-- Section 1: Quy chế Quản lý & Tải lên Giáo án -->
+        <article class="content-card" id="card-section-1" data-section="terms">
+            <div class="card-header-line">
+                <div class="card-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <h3>1. Quy chế Quản lý &amp; Tải lên Giáo án</h3>
+            </div>
+            <ul class="rule-list">
+                <li class="rule-item">
+                    <span class="rule-bullet"></span>
+                    <div class="rule-text">
+                        <strong>Định dạng chấp nhận:</strong> Tệp Microsoft Word (<code>.docx</code>) hoặc PDF (<code>.pdf</code>), dung lượng tải lên tối đa <strong>25MB</strong> cho mỗi tệp tin giáo án.
+                    </div>
+                </li>
+                <li class="rule-item">
+                    <span class="rule-bullet"></span>
+                    <div class="rule-text">
+                        <strong>Thời hạn nộp giáo án:</strong> Giáo viên tải lên hệ thống trước thời điểm lên lớp tối thiểu <strong>03 ngày làm việc</strong> để Tổ trưởng chuyên môn thẩm định và ký duyệt.
+                    </div>
+                </li>
+                <li class="rule-item">
+                    <span class="rule-bullet"></span>
+                    <div class="rule-text">
+                        <strong>Tính chuẩn mực sư phạm:</strong> Kế hoạch bài dạy bám sát yêu cầu cần đạt của Chương trình GDPT 2018 và khung cấu trúc hướng dẫn theo Công văn 5512/BGDĐT.
+                    </div>
+                </li>
+                <li class="rule-item">
+                    <span class="rule-bullet"></span>
+                    <div class="rule-text">
+                        <strong>Chỉnh sửa và cập nhật:</strong> Khi nhận được yêu cầu điều chỉnh từ Tổ trưởng chuyên môn, Thầy/Cô cập nhật phiên bản mới kịp thời để đảm bảo tiến độ giảng dạy.
+                    </div>
+                </li>
+            </ul>
+        </article>
+
+        <!-- Section 2: Quyền Sở hữu & Trách nhiệm Sư phạm -->
+        <article class="content-card" id="card-section-2" data-section="terms">
+            <div class="card-header-line">
+                <div class="card-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                </div>
+                <h3>2. Quyền Sở hữu &amp; Trách nhiệm Sư phạm</h3>
+            </div>
+            <ul class="rule-list">
+                <li class="rule-item">
+                    <span class="rule-bullet"></span>
+                    <div class="rule-text">
+                        <strong>Tác quyền giáo án:</strong> Giáo viên là tác giả giáo án và tự chịu trách nhiệm về bản quyền học liệu, hình ảnh, liên kết và nội dung trích dẫn trong bài giảng.
+                    </div>
+                </li>
+                <li class="rule-item">
+                    <span class="rule-bullet"></span>
+                    <div class="rule-text">
+                        <strong>Lưu trữ &amp; Khai thác nội bộ:</strong> Nhà trường được quyền lưu trữ, khai thác nội bộ kế hoạch bài dạy phục vụ công tác kiểm tra chuyên môn, dự giờ và trao đổi kinh nghiệm sư phạm trong tổ bộ môn.
+                    </div>
+                </li>
+                <li class="rule-item">
+                    <span class="rule-bullet"></span>
+                    <div class="rule-text">
+                        <strong>Quy chuẩn đạo đức nghề nghiệp:</strong> Nghiêm cấm tải lên nội dung sai trái, vi phạm pháp luật, trái thuần phong mỹ tục hoặc chứa mã độc gây hại hệ thống.
+                    </div>
+                </li>
+            </ul>
+        </article>
+
+        <!-- Section 3: Bảo mật Thông tin & Quyền Riêng tư -->
+        <article class="content-card" id="card-section-3" data-section="privacy">
+            <div class="card-header-line">
+                <div class="card-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #059669;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </div>
+                <h3>3. Bảo mật Thông tin &amp; Quyền Riêng tư</h3>
+            </div>
+            <ul class="rule-list">
+                <li class="rule-item">
+                    <span class="rule-bullet" style="background: #059669;"></span>
+                    <div class="rule-text">
+                        <strong>Mã hóa mật khẩu &amp; Xác thực OTP:</strong> Mật khẩu tài khoản được mã hóa an toàn một chiều bằng thuật toán BCrypt. Mỗi tài khoản bắt buộc xác thực danh tính qua mã OTP gửi về email cá nhân.
+                    </div>
+                </li>
+                <li class="rule-item">
+                    <span class="rule-bullet" style="background: #059669;"></span>
+                    <div class="rule-text">
+                        <strong>Cam kết bảo mật dữ liệu:</strong> Thông tin cá nhân của giáo viên chỉ phục vụ phân công chuyên môn và kiểm tra của Ngành Giáo dục; nhà trường <strong>cam kết không chia sẻ cho bất kỳ bên thứ ba nào</strong> vì mục đích thương mại.
+                    </div>
+                </li>
+                <li class="rule-item">
+                    <span class="rule-bullet" style="background: #059669;"></span>
+                    <div class="rule-text">
+                        <strong>Trách nhiệm bảo mật tài khoản:</strong> Giáo viên có trách nhiệm tự bảo quản mật khẩu và mã OTP, không cung cấp tài khoản cá nhân cho người khác sử dụng.
+                    </div>
+                </li>
+                <li class="rule-item">
+                    <span class="rule-bullet" style="background: #059669;"></span>
+                    <div class="rule-text">
+                        <strong>Quyền tra cứu &amp; Tải về:</strong> Thầy/Cô có toàn quyền xem, xuất và tải về các kế hoạch bài dạy do chính mình đăng tải bất kỳ lúc nào trên hệ thống.
+                    </div>
+                </li>
+            </ul>
+        </article>
+
+        <!-- Support Card -->
+        <div class="support-card">
+            <div class="support-card-text">
+                <h4>Cần trợ giúp hoặc có thắc mắc kỹ thuật?</h4>
+                <p>Bộ phận Quản trị hệ thống luôn sẵn sàng hỗ trợ Quý Thầy/Cô trong quá trình sử dụng cổng giáo án.</p>
+            </div>
+            <div class="support-card-actions">
+                <a th:href="@{/login}" class="btn-outline-tp">Đăng nhập ngay</a>
+                <a th:href="@{/register}" class="btn-primary-tp">Tạo tài khoản giáo viên</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="terms-footer">
+        <div>
+            © Trường THCS Nguyễn Văn Linh — Hệ thống Quản lý Kế hoạch Bài dạy Điện tử
+        </div>
+    </footer>
+
+    <!-- Interactive Script -->
+    <script>
+        (function() {
+            'use strict';
+
+            // Theme toggle
+            var toggleBtn = document.getElementById('themeToggleBtn');
+            var iconSun = document.getElementById('themeIconSun');
+            var iconMoon = document.getElementById('themeIconMoon');
+
+            function updateIcons(theme) {
+                if (theme === 'dark') {
+                    if (iconSun) iconSun.style.display = 'block';
+                    if (iconMoon) iconMoon.style.display = 'none';
+                } else {
+                    if (iconSun) iconSun.style.display = 'none';
+                    if (iconMoon) iconMoon.style.display = 'block';
+                }
+            }
+
+            var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            updateIcons(currentTheme);
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    var newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('nvl_theme', newTheme);
+                    updateIcons(newTheme);
+                });
+            }
+
+            // Tab switching
+            var tabBtns = document.querySelectorAll('.tab-btn[data-target-tab]');
+            var card1 = document.getElementById('card-section-1');
+            var card2 = document.getElementById('card-section-2');
+            var card3 = document.getElementById('card-section-3');
+
+            function applyTab(tab) {
+                tabBtns.forEach(function(b) {
+                    b.classList.toggle('active', b.dataset.targetTab === tab);
+                });
+
+                if (tab === 'terms') {
+                    if (card1) card1.style.display = 'block';
+                    if (card2) card2.style.display = 'block';
+                    if (card3) card3.style.display = 'none';
+                } else if (tab === 'privacy') {
+                    if (card1) card1.style.display = 'none';
+                    if (card2) card2.style.display = 'none';
+                    if (card3) card3.style.display = 'block';
+                } else {
+                    if (card1) card1.style.display = 'block';
+                    if (card2) card2.style.display = 'block';
+                    if (card3) card3.style.display = 'block';
+                }
+            }
+
+            tabBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var tab = btn.dataset.targetTab;
+                    applyTab(tab);
+                    var url = new URL(window.location);
+                    if (tab === 'all') {
+                        url.searchParams.delete('tab');
+                    } else {
+                        url.searchParams.set('tab', tab);
+                    }
+                    window.history.replaceState({}, '', url);
+                });
+            });
+
+            var urlParams = new URLSearchParams(window.location.search);
+            var initialTab = urlParams.get('tab') || 'all';
+            applyTab(initialTab);
+        })();
+    </script>
+</body>
+
+</html>

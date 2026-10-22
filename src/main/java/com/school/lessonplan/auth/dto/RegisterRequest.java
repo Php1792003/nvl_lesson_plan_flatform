@@ -4,6 +4,7 @@ import com.school.lessonplan.common.validation.FormatGroup;
 import com.school.lessonplan.common.validation.PasswordConfirmable;
 import com.school.lessonplan.common.validation.PasswordMatches;
 import jakarta.validation.GroupSequence;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -45,6 +46,10 @@ public class RegisterRequest implements PasswordConfirmable {
 
     @NotBlank
     private String confirmPassword;
+
+    @NotNull(message = "Vui lòng tích chọn đồng ý với Điều khoản sử dụng và Chính sách bảo mật.")
+    @AssertTrue(message = "Vui lòng tích chọn đồng ý với Điều khoản sử dụng và Chính sách bảo mật.", groups = {RegisterRequest.class, FormatGroup.class})
+    private Boolean agreeTerms;
 
     public String getLastName() {
         return lastName;
@@ -102,5 +107,13 @@ public class RegisterRequest implements PasswordConfirmable {
 
     public void setConfirmPassword(String confirmPassword) {
         this.confirmPassword = confirmPassword;
+    }
+
+    public Boolean getAgreeTerms() {
+        return agreeTerms;
+    }
+
+    public void setAgreeTerms(Boolean agreeTerms) {
+        this.agreeTerms = agreeTerms;
     }
 }
