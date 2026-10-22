@@ -73,6 +73,7 @@ public class SecurityConfig {
                                 "/login", "/register", "/verify-email", "/verify-email/resend",
                                 "/forgot-password", "/forgot-password/verify", "/reset-password",
                                 "/terms-and-privacy", "/terms", "/privacy",
+                                "/feedback", "/feedback/**",
                                 "/css/**", "/js/**", "/img/**", "/vendor/**", "/images/**", "/favicon.ico",
                                 "/.well-known/**", "/error", "/error/**")
                         .permitAll()

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/layout-base :: layout('Hòm thư Góp ý — Ban Giám Hiệu', ~{::content})}">
+
+<th:block th:fragment="content">
+    <div class="page-container" style="max-width: 1300px; margin: 0 auto;">
+
+        <!-- Header Title Banner -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h1 style="font-size: 22px; font-weight: 800; color: var(--dark); margin: 0 0 6px; letter-spacing: -0.3px;">
+                    Quản lý Ý kiến &amp; Báo cáo Sự cố
+                </h1>
+                <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">
+                    Tổng hợp toàn bộ góp ý chuyên môn, kiến nghị và báo lỗi từ các Thầy/Cô gửi đến Ban Giám Hiệu.
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a th:href="@{/feedback}" target="_blank" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    <span>Xem trang gửi góp ý</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 4 KPI Stat Cards -->
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <div class="stat-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md, 12px); padding: 20px; box-shadow: var(--shadow-sm);">
+                <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 6px;">
+                    Tổng số ý kiến
+                </div>
+                <div style="font-size: 28px; font-weight: 800; color: var(--dark);" th:text="${stats.total}">0</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Đã ghi nhận trong hệ thống</div>
+            </div>
+
+            <div class="stat-card" style="background: var(--surface); border: 1px solid var(--border); border-left: 4px solid #f59e0b; border-radius: var(--radius-md, 12px); padding: 20px; box-shadow: var(--shadow-sm);">
+                <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #d97706; letter-spacing: 0.5px; margin-bottom: 6px;">
+                    Chờ tiếp nhận
+                </div>
+                <div style="font-size: 28px; font-weight: 800; color: #d97706;" th:text="${stats.pending}">0</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Cần BGH xem xét &amp; phân loại</div>
+            </div>
+
+            <div class="stat-card" style="background: var(--surface); border: 1px solid var(--border); border-left: 4px solid #3b82f6; border-radius: var(--radius-md, 12px); padding: 20px; box-shadow: var(--shadow-sm);">
+                <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #2563eb; letter-spacing: 0.5px; margin-bottom: 6px;">
+                    Đang xử lý
+                </div>
+                <div style="font-size: 28px; font-weight: 800; color: #2563eb;" th:text="${stats.inProgress}">0</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Đang giải quyết hoặc xác minh</div>
+            </div>
+
+            <div class="stat-card" style="background: var(--surface); border: 1px solid var(--border); border-left: 4px solid #10b981; border-radius: var(--radius-md, 12px); padding: 20px; box-shadow: var(--shadow-sm);">
+                <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #059669; letter-spacing: 0.5px; margin-bottom: 6px;">
+                    Đã giải quyết
+                </div>
+                <div style="font-size: 28px; font-weight: 800; color: #059669;" th:text="${stats.resolved}">0</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Đã có phản hồi thỏa đáng</div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="filter-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md, 12px); padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm);">
+            <form th:action="@{/admin/feedbacks}" method="get" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <div style="flex: 1 1 200px; min-width: 180px;">
+                    <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="Tìm kiếm tiêu đề, Thầy/Cô, email, nội dung..." style="font-size: 13.5px;">
+                </div>
+
+                <div style="min-width: 160px;">
+                    <select name="status" class="form-select" style="font-size: 13.5px;">
+                        <option value="">-- Tất cả trạng thái --</option>
+                        <option th:each="st : ${statuses}" th:value="${st}" th:text="${st.displayName}" th:selected="${st == selectedStatus}"></option>
+                    </select>
+                </div>
+
+                <div style="min-width: 180px;">
+                    <select name="category" class="form-select" style="font-size: 13.5px;">
+                        <option value="">-- Tất cả phân loại --</option>
+                        <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat.displayName}" th:selected="${cat == selectedCategory}"></option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <span>Lọc</span>
+                    </button>
+                    <a th:href="@{/admin/feedbacks}" class="btn btn-outline" style="font-size: 13px; padding: 8px 14px;">Đặt lại</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Table Data -->
+        <div class="content-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md, 12px); overflow: hidden; box-shadow: var(--shadow-sm);">
+            <div th:if="${feedbackPage.empty}" style="padding: 48px 24px; text-align: center;">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom: 10px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--dark); margin: 0 0 4px;">Không tìm thấy ý kiến đóng góp nào</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Hãy thử thay đổi điều kiện lọc hoặc từ khóa tìm kiếm.</p>
+            </div>
+
+            <div th:if="${!feedbackPage.empty}" class="table-responsive" style="overflow-x: auto;">
+                <table class="table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+                    <thead>
+                        <tr style="background: var(--surface-alt); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <th style="padding: 12px 16px; width: 60px;">Mã</th>
+                            <th style="padding: 12px 16px; min-width: 180px;">Giáo viên gửi</th>
+                            <th style="padding: 12px 16px; min-width: 250px;">Tiêu đề &amp; Nội dung</th>
+                            <th style="padding: 12px 16px; min-width: 140px;">Phân loại</th>
+                            <th style="padding: 12px 16px; min-width: 120px;">Trạng thái</th>
+                            <th style="padding: 12px 16px; min-width: 140px;">Thời gian</th>
+                            <th style="padding: 12px 16px; width: 120px; text-align: right;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="fb : ${feedbackPage.content}" style="border-bottom: 1px solid var(--border); transition: background-color 0.15s;">
+                            <td style="padding: 14px 16px; font-weight: 700; color: var(--text-muted);" th:text="'#' + ${fb.id}">#1</td>
+                            <td style="padding: 14px 16px;">
+                                <div style="font-weight: 600; color: var(--dark);" th:text="${fb.senderName}">Thầy Nguyễn Văn A</div>
+                                <div style="font-size: 12px; color: var(--text-muted);" th:text="${fb.senderEmail}">email@school.edu.vn</div>
+                                <div th:if="${fb.departmentName != null}" style="font-size: 11.5px; color: var(--primary); font-weight: 500;" th:text="${fb.departmentName}">Tổ Toán - Tin</div>
+                            </td>
+                            <td style="padding: 14px 16px;">
+                                <div style="font-weight: 600; color: var(--dark); margin-bottom: 3px;" th:text="${fb.title}">Tiêu đề góp ý</div>
+                                <div style="font-size: 12.5px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;" th:text="${fb.content}">
+                                    Nội dung góp ý tóm tắt...
+                                </div>
+                            </td>
+                            <td style="padding: 14px 16px;">
+                                <span style="font-size: 12px; background: var(--surface-alt); padding: 3px 8px; border-radius: 6px; font-weight: 500; color: var(--text-body); display: inline-block;" th:text="${fb.category.displayName}">Chuyên môn</span>
+                                <div th:if="${fb.priority.name() == 'URGENT' or fb.priority.name() == 'HIGH'}" style="margin-top: 4px;">
+                                    <span style="font-size: 11px; color: #dc2626; font-weight: 700;">● Ưu tiên cao</span>
+                                </div>
+                            </td>
+                            <td style="padding: 14px 16px;">
+                                <span class="badge" th:classappend="${fb.status.badgeClass}" th:text="${fb.status.displayName}">Chờ tiếp nhận</span>
+                            </td>
+                            <td style="padding: 14px 16px; font-size: 12.5px; color: var(--text-muted);">
+                                <span th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}">15/09/2024 10:30</span>
+                            </td>
+                            <td style="padding: 14px 16px; text-align: right;">
+                                <button type="button" class="btn btn-primary btn-sm btn-respond-feedback"
+                                        th:attr="data-id=${fb.id},
+                                                 data-title=${fb.title},
+                                                 data-sender=${fb.senderName},
+                                                 data-email=${fb.senderEmail},
+                                                 data-dept=${fb.departmentName},
+                                                 data-category=${fb.category.displayName},
+                                                 data-content=${fb.content},
+                                                 data-status=${fb.status.name()},
+                                                 data-response=${fb.adminResponse},
+                                                 data-created=${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"
+                                        style="font-size: 12px; padding: 5px 12px;">
+                                    Xử lý
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div th:if="${feedbackPage.totalPages > 1}" style="padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                <div style="color: var(--text-muted);">
+                    Trang <span th:text="${feedbackPage.number + 1}">1</span> / <span th:text="${feedbackPage.totalPages}">5</span> (Tổng <span th:text="${feedbackPage.totalElements}">10</span> ý kiến)
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <a th:if="${feedbackPage.hasPrevious()}" th:href="@{/admin/feedbacks(page=${feedbackPage.number - 1}, keyword=${keyword}, status=${selectedStatus}, category=${selectedCategory})}" class="btn btn-outline btn-sm">Trước</a>
+                    <a th:if="${feedbackPage.hasNext()}" th:href="@{/admin/feedbacks(page=${feedbackPage.number + 1}, keyword=${keyword}, status=${selectedStatus}, category=${selectedCategory})}" class="btn btn-outline btn-sm">Sau</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL XỬ LÝ & PHẢN HỒI Ý KIẾN -->
+    <div id="respondModalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box modal-box-xl" style="max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--radius-lg, 16px);">
+            <!-- Modal Header -->
+            <div style="padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface-alt);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 34px; height: 34px; border-radius: 8px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 id="modalTitle" style="font-size: 16px; font-weight: 700; margin: 0; color: var(--dark);">Chi tiết &amp; Phản hồi Ý kiến</h2>
+                        <p id="modalFeedbackCode" style="font-size: 12px; margin: 2px 0 0; color: var(--text-muted);">Mã ý kiến: #</p>
+                    </div>
+                </div>
+                <button type="button" id="btnModalClose" style="background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 6px;" aria-label="Đóng">✕</button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div style="padding: 24px; overflow-y: auto; flex: 1;">
+                <!-- Teacher Request Info Box -->
+                <div style="background: var(--surface-alt); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <span id="modalSender" style="font-weight: 700; color: var(--dark); font-size: 14.5px;">Thầy/Cô</span>
+                            <span id="modalEmail" style="color: var(--text-muted); font-size: 13px; margin-left: 6px;">(email)</span>
+                            <div id="modalDept" style="font-size: 12px; color: var(--primary); font-weight: 500; margin-top: 2px;">Tổ bộ môn</div>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted);" id="modalCreated">Thời gian gửi</div>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span id="modalCategory" style="font-size: 11.5px; background: rgba(37, 99, 235, 0.1); color: var(--primary); padding: 2px 8px; border-radius: 4px; font-weight: 600;">Chuyên môn</span>
+                    </div>
+                    <h3 id="modalFeedbackTitle" style="font-size: 15px; font-weight: 700; color: var(--dark); margin: 0 0 8px;">Tiêu đề góp ý</h3>
+                    <div id="modalFeedbackContent" style="font-size: 13.5px; color: var(--text-body); line-height: 1.6; white-space: pre-wrap; background: var(--surface); padding: 12px; border-radius: 6px; border: 1px solid var(--border);">
+                        Nội dung chi tiết...
+                    </div>
+                </div>
+
+                <!-- BGH Response Form -->
+                <form id="respondForm" method="post" action="">
+                    <h3 style="font-size: 15px; font-weight: 700; color: var(--dark); margin: 0 0 12px;">Ý kiến xử lý của Ban Giám Hiệu</h3>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" for="respStatus">Cập nhật trạng thái <span class="req">*</span></label>
+                        <select id="respStatus" name="status" class="form-select" required>
+                            <option th:each="st : ${statuses}" th:value="${st}" th:text="${st.displayName}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="form-label" for="respAdminContent">Nội dung phản hồi gửi Thầy/Cô (sẽ hiển thị trên cổng giáo viên)</label>
+                        <textarea id="respAdminContent" name="adminResponse" class="form-control" rows="5" placeholder="Nhập ý kiến chỉ đạo, phương án giải quyết hoặc hướng dẫn chi tiết cho Thầy/Cô..."></textarea>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" id="btnModalCancel" class="btn btn-secondary" style="padding: 8px 18px; font-size: 13px;">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-primary" style="padding: 8px 24px; font-size: 13px; font-weight: 600;">Lưu &amp; Gửi phản hồi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script mở/đóng modal phản hồi -->
+    <script>
+        (function() {
+            var modal = document.getElementById('respondModalOverlay');
+            var btnClose = document.getElementById('btnModalClose');
+            var btnCancel = document.getElementById('btnModalCancel');
+            var form = document.getElementById('respondForm');
+
+            var modalCode = document.getElementById('modalFeedbackCode');
+            var modalSender = document.getElementById('modalSender');
+            var modalEmail = document.getElementById('modalEmail');
+            var modalDept = document.getElementById('modalDept');
+            var modalCreated = document.getElementById('modalCreated');
+            var modalCategory = document.getElementById('modalCategory');
+            var modalTitle = document.getElementById('modalFeedbackTitle');
+            var modalContent = document.getElementById('modalFeedbackContent');
+            var respStatus = document.getElementById('respStatus');
+            var respAdminContent = document.getElementById('respAdminContent');
+
+            function closeModal() {
+                if (modal) modal.classList.remove('open');
+            }
+
+            if (btnClose) btnClose.addEventListener('click', closeModal);
+            if (btnCancel) btnCancel.addEventListener('click', closeModal);
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) closeModal();
+                });
+            }
+
+            document.querySelectorAll('.btn-respond-feedback').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = btn.getAttribute('data-id');
+                    form.action = '/portal/admin/feedbacks/' + id + '/respond';
+
+                    if (modalCode) modalCode.textContent = 'Mã ý kiến: #' + id;
+                    if (modalSender) modalSender.textContent = btn.getAttribute('data-sender') || '';
+                    if (modalEmail) modalEmail.textContent = '(' + (btn.getAttribute('data-email') || '') + ')';
+                    if (modalDept) modalDept.textContent = btn.getAttribute('data-dept') || '';
+                    if (modalCreated) modalCreated.textContent = btn.getAttribute('data-created') || '';
+                    if (modalCategory) modalCategory.textContent = btn.getAttribute('data-category') || '';
+                    if (modalTitle) modalTitle.textContent = btn.getAttribute('data-title') || '';
+                    if (modalContent) modalContent.textContent = btn.getAttribute('data-content') || '';
+
+                    var curStatus = btn.getAttribute('data-status');
+                    if (respStatus && curStatus) respStatus.value = curStatus;
+
+                    var curResp = btn.getAttribute('data-response') || '';
+                    if (respAdminContent) respAdminContent.value = curResp;
+
+                    if (modal) modal.classList.add('open');
+                });
+            });
+        })();
+    </script>
+</th:block>
+</html>

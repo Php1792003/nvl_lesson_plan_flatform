@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Góp ý & Báo lỗi — THCS Nguyễn Văn Linh</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/img/nvl_logo.png}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/form-validation.js}" defer></script>
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('nvl_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+</head>
+
+<body class="auth-page" style="padding: 32px 16px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <div class="auth-card" style="max-width: 680px; width: 100%; border-radius: var(--radius-lg, 16px); padding: 36px 32px;">
+        <div class="auth-header">
+            <div class="auth-brand">
+                <img th:src="@{/img/nvl_logo.png}" alt="Logo" style="width: 54px; height: 54px; object-fit: contain;">
+            </div>
+            <h1 class="auth-title" style="font-size: 22px;">Hòm thư Góp ý &amp; Báo lỗi</h1>
+            <p class="auth-subtitle">Gửi ý kiến đóng góp hoặc phản ánh trực tiếp tới Ban Giám Hiệu THCS Nguyễn Văn Linh</p>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success" role="status">
+            <span th:text="${successMessage}">Thành công!</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+            <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
+        </div>
+
+        <form th:action="@{/feedback}" th:object="${feedbackForm}" method="post" data-validate novalidate>
+            <div class="form-grid">
+                <div class="form-group" th:classappend="${#fields.hasErrors('category')} ? 'has-error'">
+                    <label class="form-label" for="category">Phân loại vấn đề <span class="req">*</span></label>
+                    <select id="category" th:field="*{category}" class="form-select" required>
+                        <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat.displayName}"></option>
+                    </select>
+                </div>
+                <div class="form-group" th:classappend="${#fields.hasErrors('priority')} ? 'has-error'">
+                    <label class="form-label" for="priority">Mức độ ưu tiên <span class="req">*</span></label>
+                    <select id="priority" th:field="*{priority}" class="form-select" required>
+                        <option th:each="pri : ${priorities}" th:value="${pri}" th:text="${pri.displayName}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" th:classappend="${#fields.hasErrors('title')} ? 'has-error'">
+                <label class="form-label" for="title">Tiêu đề ý kiến / Sự cố <span class="req">*</span></label>
+                <input type="text" id="title" th:field="*{title}" class="form-control" placeholder="Tóm tắt ngắn gọn vấn đề cần góp ý..." maxlength="250" required
+                       data-msg-required="Vui lòng nhập tiêu đề góp ý.">
+                <p class="field-error" id="title-error" role="alert" th:if="${#fields.hasErrors('title')}" th:text="${#fields.errors('title')[0]}"></p>
+            </div>
+
+            <div class="form-group" th:classappend="${#fields.hasErrors('content')} ? 'has-error'">
+                <label class="form-label" for="content">Nội dung chi tiết <span class="req">*</span></label>
+                <textarea id="content" th:field="*{content}" class="form-control" rows="5" placeholder="Mô tả cụ thể nội dung ý kiến đóng góp hoặc sự cố Thầy/Cô gặp phải..." required
+                          data-minlength="10" data-msg-required="Vui lòng nhập nội dung chi tiết." data-msg-minlength="Nội dung cần tối thiểu 10 ký tự."></textarea>
+                <p class="field-error" id="content-error" role="alert" th:if="${#fields.hasErrors('content')}" th:text="${#fields.errors('content')[0]}"></p>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group" th:classappend="${#fields.hasErrors('senderName')} ? 'has-error'">
+                    <label class="form-label" for="senderName">Họ và tên Thầy/Cô <span class="req">*</span></label>
+                    <input type="text" id="senderName" th:field="*{senderName}" class="form-control" placeholder="Thầy/Cô Nguyễn Văn A" required
+                           data-msg-required="Vui lòng nhập họ tên.">
+                    <p class="field-error" id="senderName-error" role="alert" th:if="${#fields.hasErrors('senderName')}" th:text="${#fields.errors('senderName')[0]}"></p>
+                </div>
+                <div class="form-group" th:classappend="${#fields.hasErrors('senderEmail')} ? 'has-error'">
+                    <label class="form-label" for="senderEmail">Email nhận phản hồi <span class="req">*</span></label>
+                    <input type="email" id="senderEmail" th:field="*{senderEmail}" class="form-control" placeholder="giaovien@school.edu.vn" required
+                           data-pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                           data-msg-required="Vui lòng nhập email."
+                           data-msg-pattern="Email không hợp lệ.">
+                    <p class="field-error" id="senderEmail-error" role="alert" th:if="${#fields.hasErrors('senderEmail')}" th:text="${#fields.errors('senderEmail')[0]}"></p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="departmentName">Tổ bộ môn (nếu có)</label>
+                <input type="text" id="departmentName" th:field="*{departmentName}" class="form-control" placeholder="Toán - Tin, Ngữ Văn, Tiếng Anh...">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-weight: 600;">
+                Gửi ý kiến đến Ban Giám Hiệu
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 24px; font-size: 13px; color: var(--text-muted); display: flex; justify-content: center; gap: 16px;">
+            <a th:href="@{/login}" style="color: var(--primary); text-decoration: none;">← Về Đăng nhập</a>
+            <span>•</span>
+            <a th:href="@{/terms-and-privacy}" style="color: var(--primary); text-decoration: none;">Điều khoản sử dụng</a>
+        </div>
+    </div>
+</body>
+</html>
