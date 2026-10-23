@@ -3,12 +3,15 @@
     th:replace="~{layout/layout-base :: layout('Chi tiết Giáo viên: ' + ${user.fullName}, ~{::contentBlock})}">
 
 <body>
-    <div th:fragment="contentBlock">        <div class="user-detail-container">
+    <div th:fragment="contentBlock">
+
+        <div class="user-detail-container">
 
             <!-- Breadcrumb Navigation -->
             <nav class="user-breadcrumb" aria-label="Breadcrumb">
                 <a th:href="@{/admin/users}" class="user-breadcrumb-link">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
@@ -21,45 +24,73 @@
             <!-- Page Header with Title and Quick Actions -->
             <div class="user-detail-header">
                 <div class="user-detail-title-group">
-                    <h1>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary, #2563eb);">
+                    <div class="user-header-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
-                        <span th:text="${'Chi tiết Giáo viên: ' + user.fullName}">Chi tiết Giáo viên</span>
-                    </h1>
-                    <p>Xem thông tin chi tiết, phân công chuyên môn, điểm trường và quản lý trạng thái tài khoản</p>
+                    </div>
+                    <div class="user-header-text">
+                        <div class="user-header-badge">
+                            <span class="user-header-badge-dot"></span>
+                            <span>Hồ sơ Giáo viên &amp; Phân công</span>
+                        </div>
+                        <h1 class="user-page-title">
+                            <span>Chi tiết Giáo viên: </span>
+                            <span class="user-page-title-name" th:text="${user.fullName}">Phạm Hoàng Phúc</span>
+                        </h1>
+                        <p class="user-page-subtitle">Xem thông tin chi tiết, phân công chuyên môn, điểm trường và quản
+                            lý trạng thái tài khoản</p>
+                    </div>
                 </div>
 
                 <div class="user-detail-actions">
                     <!-- Duyệt tài khoản (nếu chờ duyệt) -->
                     <form th:if="${user.status.name() == 'PENDING_APPROVAL'}"
-                          th:action="@{/admin/users/{id}/approve(id=${user.id})}" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-success btn-sm">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        th:action="@{/admin/users/{id}/approve(id=${user.id})}" method="post" style="display:inline;">
+                        <button type="submit" class="action-btn action-btn-success">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
                             <span>Duyệt tài khoản</span>
                         </button>
                     </form>
 
                     <!-- Khoá tài khoản (nếu đang hoạt động) -->
-                    <button th:if="${user.status.name() == 'ACTIVE'}" class="btn btn-outline-warning btn-sm"
-                            data-modal-target="lockModal">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <button th:if="${user.status.name() == 'ACTIVE'}" type="button"
+                        class="action-btn action-btn-warning" data-modal-target="lockModal">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
                         <span>Khoá tài khoản</span>
                     </button>
 
                     <!-- Mở khoá tài khoản (nếu bị khoá) -->
                     <form th:if="${user.status.name() == 'LOCKED'}"
-                          th:action="@{/admin/users/{id}/unlock(id=${user.id})}" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-success btn-sm">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                        th:action="@{/admin/users/{id}/unlock(id=${user.id})}" method="post" style="display:inline;">
+                        <button type="submit" class="action-btn action-btn-success">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                            </svg>
                             <span>Mở khoá tài khoản</span>
                         </button>
                     </form>
 
                     <!-- Xoá tài khoản -->
-                    <button class="btn btn-outline-danger btn-sm" data-modal-target="deleteModal">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <button type="button" class="action-btn action-btn-danger" data-modal-target="deleteModal"
+                        title="Xoá tài khoản giáo viên này">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                            </path>
+                        </svg>
                         <span>Xoá</span>
                     </button>
                 </div>
@@ -68,17 +99,21 @@
             <!-- Banner cảnh báo nếu tài khoản đang bị khoá -->
             <div th:if="${user.status.name() == 'LOCKED'}" class="user-locked-banner" role="alert">
                 <div class="user-locked-banner-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                     </svg>
                 </div>
                 <div class="user-locked-banner-content">
-                    <div class="user-locked-banner-title">Tài khoản này hiện đang bị khoá</div>
+                    <div class="user-locked-banner-title">Tài khoản này hiện đang bị khoá truy cập</div>
                     <div class="user-locked-banner-desc">
-                        <span><strong>Lý do khoá:</strong> <span th:text="${user.lockReason}">Vi phạm quy chế chuyên môn</span></span>
-                        <span style="margin: 0 8px; opacity: 0.5;">•</span>
-                        <span><strong>Thời điểm khoá:</strong> <span th:text="${#temporals.format(user.lockedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</span></span>
+                        <span><strong>Lý do:</strong> <span th:text="${user.lockReason}">Vi phạm quy chế chuyên
+                                môn</span></span>
+                        <span class="user-locked-banner-sep">•</span>
+                        <span><strong>Thời điểm khoá:</strong> <span
+                                th:text="${#temporals.format(user.lockedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026
+                                10:00</span></span>
                     </div>
                 </div>
             </div>
@@ -88,90 +123,169 @@
 
                 <!-- Left Column: Profile Summary & Stats -->
                 <aside class="user-profile-summary-card">
+                    <!-- Top Decorative Banner -->
+                    <div class="user-profile-cover"></div>
+
                     <div class="user-profile-summary-header">
                         <div class="user-profile-avatar-wrapper">
-                            <div class="user-profile-avatar" th:text="${#strings.substring(user.lastName, 0, 1)}">N</div>
+                            <div class="user-profile-avatar" th:text="${#strings.substring(user.lastName, 0, 1)}">N
+                            </div>
                             <span class="user-profile-status-dot"
-                                  th:classappend="${user.status.name() == 'ACTIVE'} ? 'active' : (${user.status.name() == 'LOCKED'} ? 'locked' : 'pending')"
-                                  th:title="${user.status.name() == 'ACTIVE' ? 'Đang hoạt động' : (user.status.name() == 'LOCKED' ? 'Bị khoá' : 'Chờ xử lý')}"></span>
+                                th:classappend="${user.status.name() == 'ACTIVE'} ? 'active' : (${user.status.name() == 'LOCKED'} ? 'locked' : 'pending')"
+                                th:title="${user.status.name() == 'ACTIVE' ? 'Đang hoạt động' : (user.status.name() == 'LOCKED' ? 'Bị khoá' : 'Chờ xử lý')}"></span>
                         </div>
                         <h2 class="user-profile-name" th:text="${user.fullName}">Nguyễn Văn An</h2>
-                        <div class="user-profile-email" th:text="${user.email}">an.nguyen@school.edu.vn</div>
+                        <div class="user-profile-email">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                </path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <span th:text="${user.email}">an.nguyen@school.edu.vn</span>
+                        </div>
 
-                        <span th:if="${user.status.name() == 'ACTIVE'}" class="user-status-pill active">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
-                            <span>Đang hoạt động</span>
-                        </span>
-                        <span th:if="${user.status.name() == 'PENDING_APPROVAL'}" class="user-status-pill pending">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
-                            <span>Chờ BGH duyệt</span>
-                        </span>
-                        <span th:if="${user.status.name() == 'PENDING_EMAIL'}" class="user-status-pill pending">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
-                            <span>Chưa xác thực email</span>
-                        </span>
-                        <span th:if="${user.status.name() == 'LOCKED'}" class="user-status-pill locked">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
-                            <span>Tài khoản bị khoá</span>
-                        </span>
+                        <!-- Status Badge -->
+                        <div class="user-status-badge-wrap">
+                            <span th:if="${user.status.name() == 'ACTIVE'}" class="user-status-pill active">
+                                <span class="user-status-pulse"></span>
+                                <span>Đang hoạt động</span>
+                            </span>
+                            <span th:if="${user.status.name() == 'PENDING_APPROVAL'}" class="user-status-pill pending">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                                <span>Chờ BGH duyệt</span>
+                            </span>
+                            <span th:if="${user.status.name() == 'PENDING_EMAIL'}" class="user-status-pill unverified">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                                <span>Chưa xác thực email</span>
+                            </span>
+                            <span th:if="${user.status.name() == 'LOCKED'}" class="user-status-pill locked">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                                <span>Tài khoản bị khoá</span>
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Profile Key Facts -->
-                    <div class="user-profile-facts">
-                        <div class="user-fact-item">
-                            <span class="user-fact-label">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                                <span>Điểm trường / Cơ sở</span>
-                            </span>
-                            <span class="user-fact-val" th:text="${user.campus != null ? user.campus.name : 'Chưa phân công'}">Điểm trường chính</span>
-                        </div>
+                    <div class="user-profile-facts-section">
+                        <div class="user-profile-section-heading">Thông tin tổng quan</div>
+                        <div class="user-profile-facts">
+                            <div class="user-fact-item">
+                                <span class="user-fact-label">
+                                    <span class="user-fact-icon">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                        </svg>
+                                    </span>
+                                    <span>Điểm trường</span>
+                                </span>
+                                <span class="user-fact-val"
+                                    th:text="${user.campus != null ? user.campus.name : 'Chưa phân công'}">Điểm trường
+                                    chính</span>
+                            </div>
 
-                        <div class="user-fact-item">
-                            <span class="user-fact-label">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                                <span>Tổ bộ môn</span>
-                            </span>
-                            <span class="user-fact-val" th:text="${user.department != null ? user.department.name : 'Chưa phân công'}">Toán học</span>
-                        </div>
+                            <div class="user-fact-item">
+                                <span class="user-fact-label">
+                                    <span class="user-fact-icon">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z">
+                                            </path>
+                                        </svg>
+                                    </span>
+                                    <span>Tổ bộ môn</span>
+                                </span>
+                                <span class="user-fact-val"
+                                    th:text="${user.department != null ? user.department.name : 'Chưa phân công'}">Toán
+                                    học</span>
+                            </div>
 
-                        <div class="user-fact-item">
-                            <span class="user-fact-label">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                                <span>Giáo án đã đăng</span>
-                            </span>
-                            <span class="user-fact-val">
-                                <a th:href="@{/admin/plans(search=${user.fullName})}" title="Xem danh sách giáo án của giáo viên này">
-                                    <strong th:text="${planCount != null ? planCount : 0}">0</strong> giáo án
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                                </a>
-                            </span>
-                        </div>
+                            <div class="user-fact-item">
+                                <span class="user-fact-label">
+                                    <span class="user-fact-icon">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                    </span>
+                                    <span>Giáo án đã đăng</span>
+                                </span>
+                                <span class="user-fact-val">
+                                    <a th:href="@{/admin/plans(search=${user.fullName})}" class="plan-count-link"
+                                        title="Xem danh sách giáo án của giáo viên này">
+                                        <strong th:text="${planCount != null ? planCount : 0}">0</strong>
+                                        <span>giáo án</span>
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </a>
+                                </span>
+                            </div>
 
-                        <div class="user-fact-item">
-                            <span class="user-fact-label">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                <span>Ngày tham gia</span>
-                            </span>
-                            <span class="user-fact-val" th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy') : '---'}">01/01/2026</span>
-                        </div>
+                            <div class="user-fact-item">
+                                <span class="user-fact-label">
+                                    <span class="user-fact-icon">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                    </span>
+                                    <span>Ngày tham gia</span>
+                                </span>
+                                <span class="user-fact-val"
+                                    th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy') : '---'}">01/01/2026</span>
+                            </div>
 
-                        <div class="user-fact-item">
-                            <span class="user-fact-label">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                <span>Cập nhật gần nhất</span>
-                            </span>
-                            <span class="user-fact-val" th:text="${user.updatedAt != null ? #temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm') : '---'}">01/01/2026 12:00</span>
+                            <div class="user-fact-item">
+                                <span class="user-fact-label">
+                                    <span class="user-fact-icon">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                    </span>
+                                    <span>Cập nhật gần nhất</span>
+                                </span>
+                                <span class="user-fact-val"
+                                    th:text="${user.updatedAt != null ? #temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm') : '---'}">01/01/2026
+                                    12:00</span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Profile Current Roles -->
                     <div class="user-profile-roles-widget">
-                        <div class="user-profile-roles-title">Vai trò hiện tại</div>
+                        <div class="user-profile-section-heading">Vai trò hiện tại</div>
                         <div class="user-profile-roles-list">
                             <th:block th:each="r : ${user.roles}">
-                                <span class="user-role-badge" th:classappend="${r.code == 'ADMIN'} ? 'admin' : 'teacher'">
-                                    <svg th:if="${r.code == 'ADMIN'}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 4v6c0 5.25-3.5 10-7 10S5 17.25 5 12V6l7-4z"></path></svg>
-                                    <svg th:if="${r.code != 'ADMIN'}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                <span class="user-role-badge"
+                                    th:classappend="${r.code == 'ADMIN'} ? 'admin' : 'teacher'">
+                                    <svg th:if="${r.code == 'ADMIN'}" width="14" height="14" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2l7 4v6c0 5.25-3.5 10-7 10S5 17.25 5 12V6l7-4z"></path>
+                                    </svg>
+                                    <svg th:if="${r.code != 'ADMIN'}" width="14" height="14" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                    </svg>
                                     <span th:text="${r.name}">Giáo viên</span>
                                 </span>
                             </th:block>
@@ -181,143 +295,207 @@
 
                 <!-- Right Column: Edit Profile Form -->
                 <main class="user-form-card">
-                    <form th:action="@{/admin/users/{id}(id=${user.id})}" th:object="${userForm}" method="post" data-validate novalidate>
-                        <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+                    <form th:action="@{/admin/users/{id}(id=${user.id})}" th:object="${userForm}" method="post"
+                        data-validate novalidate>
+                        <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}"
+                            th:text="${#fields.globalErrors()[0]}"></div>
 
                         <!-- Section 1: Thông tin cá nhân & Tài khoản -->
                         <div class="user-form-section">
-                            <div class="user-form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                                <span>1. Thông tin cá nhân & Tài khoản</span>
+                            <div class="user-form-section-header">
+                                <div class="user-section-num">1</div>
+                                <div class="user-section-title-wrap">
+                                    <h3 class="user-section-title">Thông tin cá nhân &amp; Tài khoản</h3>
+                                    <p class="user-section-desc">Cập nhật họ tên hiển thị trong hệ thống quản lý bài
+                                        giảng và phân công</p>
+                                </div>
                             </div>
 
                             <div class="form-grid">
                                 <div class="form-group" th:classappend="${#fields.hasErrors('lastName')} ? 'has-error'">
-                                    <label class="form-label" for="lastName">Họ <span class="req" aria-hidden="true">*</span></label>
+                                    <label class="form-label" for="lastName">Họ <span class="req"
+                                            aria-hidden="true">*</span></label>
                                     <input type="text" id="lastName" th:field="*{lastName}" class="form-control"
-                                           maxlength="50" required autocomplete="family-name"
-                                           data-pattern="^[\p{L}][\p{L} .'’-]*$"
-                                           data-msg-required="Vui lòng nhập họ."
-                                           data-msg-pattern="Họ chỉ gồm chữ cái và khoảng trắng."
-                                           th:attr="aria-invalid=${#fields.hasErrors('lastName')},aria-describedby='lastName-error'">
+                                        placeholder="Nhập họ..." maxlength="50" required autocomplete="family-name"
+                                        data-pattern="^[\p{L}][\p{L} .'’-]*$" data-msg-required="Vui lòng nhập họ."
+                                        data-msg-pattern="Họ chỉ gồm chữ cái và khoảng trắng."
+                                        th:attr="aria-invalid=${#fields.hasErrors('lastName')},aria-describedby='lastName-error'">
                                     <p class="field-error" id="lastName-error" role="alert"
-                                       th:if="${#fields.hasErrors('lastName')}" th:text="${#fields.errors('lastName')[0]}"></p>
+                                        th:if="${#fields.hasErrors('lastName')}"
+                                        th:text="${#fields.errors('lastName')[0]}"></p>
                                 </div>
-                                <div class="form-group" th:classappend="${#fields.hasErrors('givenName')} ? 'has-error'">
-                                    <label class="form-label" for="givenName">Tên đệm & Tên <span class="req" aria-hidden="true">*</span></label>
+                                <div class="form-group"
+                                    th:classappend="${#fields.hasErrors('givenName')} ? 'has-error'">
+                                    <label class="form-label" for="givenName">Tên đệm &amp; Tên <span class="req"
+                                            aria-hidden="true">*</span></label>
                                     <input type="text" id="givenName" th:field="*{givenName}" class="form-control"
-                                           maxlength="80" required autocomplete="given-name"
-                                           data-pattern="^[\p{L}][\p{L} .'’-]*$"
-                                           data-msg-required="Vui lòng nhập tên đệm và tên."
-                                           data-msg-pattern="Tên đệm và tên chỉ gồm chữ cái và khoảng trắng."
-                                           th:attr="aria-invalid=${#fields.hasErrors('givenName')},aria-describedby='givenName-error'">
+                                        placeholder="Nhập tên đệm và tên..." maxlength="80" required
+                                        autocomplete="given-name" data-pattern="^[\p{L}][\p{L} .'’-]*$"
+                                        data-msg-required="Vui lòng nhập tên đệm và tên."
+                                        data-msg-pattern="Tên đệm và tên chỉ gồm chữ cái và khoảng trắng."
+                                        th:attr="aria-invalid=${#fields.hasErrors('givenName')},aria-describedby='givenName-error'">
                                     <p class="field-error" id="givenName-error" role="alert"
-                                       th:if="${#fields.hasErrors('givenName')}" th:text="${#fields.errors('givenName')[0]}"></p>
+                                        th:if="${#fields.hasErrors('givenName')}"
+                                        th:text="${#fields.errors('givenName')[0]}"></p>
                                 </div>
                             </div>
 
                             <!-- Email Readonly Display -->
-                            <div class="form-group" style="margin-top: 14px;">
+                            <div class="form-group" style="margin-top: 18px;">
                                 <label class="form-label">Email tài khoản</label>
                                 <div class="readonly-email-box">
                                     <div class="email-text">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #64748b;">
-                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                            <polyline points="22,6 12,13 2,6"></polyline>
-                                        </svg>
-                                        <span th:text="${user.email}">user@school.edu.vn</span>
+                                        <div class="email-icon-box">
+                                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path
+                                                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                                </path>
+                                                <polyline points="22,6 12,13 2,6"></polyline>
+                                            </svg>
+                                        </div>
+                                        <span class="email-address-val"
+                                            th:text="${user.email}">user@school.edu.vn</span>
                                     </div>
-                                    <span class="email-badge">Tài khoản đăng nhập cố định</span>
+                                    <span class="email-badge">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                        </svg>
+                                        <span>Định danh cố định</span>
+                                    </span>
                                 </div>
-                                <div class="form-hint">Địa chỉ email là mã định danh duy nhất trên hệ thống và không thể thay đổi tại màn hình này.</div>
+                                <div class="form-hint">Địa chỉ email là mã định danh duy nhất trên hệ thống và không thể
+                                    thay đổi tại màn hình này.</div>
                             </div>
                         </div>
 
                         <!-- Section 2: Phân công Chuyên môn & Điểm trường -->
                         <div class="user-form-section">
-                            <div class="user-form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                </svg>
-                                <span>2. Phân công Đơn vị & Điểm trường công tác</span>
+                            <div class="user-form-section-header">
+                                <div class="user-section-num">2</div>
+                                <div class="user-section-title-wrap">
+                                    <h3 class="user-section-title">Phân công Đơn vị &amp; Điểm trường công tác</h3>
+                                    <p class="user-section-desc">Gán tổ chuyên môn và điểm trường/phân hiệu trực thuộc
+                                        công tác</p>
+                                </div>
                             </div>
 
                             <div class="form-grid">
-                                <div class="form-group" th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
-                                    <label class="form-label" for="departmentId">Tổ bộ môn <span class="req" aria-hidden="true">*</span></label>
-                                    <select id="departmentId" th:field="*{departmentId}" class="form-select" required
+                                <div class="form-group"
+                                    th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
+                                    <label class="form-label" for="departmentId">Tổ bộ môn <span class="req"
+                                            aria-hidden="true">*</span></label>
+                                    <div class="select-wrapper">
+                                        <select id="departmentId" th:field="*{departmentId}"
+                                            class="form-select custom-select" required
                                             data-msg-required="Vui lòng chọn môn học."
                                             th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby='departmentId-error'">
-                                        <option value="">-- Chọn môn học --</option>
-                                        <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
-                                                th:selected="${user.department != null && dept.id == user.department.id}"></option>
-                                    </select>
+                                            <option value="">-- Chọn môn học --</option>
+                                            <option th:each="dept : ${departments}" th:value="${dept.id}"
+                                                th:text="${dept.name}"
+                                                th:selected="${user.department != null && dept.id == user.department.id}">
+                                            </option>
+                                        </select>
+                                    </div>
                                     <p class="field-error" id="departmentId-error" role="alert"
-                                       th:if="${#fields.hasErrors('departmentId')}" th:text="${#fields.errors('departmentId')[0]}"></p>
+                                        th:if="${#fields.hasErrors('departmentId')}"
+                                        th:text="${#fields.errors('departmentId')[0]}"></p>
                                 </div>
 
                                 <div class="form-group" th:classappend="${#fields.hasErrors('campusId')} ? 'has-error'">
-                                    <label class="form-label" for="campusId">Điểm trường / Phân hiệu <span class="req" aria-hidden="true">*</span></label>
-                                    <select id="campusId" th:field="*{campusId}" class="form-select" required
-                                            data-msg-required="Vui lòng chọn điểm trường/phân hiệu."
+                                    <label class="form-label" for="campusId">Điểm trường / Phân hiệu <span class="req"
+                                            aria-hidden="true">*</span></label>
+                                    <div class="select-wrapper">
+                                        <select id="campusId" th:field="*{campusId}" class="form-select custom-select"
+                                            required data-msg-required="Vui lòng chọn điểm trường/phân hiệu."
                                             th:attr="aria-invalid=${#fields.hasErrors('campusId')},aria-describedby='campusId-error'">
-                                        <option value="">-- Chọn điểm trường --</option>
-                                        <option th:each="c : ${campuses}" th:value="${c.id}" th:text="${c.name}"
+                                            <option value="">-- Chọn điểm trường --</option>
+                                            <option th:each="c : ${campuses}" th:value="${c.id}" th:text="${c.name}"
                                                 th:selected="${user.campus != null && c.id == user.campus.id}"></option>
-                                    </select>
+                                        </select>
+                                    </div>
                                     <p class="field-error" id="campusId-error" role="alert"
-                                       th:if="${#fields.hasErrors('campusId')}" th:text="${#fields.errors('campusId')[0]}"></p>
+                                        th:if="${#fields.hasErrors('campusId')}"
+                                        th:text="${#fields.errors('campusId')[0]}"></p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Section 3: Phân quyền & Vai trò hệ thống -->
-                        <div class="user-form-section">
-                            <div class="user-form-section-title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                                </svg>
-                                <span>3. Vai trò & Phân quyền truy cập</span>
+                        <div class="user-form-section"
+                            style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                            <div class="user-form-section-header">
+                                <div class="user-section-num">3</div>
+                                <div class="user-section-title-wrap">
+                                    <h3 class="user-section-title">Vai trò &amp; Phân quyền truy cập</h3>
+                                    <p class="user-section-desc">Cấp quyền tương ứng với chức năng chuyên môn và nhiệm
+                                        vụ quản trị</p>
+                                </div>
                             </div>
 
                             <div class="role-cards-grid">
-                                <label th:each="r : ${allRoles}"
-                                       class="role-select-card"
-                                       th:classappend="${userForm.roleIds != null ? (userForm.roleIds.contains(r.id) ? 'is-checked' : '') : (user.roles.contains(r) ? 'is-checked' : '')}">
-                                    <input type="checkbox" name="roleIds" th:value="${r.id}"
-                                           th:checked="${userForm.roleIds != null ? userForm.roleIds.contains(r.id) : user.roles.contains(r)}">
+                                <label th:each="r : ${allRoles}" class="role-select-card"
+                                    th:classappend="${userForm.roleIds != null ? (userForm.roleIds.contains(r.id) ? 'is-checked' : '') : (user.roles.contains(r) ? 'is-checked' : '')}">
+                                    <input type="checkbox" name="roleIds" th:value="${r.id}" class="role-checkbox"
+                                        th:checked="${userForm.roleIds != null ? userForm.roleIds.contains(r.id) : user.roles.contains(r)}">
                                     <div class="role-card-info">
-                                        <div class="role-card-name">
-                                            <span th:if="${r.code == 'ADMIN'}">🏛️</span>
-                                            <span th:if="${r.code != 'ADMIN'}">📖</span>
-                                            <span th:text="${r.name}">Giáo viên</span>
+                                        <div class="role-card-top">
+                                            <div class="role-icon-badge"
+                                                th:classappend="${r.code == 'ADMIN'} ? 'admin' : 'teacher'">
+                                                <span th:if="${r.code == 'ADMIN'}">🏛️</span>
+                                                <span th:if="${r.code != 'ADMIN'}">📖</span>
+                                            </div>
+                                            <div class="role-card-name" th:text="${r.name}">Giáo viên</div>
+                                            <div class="role-custom-check">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="3">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </div>
                                         </div>
                                         <div class="role-card-desc" th:if="${r.code == 'ADMIN'}">
-                                            Quyền quản trị toàn diện: Duyệt tài khoản, duyệt và nhận xét giáo án toàn trường, quản lý phân hiệu và bảo trì hệ thống.
+                                            Quyền quản trị toàn diện: Duyệt tài khoản, duyệt và nhận xét giáo án toàn
+                                            trường, quản lý phân hiệu và bảo trì hệ thống.
                                         </div>
                                         <div class="role-card-desc" th:if="${r.code != 'ADMIN'}">
-                                            Quyền giảng dạy: Soạn thảo, tải lên giáo án cá nhân, chia sẻ tài liệu với đồng nghiệp và xem nhận xét chuyên môn.
+                                            Quyền giảng dạy: Soạn thảo, tải lên giáo án cá nhân, chia sẻ tài liệu với
+                                            đồng nghiệp và xem nhận xét chuyên môn.
                                         </div>
                                     </div>
                                 </label>
                             </div>
-                            <div class="form-hint" style="margin-top: 10px;">
-                                Giáo viên có thể được cấp đồng thời quyền Ban Giám Hiệu và Giáo viên tuỳ theo phân công nhiệm vụ của nhà trường.
+                            <div class="form-hint" style="margin-top: 14px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2"
+                                    style="display: inline-block; vertical-align: -2px; margin-right: 4px; color: #2563eb;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                Giáo viên có thể được cấp đồng thời quyền Ban Giám Hiệu và Giáo viên tuỳ theo phân công
+                                nhiệm vụ của nhà trường.
                             </div>
                         </div>
 
                         <!-- Form Actions -->
-                        <div class="form-actions" style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 12px;">
-                            <a th:href="@{/admin/users}" class="btn btn-secondary">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        <div class="detail-form-actions">
+                            <a th:href="@{/admin/users}" class="btn-detail btn-detail-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2">
+                                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                                    <polyline points="12 19 5 12 12 5"></polyline>
+                                </svg>
                                 <span>Quay lại</span>
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                            <button type="submit" class="btn-detail btn-detail-primary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                    <polyline points="7 3 7 8 15 8"></polyline>
+                                </svg>
                                 <span>Lưu thay đổi</span>
                             </button>
                         </div>
@@ -328,14 +506,1009 @@
 
         </div>
 
+        <!-- ================= STYLES ================= -->
+        <style>
+            /* ---------- CONTAINER & BASE ---------- */
+            .user-detail-container {
+                max-width: 1240px;
+                margin: 0 auto;
+                padding-bottom: 56px;
+                font-family: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
+                color: #0f172a;
+            }
+
+            /* ---------- BREADCRUMB ---------- */
+            .user-breadcrumb {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13.5px;
+                color: #64748b;
+                margin-bottom: 18px;
+            }
+
+            .user-breadcrumb-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                color: #64748b;
+                text-decoration: none;
+                font-weight: 500;
+                padding: 4px 8px;
+                border-radius: 8px;
+                transition: all 0.15s ease;
+            }
+
+            .user-breadcrumb-link:hover {
+                color: #2563eb;
+                background: #eff6ff;
+            }
+
+            .user-breadcrumb-sep {
+                color: #cbd5e1;
+                font-size: 13px;
+            }
+
+            .user-breadcrumb-current {
+                color: #0f172a;
+                font-weight: 600;
+                padding: 4px 6px;
+            }
+
+            /* ---------- PAGE HEADER ---------- */
+            .user-detail-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 20px;
+                margin-bottom: 26px;
+                flex-wrap: wrap;
+            }
+
+            .user-detail-title-group {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                min-width: 0;
+            }
+
+            .user-header-icon-wrap {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+                color: #2563eb;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
+                border: 1px solid #bfdbfe;
+                flex-shrink: 0;
+            }
+
+            .user-header-text {
+                min-width: 0;
+            }
+
+            .user-header-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 11.5px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #2563eb;
+                background: #eff6ff;
+                padding: 3px 10px;
+                border-radius: 20px;
+                margin-bottom: 4px;
+                border: 1px solid #dbeafe;
+            }
+
+            .user-header-badge-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: #2563eb;
+                box-shadow: 0 0 6px #2563eb;
+            }
+
+            .user-page-title {
+                font-size: 24px;
+                font-weight: 800;
+                color: #0f172a;
+                margin: 0;
+                letter-spacing: -0.02em;
+                line-height: 1.3;
+            }
+
+            .user-page-title-name {
+                color: #2563eb;
+            }
+
+            .user-page-subtitle {
+                font-size: 13.5px;
+                color: #64748b;
+                margin: 4px 0 0;
+            }
+
+            /* ---------- ACTION BUTTONS ---------- */
+            .user-detail-actions {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13.5px;
+                font-weight: 600;
+                padding: 9px 16px;
+                border-radius: 10px;
+                cursor: pointer;
+                transition: all 0.2s cubic-bezier(.22, .8, .24, 1);
+                border: 1px solid transparent;
+                text-decoration: none;
+                line-height: 1.4;
+                font-family: inherit;
+            }
+
+            .action-btn-success {
+                background: #10b981;
+                color: #ffffff;
+                box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+            }
+
+            .action-btn-success:hover {
+                background: #059669;
+                transform: translateY(-1px);
+                box-shadow: 0 5px 14px rgba(16, 185, 129, 0.35);
+            }
+
+            .action-btn-warning {
+                background: #fffbeb;
+                color: #b45309;
+                border-color: #fde68a;
+            }
+
+            .action-btn-warning:hover {
+                background: #fef3c7;
+                border-color: #f59e0b;
+                color: #92400e;
+                transform: translateY(-1px);
+            }
+
+            .action-btn-danger {
+                background: #fef2f2;
+                color: #dc2626;
+                border-color: #fecaca;
+            }
+
+            .action-btn-danger:hover {
+                background: #dc2626;
+                color: #ffffff;
+                border-color: #dc2626;
+                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+                transform: translateY(-1px);
+            }
+
+            /* ---------- LOCKED BANNER ---------- */
+            .user-locked-banner {
+                background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+                border: 1px solid #fecaca;
+                border-radius: 14px;
+                padding: 16px 20px;
+                margin-bottom: 24px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.06);
+            }
+
+            .user-locked-banner-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+                background: #ffffff;
+                color: #dc2626;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                box-shadow: 0 2px 6px rgba(220, 38, 38, 0.15);
+            }
+
+            .user-locked-banner-title {
+                font-size: 15px;
+                font-weight: 700;
+                color: #991b1b;
+                margin-bottom: 3px;
+            }
+
+            .user-locked-banner-desc {
+                font-size: 13.5px;
+                color: #b91c1c;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .user-locked-banner-sep {
+                opacity: 0.5;
+            }
+
+            /* ---------- LAYOUT 2-COLUMN GRID ---------- */
+            .user-detail-layout {
+                display: grid;
+                grid-template-columns: 350px 1fr;
+                gap: 28px;
+                align-items: start;
+            }
+
+            @media (max-width: 1040px) {
+                .user-detail-layout {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            /* ---------- LEFT CARD: PROFILE SUMMARY ---------- */
+            .user-profile-summary-card {
+                background: #ffffff;
+                border-radius: 20px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 6px 24px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+                overflow: hidden;
+                position: sticky;
+                top: 24px;
+            }
+
+            .user-profile-cover {
+                height: 96px;
+                background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 60%, #06b6d4 100%);
+                position: relative;
+            }
+
+            .user-profile-cover::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.2), transparent 70%);
+            }
+
+            .user-profile-summary-header {
+                padding: 0 24px 22px;
+                text-align: center;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            .user-profile-avatar-wrapper {
+                position: relative;
+                width: 88px;
+                height: 88px;
+                margin: -44px auto 14px;
+            }
+
+            .user-profile-avatar {
+                width: 88px;
+                height: 88px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+                color: #ffffff;
+                font-size: 36px;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 4px solid #ffffff;
+                box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
+                text-transform: uppercase;
+                user-select: none;
+            }
+
+            .user-profile-status-dot {
+                position: absolute;
+                bottom: 2px;
+                right: 2px;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                border: 3px solid #ffffff;
+            }
+
+            .user-profile-status-dot.active {
+                background: #10b981;
+            }
+
+            .user-profile-status-dot.pending {
+                background: #f59e0b;
+            }
+
+            .user-profile-status-dot.locked {
+                background: #ef4444;
+            }
+
+            .user-profile-name {
+                font-size: 20px;
+                font-weight: 800;
+                color: #0f172a;
+                margin: 0 0 6px;
+                line-height: 1.25;
+                word-break: break-word;
+            }
+
+            .user-profile-email {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 13.5px;
+                color: #64748b;
+                margin-bottom: 14px;
+                word-break: break-all;
+                background: #f8fafc;
+                padding: 4px 12px;
+                border-radius: 20px;
+                border: 1px solid #f1f5f9;
+            }
+
+            .user-status-badge-wrap {
+                display: flex;
+                justify-content: center;
+            }
+
+            .user-status-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12.5px;
+                font-weight: 600;
+                padding: 4px 14px;
+                border-radius: 20px;
+                line-height: 1.4;
+            }
+
+            .user-status-pill.active {
+                background: #ecfdf5;
+                color: #065f46;
+                border: 1px solid #a7f3d0;
+            }
+
+            .user-status-pulse {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: #10b981;
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+                animation: statusPulse 2s infinite;
+            }
+
+            @keyframes statusPulse {
+                0% {
+                    transform: scale(0.95);
+                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+                }
+
+                70% {
+                    transform: scale(1);
+                    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+                }
+
+                100% {
+                    transform: scale(0.95);
+                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                }
+            }
+
+            .user-status-pill.pending {
+                background: #fffbeb;
+                color: #92400e;
+                border: 1px solid #fde68a;
+            }
+
+            .user-status-pill.unverified {
+                background: #f0f9ff;
+                color: #0369a1;
+                border: 1px solid #bae6fd;
+            }
+
+            .user-status-pill.locked {
+                background: #fef2f2;
+                color: #991b1b;
+                border: 1px solid #fecaca;
+            }
+
+            /* Profile Facts List */
+            .user-profile-facts-section {
+                padding: 20px 24px;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            .user-profile-section-heading {
+                font-size: 11.5px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: #94a3b8;
+                margin-bottom: 14px;
+            }
+
+            .user-profile-facts {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .user-fact-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                font-size: 13px;
+                padding-bottom: 10px;
+                border-bottom: 1px dashed #f1f5f9;
+            }
+
+            .user-fact-item:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            .user-fact-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                color: #64748b;
+                font-weight: 500;
+            }
+
+            .user-fact-icon {
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                color: #3b82f6;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .user-fact-val {
+                font-weight: 600;
+                color: #0f172a;
+                text-align: right;
+            }
+
+            .plan-count-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                color: #2563eb;
+                background: #eff6ff;
+                padding: 3px 10px;
+                border-radius: 14px;
+                text-decoration: none;
+                font-weight: 600;
+                transition: all 0.15s ease;
+                border: 1px solid #bfdbfe;
+            }
+
+            .plan-count-link:hover {
+                background: #2563eb;
+                color: #ffffff;
+                border-color: #2563eb;
+            }
+
+            /* Roles Widget */
+            .user-profile-roles-widget {
+                padding: 20px 24px 24px;
+            }
+
+            .user-profile-roles-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .user-role-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 14px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 600;
+                line-height: 1.4;
+            }
+
+            .user-role-badge.admin {
+                background: #f5f3ff;
+                color: #6d28d9;
+                border: 1px solid #ddd6fe;
+            }
+
+            .user-role-badge.teacher {
+                background: #eff6ff;
+                color: #1d4ed8;
+                border: 1px solid #bfdbfe;
+            }
+
+            /* ---------- RIGHT CARD: FORM ---------- */
+            .user-form-card {
+                background: #ffffff;
+                border-radius: 20px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 6px 24px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+                padding: 34px 38px;
+            }
+
+            @media (max-width: 640px) {
+                .user-form-card {
+                    padding: 22px 18px;
+                    border-radius: 16px;
+                }
+            }
+
+            .user-form-section {
+                padding-bottom: 28px;
+                margin-bottom: 28px;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            .user-form-section-header {
+                display: flex;
+                align-items: flex-start;
+                gap: 14px;
+                margin-bottom: 20px;
+            }
+
+            .user-section-num {
+                width: 32px;
+                height: 32px;
+                border-radius: 10px;
+                background: #eff6ff;
+                color: #2563eb;
+                font-weight: 800;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                border: 1px solid #dbeafe;
+            }
+
+            .user-section-title-wrap {
+                flex: 1;
+            }
+
+            .user-section-title {
+                font-size: 16.5px;
+                font-weight: 700;
+                color: #0f172a;
+                margin: 0;
+                line-height: 1.3;
+            }
+
+            .user-section-desc {
+                font-size: 13px;
+                color: #64748b;
+                margin: 3px 0 0;
+            }
+
+            /* Form Grid */
+            .form-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 18px;
+            }
+
+            @media (max-width: 640px) {
+                .form-grid {
+                    grid-template-columns: 1fr;
+                    gap: 14px;
+                }
+            }
+
+            .form-group {
+                margin-bottom: 0;
+            }
+
+            .form-label {
+                display: block;
+                font-size: 13px;
+                font-weight: 600;
+                color: #33415c;
+                margin-bottom: 6px;
+            }
+
+            .form-label .req {
+                color: #dc2626;
+                font-weight: 700;
+            }
+
+            .form-control {
+                width: 100%;
+                height: 44px;
+                padding: 0 14px;
+                border-radius: 10px;
+                border: 1.5px solid #cbd5e1;
+                font-size: 14px;
+                color: #0f172a;
+                background: #ffffff;
+                transition: all 0.2s ease;
+                box-sizing: border-box;
+                font-family: inherit;
+            }
+
+            .form-control:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+            }
+
+            .has-error .form-control,
+            .has-error .form-select {
+                border-color: #ef4444 !important;
+                background-color: #fffafb;
+            }
+
+            .field-error {
+                font-size: 12.5px;
+                color: #dc2626;
+                margin: 5px 0 0;
+                font-weight: 500;
+            }
+
+            /* Custom Select */
+            .select-wrapper {
+                position: relative;
+            }
+
+            .custom-select {
+                width: 100%;
+                height: 44px;
+                padding: 0 38px 0 14px;
+                border-radius: 10px;
+                border: 1.5px solid #cbd5e1;
+                font-size: 14px;
+                color: #0f172a;
+                background-color: #ffffff;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 14px center;
+                background-size: 16px;
+                appearance: none;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-sizing: border-box;
+                font-family: inherit;
+            }
+
+            .custom-select:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+            }
+
+            /* Readonly Email Box */
+            .readonly-email-box {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                background: #f8fafc;
+                border: 1.5px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+
+            .email-text {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-width: 0;
+            }
+
+            .email-icon-box {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: #ffffff;
+                color: #64748b;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid #e2e8f0;
+                flex-shrink: 0;
+            }
+
+            .email-address-val {
+                font-size: 14.5px;
+                font-weight: 600;
+                color: #0f172a;
+                word-break: break-all;
+            }
+
+            .email-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #475569;
+                background: #e2e8f0;
+                padding: 4px 10px;
+                border-radius: 20px;
+                white-space: nowrap;
+            }
+
+            .form-hint {
+                font-size: 12.5px;
+                color: #64748b;
+                margin-top: 6px;
+                line-height: 1.4;
+            }
+
+            /* ---------- ROLE SELECTION CARDS ---------- */
+            .role-cards-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-top: 8px;
+            }
+
+            @media (max-width: 768px) {
+                .role-cards-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .role-select-card {
+                position: relative;
+                border: 1.5px solid #e2e8f0;
+                border-radius: 14px;
+                padding: 18px;
+                cursor: pointer;
+                transition: all 0.2s cubic-bezier(.22, .8, .24, 1);
+                background: #ffffff;
+                display: block;
+                box-sizing: border-box;
+            }
+
+            .role-select-card:hover {
+                border-color: #93c5fd;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
+            }
+
+            .role-select-card.is-checked {
+                border-color: #2563eb;
+                background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+                box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+            }
+
+            .role-checkbox {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .role-card-top {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 8px;
+            }
+
+            .role-icon-badge {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                flex-shrink: 0;
+                background: #f1f5f9;
+            }
+
+            .role-card-name {
+                font-size: 15px;
+                font-weight: 700;
+                color: #0f172a;
+                flex: 1;
+            }
+
+            .role-custom-check {
+                width: 22px;
+                height: 22px;
+                border-radius: 6px;
+                border: 2px solid #cbd5e1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #ffffff;
+                transition: all 0.15s ease;
+                background: #ffffff;
+            }
+
+            .role-select-card.is-checked .role-custom-check {
+                background: #2563eb;
+                border-color: #2563eb;
+            }
+
+            .role-card-desc {
+                font-size: 12.5px;
+                color: #64748b;
+                line-height: 1.45;
+            }
+
+            /* ---------- FORM ACTIONS FOOTER ---------- */
+            .detail-form-actions {
+                margin-top: 30px;
+                padding-top: 22px;
+                border-top: 1px solid #f1f5f9;
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .btn-detail {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                height: 44px;
+                padding: 0 22px;
+                border-radius: 11px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border: 1px solid transparent;
+                text-decoration: none;
+                font-family: inherit;
+            }
+
+            .btn-detail-secondary {
+                background: #ffffff;
+                border-color: #cbd5e1;
+                color: #33415c;
+            }
+
+            .btn-detail-secondary:hover {
+                background: #f8fafc;
+                border-color: #94a3b8;
+                color: #0f172a;
+            }
+
+            .btn-detail-primary {
+                background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                color: #ffffff;
+                box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+            }
+
+            .btn-detail-primary:hover {
+                background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+            }
+
+            @media (max-width: 480px) {
+                .detail-form-actions {
+                    flex-direction: column-reverse;
+                }
+
+                .btn-detail {
+                    width: 100%;
+                }
+            }
+
+            /* ---------- MODAL REFINEMENTS ---------- */
+            .modal-overlay {
+                backdrop-filter: blur(5px);
+                background: rgba(15, 23, 42, 0.6);
+            }
+
+            .modal-box {
+                border-radius: 20px;
+                box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+                border: 1px solid #e2e8f0;
+                overflow: hidden;
+            }
+
+            .rule-warning-box {
+                background: #fff1f2;
+                border: 1px solid #fecdd3;
+                border-radius: 12px;
+                padding: 14px 16px;
+                margin-bottom: 16px;
+            }
+
+            .rule-warning-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #dc2626;
+                font-size: 13.5px;
+                font-weight: 700;
+                margin-bottom: 10px;
+            }
+
+            .rule-warning-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                font-size: 12.5px;
+                color: #475569;
+                margin-bottom: 8px;
+                line-height: 1.45;
+            }
+
+            .rule-warning-item:last-child {
+                margin-bottom: 0;
+            }
+
+            .badge-text-highlight {
+                color: #dc2626;
+                font-weight: 700;
+            }
+
+            /* ---------- MODAL CLOSE BUTTON (NÚT X) ---------- */
+            .modal-close-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                border: 1px solid #e2e8f0;
+                background: #ffffff;
+                color: #64748b;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s cubic-bezier(.22, .8, .24, 1);
+                box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+                padding: 0;
+                flex-shrink: 0;
+                margin: 0;
+                outline: none;
+            }
+
+            .modal-close-btn:hover {
+                background: #f1f5f9;
+                color: #0f172a;
+                border-color: #cbd5e1;
+                transform: rotate(90deg) scale(1.06);
+                box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+            }
+
+            .modal-close-btn:active {
+                transform: rotate(90deg) scale(0.95);
+            }
+
+            .modal-close-btn.modal-close-danger:hover {
+                background: #fee2e2;
+                color: #dc2626;
+                border-color: #fecaca;
+                box-shadow: 0 3px 8px rgba(220, 38, 38, 0.15);
+            }
+        </style>
+
         <script>
             // Highlight role cards on checkbox toggle
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 const roleCards = document.querySelectorAll('.role-select-card');
-                roleCards.forEach(function(card) {
+                roleCards.forEach(function (card) {
                     const cb = card.querySelector('input[type="checkbox"]');
                     if (cb) {
-                        cb.addEventListener('change', function() {
+                        cb.addEventListener('change', function () {
                             card.classList.toggle('is-checked', cb.checked);
                         });
                     }
@@ -347,30 +1520,51 @@
         <div id="lockModal" class="modal-overlay" th:classappend="${showLockModal} ? 'open active' : ''">
             <div class="modal-box">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--danger);">Khoá tài khoản giáo viên</h3>
-                    <button type="button" class="alert-close" data-modal-close style="margin: 0; font-size: 22px;" aria-label="Đóng">&times;</button>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span
+                            style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; background: #fef3c7; color: #b45309;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </span>
+                        <h3 style="font-size: 17px; font-weight: 700; margin: 0; color: #b45309;">Khoá tài khoản giáo
+                            viên</h3>
+                    </div>
+                    <button type="button" class="modal-close-btn" data-modal-close aria-label="Đóng">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-                    Tài khoản bị khoá sẽ mất hiệu lực ngay lập tức, kể cả khi token chưa hết hạn.
+                <p style="font-size: 13.5px; color: #64748b; margin-bottom: 16px; line-height: 1.45;">
+                    Tài khoản sau khi bị khoá sẽ bị thu hồi phiên đăng nhập ngay lập tức và không thể truy cập hệ thống.
                 </p>
-                <form th:action="@{/admin/users/{id}/lock(id=${user.id})}" th:object="${lockUserForm}" method="post" data-validate novalidate>
-                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+                <form th:action="@{/admin/users/{id}/lock(id=${user.id})}" th:object="${lockUserForm}" method="post"
+                    data-validate novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}"
+                        th:text="${#fields.globalErrors()[0]}"></div>
 
                     <div class="form-group" th:classappend="${#fields.hasErrors('reason')} ? 'has-error'">
-                        <label class="form-label" for="reason">Lý do khoá <span class="req" aria-hidden="true">*</span></label>
+                        <label class="form-label" for="reason">Lý do khoá <span class="req"
+                                aria-hidden="true">*</span></label>
                         <textarea id="reason" th:field="*{reason}" rows="3" class="form-control"
-                                  placeholder="Nhập lý do cụ thể (5 - 500 ký tự)..." minlength="5" maxlength="500" required
-                                  data-minlength="5" data-maxlength="500"
-                                  data-msg-required="Vui lòng nhập lý do khoá tài khoản."
-                                  data-msg-minlength="Lý do khoá cần ít nhất 5 ký tự."
-                                  data-msg-maxlength="Lý do khoá không quá 500 ký tự."
-                                  th:attr="aria-invalid=${#fields.hasErrors('reason')},aria-describedby='reason-error'"></textarea>
-                        <p class="field-error" id="reason-error" role="alert"
-                           th:if="${#fields.hasErrors('reason')}" th:text="${#fields.errors('reason')[0]}"></p>
+                            placeholder="Nhập lý do cụ thể (5 - 500 ký tự)..." minlength="5" maxlength="500" required
+                            style="height: auto; padding: 12px 14px; border-radius: 10px;" data-minlength="5"
+                            data-maxlength="500" data-msg-required="Vui lòng nhập lý do khoá tài khoản."
+                            data-msg-minlength="Lý do khoá cần ít nhất 5 ký tự."
+                            data-msg-maxlength="Lý do khoá không quá 500 ký tự."
+                            th:attr="aria-invalid=${#fields.hasErrors('reason')},aria-describedby='reason-error'"></textarea>
+                        <p class="field-error" id="reason-error" role="alert" th:if="${#fields.hasErrors('reason')}"
+                            th:text="${#fields.errors('reason')[0]}"></p>
                     </div>
-                    <div class="form-actions" style="margin-top: 20px;">
-                        <button type="button" class="btn btn-secondary" data-modal-close>Huỷ</button>
-                        <button type="submit" class="btn btn-danger">Khoá</button>
+                    <div class="detail-form-actions" style="margin-top: 20px; padding-top: 16px;">
+                        <button type="button" class="btn-detail btn-detail-secondary" data-modal-close>Huỷ bỏ</button>
+                        <button type="submit" class="btn-detail action-btn-danger"
+                            style="border: none; padding: 0 20px;">Xác nhận khoá</button>
                     </div>
                 </form>
             </div>
@@ -379,26 +1573,41 @@
         <!-- Modal Delete User (Rule 4.5a) -->
         <div id="deleteModal" class="modal-overlay" th:classappend="${showDeleteModal} ? 'open active' : ''">
             <div class="modal-box" style="max-width: 560px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: #fee2e2; color: #dc2626; flex-shrink: 0;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <span
+                            style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: #fee2e2; color: #dc2626; flex-shrink: 0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
                                 <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
                                 <line x1="10" y1="11" x2="10" y2="17"></line>
                                 <line x1="14" y1="11" x2="14" y2="17"></line>
                             </svg>
                         </span>
-                        <h3 style="font-size: 17px; font-weight: 700; margin: 0; color: #dc2626;">Xác nhận xoá tài khoản giáo viên</h3>
+                        <h3 style="font-size: 17px; font-weight: 700; margin: 0; color: #dc2626;">Xác nhận xoá tài khoản
+                            giáo viên</h3>
                     </div>
-                    <button type="button" class="alert-close" data-modal-close style="margin: 0; font-size: 22px;" aria-label="Đóng">&times;</button>
+                    <button type="button" class="modal-close-btn modal-close-danger" data-modal-close aria-label="Đóng">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- Box lưu ý quy tắc 4.5a rõ ràng, dễ hiểu -->
                 <div class="rule-warning-box" role="note">
                     <div class="rule-warning-header">
-                        <svg class="rule-warning-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <svg class="rule-warning-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                            </path>
                             <line x1="12" y1="9" x2="12" y2="13"></line>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
@@ -408,48 +1617,59 @@
                         <div class="rule-warning-item">
                             <span class="rule-warning-bullet">📁</span>
                             <div class="rule-warning-text">
-                                <strong>Giữ lại toàn bộ giáo án:</strong> Toàn bộ giáo án của giáo viên này sẽ được <span class="badge-text-highlight">GIỮ LẠI ĐẦY ĐỦ</span> (cả file đính kèm và các phiên bản đã tải) dưới dạng <em>giáo án mồ côi</em> làm hồ sơ lưu trữ của nhà trường.
+                                <strong>Giữ lại toàn bộ giáo án:</strong> Toàn bộ giáo án của giáo viên này sẽ được
+                                <span class="badge-text-highlight">GIỮ LẠI ĐẦY ĐỦ</span> (cả file đính kèm và các phiên
+                                bản đã tải) dưới dạng <em>giáo án mồ côi</em> làm hồ sơ lưu trữ của nhà trường.
                             </div>
                         </div>
                         <div class="rule-warning-item">
                             <span class="rule-warning-bullet">🛡️</span>
                             <div class="rule-warning-text">
-                                <strong>Bảo toàn đánh giá & nhận xét:</strong> Mọi đánh giá, nhận xét của Ban Giám Hiệu trên các giáo án này <span class="badge-text-highlight">KHÔNG BỊ XOÁ</span>.
+                                <strong>Bảo toàn đánh giá &amp; nhận xét:</strong> Mọi đánh giá, nhận xét của Ban Giám
+                                Hiệu trên các giáo án này <span class="badge-text-highlight">KHÔNG BỊ XOÁ</span>.
                             </div>
                         </div>
                         <div class="rule-warning-item">
                             <span class="rule-warning-bullet">⛔</span>
                             <div class="rule-warning-text">
-                                <strong>Xoá tài khoản vĩnh viễn:</strong> Thông tin đăng nhập và quyền truy cập của tài khoản này sẽ bị xoá khỏi hệ thống và không thể khôi phục.
+                                <strong>Xoá tài khoản vĩnh viễn:</strong> Thông tin đăng nhập và quyền truy cập của tài
+                                khoản này sẽ bị xoá khỏi hệ thống và không thể khôi phục.
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+                <div
+                    style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;">
                     <div style="font-size: 13px; color: #475569; margin-bottom: 6px;">
                         Để xác nhận thao tác, vui lòng nhập chính xác địa chỉ email của giáo viên này:
                     </div>
-                    <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13.5px; font-weight: 700; color: #0f172a; background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-block; user-select: all;" th:text="${user.email}">user@school.edu.vn</div>
+                    <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13.5px; font-weight: 700; color: #0f172a; background: #ffffff; padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; display: inline-block; user-select: all;"
+                        th:text="${user.email}">user@school.edu.vn</div>
                 </div>
 
-                <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" th:object="${deleteUserForm}" method="post" data-validate novalidate>
-                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
+                <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" th:object="${deleteUserForm}" method="post"
+                    data-validate novalidate>
+                    <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}"
+                        th:text="${#fields.globalErrors()[0]}"></div>
 
                     <div class="form-group" th:classappend="${#fields.hasErrors('confirmEmail')} ? 'has-error'">
-                        <label class="form-label" for="confirmEmail">Nhập lại email để xác nhận <span class="req" aria-hidden="true">*</span></label>
+                        <label class="form-label" for="confirmEmail">Nhập lại email để xác nhận <span class="req"
+                                aria-hidden="true">*</span></label>
                         <input type="email" id="confirmEmail" th:field="*{confirmEmail}" class="form-control"
-                               placeholder="Nhập lại email chính xác..." maxlength="150" required autocomplete="off"
-                               data-pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-                               data-msg-required="Vui lòng nhập email xác nhận."
-                               data-msg-pattern="Email không hợp lệ. Ví dụ: ten@school.edu.vn"
-                               th:attr="aria-invalid=${#fields.hasErrors('confirmEmail')},aria-describedby='confirmEmail-error'">
+                            placeholder="Nhập lại email chính xác..." maxlength="150" required autocomplete="off"
+                            data-pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                            data-msg-required="Vui lòng nhập email xác nhận."
+                            data-msg-pattern="Email không hợp lệ. Ví dụ: ten@school.edu.vn"
+                            th:attr="aria-invalid=${#fields.hasErrors('confirmEmail')},aria-describedby='confirmEmail-error'">
                         <p class="field-error" id="confirmEmail-error" role="alert"
-                           th:if="${#fields.hasErrors('confirmEmail')}" th:text="${#fields.errors('confirmEmail')[0]}"></p>
+                            th:if="${#fields.hasErrors('confirmEmail')}" th:text="${#fields.errors('confirmEmail')[0]}">
+                        </p>
                     </div>
-                    <div class="form-actions" style="margin-top: 20px;">
-                        <button type="button" class="btn btn-secondary" data-modal-close>Huỷ</button>
-                        <button type="submit" class="btn btn-danger">Xoá vĩnh viễn</button>
+                    <div class="detail-form-actions" style="margin-top: 20px; padding-top: 16px;">
+                        <button type="button" class="btn-detail btn-detail-secondary" data-modal-close>Huỷ</button>
+                        <button type="submit" class="btn-detail action-btn-danger"
+                            style="border: none; padding: 0 20px;">Xoá vĩnh viễn</button>
                     </div>
                 </form>
             </div>

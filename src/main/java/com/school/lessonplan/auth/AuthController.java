@@ -128,10 +128,10 @@ public class AuthController {
         if (!bindingResult.hasErrors()) {
             try {
                 rateLimiterService.checkRegisterRateLimit(request.getRemoteAddr());
-                User user = authService.register(registerRequest);
+                PendingRegistration pending = authService.register(registerRequest);
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Đăng ký thành công! Vui lòng nhập mã xác thực OTP đã được gửi đến email của bạn.");
-                return "redirect:/verify-email?userId=" + user.getId();
+                return "redirect:/verify-email?email=" + java.net.URLEncoder.encode(pending.getEmail(), java.nio.charset.StandardCharsets.UTF_8);
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException | RateLimitException e) {
@@ -172,16 +172,35 @@ public class AuthController {
     // ======================== EMAIL OTP VERIFICATION ========================
 
     @GetMapping("/verify-email")
-    public String verifyEmailPage(@RequestParam(name = "userId", required = false) Long userId,
+    public String verifyEmailPage(@RequestParam(name = "email", required = false) String email,
+                                  @RequestParam(name = "userId", required = false) Long userId,
                                   Model model) {
-        if (userId == null) {
+        String targetEmail = email;
+        if ((targetEmail == null || targetEmail.isBlank()) && userId != null) {
+            User legacyUser = userRepository.findById(userId).orElse(null);
+            if (legacyUser != null) {
+                targetEmail = legacyUser.getEmail();
+            }
+        }
+
+        if (targetEmail == null || targetEmail.isBlank()) {
             return "redirect:/login";
         }
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
+
+        targetEmail = targetEmail.trim().toLowerCase();
+
+        // Kiểm tra xem đã có tài khoản chính thức trong users chưa
+        User existingUser = userRepository.findByEmail(targetEmail).orElse(null);
+        if (existingUser != null && existingUser.getStatus() != com.school.lessonplan.user.UserStatus.PENDING_EMAIL) {
             return "redirect:/login";
         }
-        model.addAttribute("user", user);
+
+        var pendingOpt = authService.getPendingRegistration(targetEmail);
+        if (pendingOpt.isEmpty() && existingUser == null) {
+            return "redirect:/register";
+        }
+
+        model.addAttribute("email", targetEmail);
         model.addAttribute("userId", userId);
         if (!model.containsAttribute("verifyOtpRequest")) {
             model.addAttribute("verifyOtpRequest", new VerifyOtpRequest());
@@ -190,21 +209,38 @@ public class AuthController {
     }
 
     @PostMapping("/verify-email")
-    public String verifyEmail(@RequestParam("userId") Long userId,
+    public String verifyEmail(@RequestParam(name = "email", required = false) String email,
+                              @RequestParam(name = "userId", required = false) Long userId,
                               @Valid @ModelAttribute("verifyOtpRequest") VerifyOtpRequest verifyOtpRequest,
                               BindingResult bindingResult,
                               HttpServletRequest request,
                               Model model,
                               RedirectAttributes redirectAttributes) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
+        String targetEmail = email;
+        if ((targetEmail == null || targetEmail.isBlank()) && userId != null) {
+            User legacyUser = userRepository.findById(userId).orElse(null);
+            if (legacyUser != null) {
+                targetEmail = legacyUser.getEmail();
+            }
+        }
+
+        if (targetEmail == null || targetEmail.isBlank()) {
             return "redirect:/login";
         }
 
+        targetEmail = targetEmail.trim().toLowerCase();
+
         if (!bindingResult.hasErrors()) {
             try {
-                rateLimiterService.checkOtpRateLimit(request.getRemoteAddr() + ":" + user.getEmail());
-                authService.verifyEmailOtp(userId, verifyOtpRequest.getCode());
+                rateLimiterService.checkOtpRateLimit(request.getRemoteAddr() + ":" + targetEmail);
+                if (authService.hasPendingRegistration(targetEmail)) {
+                    authService.verifyRegistrationOtp(targetEmail, verifyOtpRequest.getCode());
+                } else if (userId != null) {
+                    authService.verifyEmailOtp(userId, verifyOtpRequest.getCode());
+                } else {
+                    throw new BusinessException("Phiên đăng ký không tồn tại hoặc đã hết hạn. Vui lòng đăng ký lại.");
+                }
+
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Xác thực email thành công! Tài khoản đang chờ Ban Giám Hiệu phê duyệt. Bạn sẽ nhận được thông báo qua email khi tài khoản được kích hoạt.");
                 return "redirect:/login";
@@ -215,29 +251,46 @@ public class AuthController {
             }
         }
 
-        model.addAttribute("user", user);
+        model.addAttribute("email", targetEmail);
         model.addAttribute("userId", userId);
         return "auth/email-verification-page";
     }
 
     @PostMapping("/verify-email/resend")
-    public String resendEmailOtp(@RequestParam("userId") Long userId,
+    public String resendEmailOtp(@RequestParam(name = "email", required = false) String email,
+                                 @RequestParam(name = "userId", required = false) Long userId,
                                  HttpServletRequest request,
                                  RedirectAttributes redirectAttributes) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
+        String targetEmail = email;
+        if ((targetEmail == null || targetEmail.isBlank()) && userId != null) {
+            User legacyUser = userRepository.findById(userId).orElse(null);
+            if (legacyUser != null) {
+                targetEmail = legacyUser.getEmail();
+            }
+        }
+
+        if (targetEmail == null || targetEmail.isBlank()) {
             return "redirect:/login";
         }
 
+        targetEmail = targetEmail.trim().toLowerCase();
+
         try {
-            rateLimiterService.checkOtpRateLimit(request.getRemoteAddr() + ":" + user.getEmail());
-            authService.sendVerificationOtp(user);
+            rateLimiterService.checkOtpRateLimit(request.getRemoteAddr() + ":" + targetEmail);
+            if (authService.hasPendingRegistration(targetEmail)) {
+                authService.resendRegistrationOtp(targetEmail);
+            } else if (userId != null) {
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null) {
+                    authService.sendVerificationOtp(user);
+                }
+            }
             redirectAttributes.addFlashAttribute("successMessage", "Mã xác thực mới đã được gửi vào email của bạn.");
         } catch (BusinessException | RateLimitException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
-        return "redirect:/verify-email?userId=" + userId;
+        return "redirect:/verify-email?email=" + java.net.URLEncoder.encode(targetEmail, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     // ======================== FORGOT PASSWORD ========================

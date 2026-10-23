@@ -44,6 +44,7 @@ public class AuthService {
     private final DepartmentRepository departmentRepository;
     private final CampusRepository campusRepository;
     private final EmailVerificationCodeRepository otpRepository;
+    private final PendingRegistrationRepository pendingRegistrationRepository;
     private final PasswordResetTokenRepository resetTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final EmailService emailService;
@@ -56,6 +57,7 @@ public class AuthService {
     public AuthService(UserRepository userRepository, RoleRepository roleRepository,
             DepartmentRepository departmentRepository, CampusRepository campusRepository,
             EmailVerificationCodeRepository otpRepository,
+            PendingRegistrationRepository pendingRegistrationRepository,
             PasswordResetTokenRepository resetTokenRepository,
             RefreshTokenRepository refreshTokenRepository,
             EmailService emailService,
@@ -67,6 +69,7 @@ public class AuthService {
         this.departmentRepository = departmentRepository;
         this.campusRepository = campusRepository;
         this.otpRepository = otpRepository;
+        this.pendingRegistrationRepository = pendingRegistrationRepository;
         this.resetTokenRepository = resetTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.emailService = emailService;
@@ -80,7 +83,7 @@ public class AuthService {
     // ======================== ĐĂNG KÝ ========================
 
     @Transactional
-    public User register(RegisterRequest request) {
+    public PendingRegistration register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
 
         // Kiểm tra đồng ý điều khoản & chính sách bảo mật
@@ -110,46 +113,55 @@ public class AuthService {
                     .orElseThrow(() -> new BusinessException("Không tìm thấy phân hiệu mặc định."));
         }
 
-        // Kiểm tra email trùng hoặc tài khoản chưa xác thực OTP
-        User user;
+        // Kiểm tra email đã có tài khoản trong users chưa
         java.util.Optional<User> existingUserOpt = userRepository.findByEmail(email);
         if (existingUserOpt.isPresent()) {
             User existing = existingUserOpt.get();
+            // Nếu người dùng trước đó bị kẹt ở trạng thái PENDING_EMAIL trong bảng users,
+            // dọn dẹp để giải phóng email cho họ đăng ký lại bình thường
             if (existing.getStatus() == UserStatus.PENDING_EMAIL) {
-                // Người dùng trước đó chưa xác thực OTP -> cho phép cập nhật thông tin và cấp mã mới
-                user = existing;
-                otpRepository.deleteByUserId(user.getId());
+                otpRepository.deleteByUserId(existing.getId());
+                userRepository.delete(existing);
             } else {
                 throw new FieldValidationException("email", "Duplicate", "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.");
             }
-        } else {
-            user = new User();
-            user.setEmail(email);
-            // Gán role TEACHER
-            Role teacherRole = roleRepository.findByCode("TEACHER")
-                    .orElseThrow(() -> new BusinessException("Vai trò TEACHER chưa được tạo."));
-            user.getRoles().add(teacherRole);
         }
 
-        user.setLastName(request.getLastName().trim());
-        user.setGivenName(request.getGivenName().trim());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setDepartment(department);
-        user.setCampus(campus);
-        user.setStatus(UserStatus.PENDING_EMAIL);
-
-        try {
-            user = userRepository.save(user);
-        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
-            throw new FieldValidationException("email", "Duplicate", "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.");
+        // Kiểm tra cooldown nếu đã có yêu cầu đăng ký trước đó chưa hết 60s
+        var existingPendingOpt = pendingRegistrationRepository.findByEmail(email);
+        if (existingPendingOpt.isPresent()) {
+            PendingRegistration prev = existingPendingOpt.get();
+            Instant cooldownEnd = prev.getLastSentAt()
+                    .plus(appProperties.getOtp().getResendCooldownSeconds(), ChronoUnit.SECONDS);
+            if (Instant.now().isBefore(cooldownEnd)) {
+                throw new RateLimitException("Mã xác thực vừa được gửi. Vui lòng đợi 60 giây trước khi thử lại.");
+            }
         }
 
-        // Gửi mã OTP
-        sendVerificationOtp(user);
+        // Sinh mã OTP 6 chữ số
+        String code = generateOtpCode();
+        String codeHash = hashSha256(code);
 
-        auditService.log("USER_REGISTER", "USER", user.getId(), "Đăng ký tài khoản: " + email);
+        // Lưu thông tin đăng ký vào bảng pending_registrations tạm thời (TUYỆT ĐỐI KHÔNG INSERT VÀO USERS)
+        PendingRegistration pending = existingPendingOpt.orElseGet(PendingRegistration::new);
+        pending.setEmail(email);
+        pending.setLastName(request.getLastName().trim());
+        pending.setGivenName(request.getGivenName().trim());
+        pending.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        pending.setDepartmentId(department.getId());
+        pending.setCampusId(campus.getId());
+        pending.setCodeHash(codeHash);
+        pending.setExpiresAt(Instant.now().plus(appProperties.getOtp().getExpiryMinutes(), ChronoUnit.MINUTES));
+        pending.setAttempts(0);
+        pending.setLastSentAt(Instant.now());
 
-        return user;
+        pending = pendingRegistrationRepository.save(pending);
+
+        // Gửi mã OTP xác thực qua email
+        emailService.sendOtpVerification(pending.getEmail(), pending.getFullName(), code);
+
+        log.info("OTP verification code sent for pending registration email: {}", email);
+        return pending;
     }
 
     // ======================== OTP XÁC THỰC EMAIL ========================
@@ -244,6 +256,109 @@ public class AuthService {
         return true;
     }
 
+    public java.util.Optional<PendingRegistration> getPendingRegistration(String email) {
+        if (email == null || email.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        return pendingRegistrationRepository.findByEmail(email.trim().toLowerCase());
+    }
+
+    public boolean hasPendingRegistration(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        return pendingRegistrationRepository.existsByEmail(email.trim().toLowerCase());
+    }
+
+    @Transactional
+    public void resendRegistrationOtp(String email) {
+        String normalizedEmail = email.trim().toLowerCase();
+        PendingRegistration pending = pendingRegistrationRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy thông tin đăng ký cho email này. Vui lòng đăng ký lại."));
+
+        // Kiểm tra cooldown 60 giây
+        Instant cooldownEnd = pending.getLastSentAt()
+                .plus(appProperties.getOtp().getResendCooldownSeconds(), ChronoUnit.SECONDS);
+        if (Instant.now().isBefore(cooldownEnd)) {
+            throw new RateLimitException("Vui lòng đợi 60 giây trước khi yêu cầu gửi lại mã.");
+        }
+
+        // Sinh mã OTP 6 chữ số mới
+        String code = generateOtpCode();
+        String codeHash = hashSha256(code);
+
+        pending.setCodeHash(codeHash);
+        pending.setExpiresAt(Instant.now().plus(appProperties.getOtp().getExpiryMinutes(), ChronoUnit.MINUTES));
+        pending.setAttempts(0);
+        pending.setLastSentAt(Instant.now());
+
+        pendingRegistrationRepository.save(pending);
+
+        emailService.sendOtpVerification(pending.getEmail(), pending.getFullName(), code);
+        log.info("New OTP resent to pending registration email: {}", normalizedEmail);
+    }
+
+    @Transactional
+    public User verifyRegistrationOtp(String email, String code) {
+        String normalizedEmail = email.trim().toLowerCase();
+        PendingRegistration pending = pendingRegistrationRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy thông tin đăng ký hoặc phiên đăng ký đã hết hạn. Vui lòng đăng ký lại."));
+
+        // Kiểm tra hết hạn
+        if (pending.isExpired()) {
+            throw new FieldValidationException("code", "Invalid", "Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.");
+        }
+
+        // Kiểm tra số lần nhập sai
+        if (pending.isMaxAttemptsReached(appProperties.getOtp().getMaxAttempts())) {
+            throw new FieldValidationException("code", "Invalid",
+                    "Đã nhập sai quá " + appProperties.getOtp().getMaxAttempts() + " lần. Vui lòng yêu cầu mã mới.");
+        }
+
+        // Kiểm tra mã OTP
+        String inputHash = hashSha256(code.trim());
+        if (!inputHash.equals(pending.getCodeHash())) {
+            pending.incrementAttempts();
+            pendingRegistrationRepository.save(pending);
+            int remaining = appProperties.getOtp().getMaxAttempts() - pending.getAttempts();
+            if (remaining <= 0) {
+                throw new FieldValidationException("code", "Invalid",
+                        "Đã nhập sai quá " + appProperties.getOtp().getMaxAttempts() + " lần. Vui lòng yêu cầu mã mới.");
+            }
+            throw new FieldValidationException("code", "Invalid",
+                    "Mã xác thực không đúng. Bạn còn " + remaining + " lần thử.");
+        }
+
+        // OTP HỢP LỆ -> BÂY GIỜ MỚI CHÍNH THỨC INSERT TÀI KHOẢN VÀO BẢNG USERS!
+        Department department = departmentRepository.findById(pending.getDepartmentId())
+                .orElseThrow(() -> new BusinessException("Bộ môn không tồn tại."));
+        Campus campus = campusRepository.findById(pending.getCampusId())
+                .orElseThrow(() -> new BusinessException("Phân hiệu không tồn tại."));
+
+        Role teacherRole = roleRepository.findByCode("TEACHER")
+                .orElseThrow(() -> new BusinessException("Vai trò TEACHER chưa được tạo."));
+
+        User user = new User();
+        user.setEmail(pending.getEmail());
+        user.setLastName(pending.getLastName());
+        user.setGivenName(pending.getGivenName());
+        user.setPasswordHash(pending.getPasswordHash());
+        user.setDepartment(department);
+        user.setCampus(campus);
+        user.setStatus(UserStatus.PENDING_APPROVAL); // Sau khi xác thực OTP thì chuyển sang chờ BGH phê duyệt
+        user.getRoles().add(teacherRole);
+
+        user = userRepository.save(user);
+
+        // Xoá bản ghi chờ đăng ký sau khi đã tạo tài khoản thành công
+        pendingRegistrationRepository.delete(pending);
+
+        auditService.log("USER_REGISTER", "USER", user.getId(), "Đăng ký tài khoản thành công qua OTP: " + user.getEmail());
+
+        log.info("User {} created successfully after OTP email verification: {}", user.getId(), user.getEmail());
+        return user;
+    }
+
     // ======================== ĐĂNG NHẬP ========================
 
     @Transactional
@@ -254,6 +369,9 @@ public class AuthService {
 
         // Thông báo chung chung - không lộ email có tồn tại
         if (user == null) {
+            if (pendingRegistrationRepository.existsByEmail(email)) {
+                throw new BusinessException("Tài khoản chưa hoàn tất xác thực OTP email. Vui lòng kiểm tra email hoặc đăng ký lại để nhận mã.");
+            }
             throw new BusinessException("Email hoặc mật khẩu không đúng.");
         }
 
