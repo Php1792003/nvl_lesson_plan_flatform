@@ -668,7 +668,10 @@
         /* Chip bộ lọc đang áp dụng */
         var host = NVL.$('chipHost');
         var items = [];
-        var isEn = (document.cookie.indexOf('nvl_lang=en') !== -1 || localStorage.getItem('nvl_lang') === 'en');
+        var isEn = false;
+        try {
+            isEn = (document.cookie.indexOf('nvl_lang=en') !== -1 || (window.localStorage && localStorage.getItem('nvl_lang') === 'en'));
+        } catch (e) {}
         if (fSearch && fSearch.value.trim()) items.push({ el: fSearch, text: (isEn ? 'Keyword: ' : 'Từ khoá: ') + fSearch.value.trim() });
         if (fDept && fDept.value) items.push({ el: fDept, text: fDept.options[fDept.selectedIndex].text });
         if (fYear && fYear.value && fYear.value.trim()) {
@@ -1045,14 +1048,24 @@
        AUTO INITIALIZATION
        ========================================================================== */
     NVL.autoInit = function () {
-        NVL.setupPageTransitions();
-        NVL.setupPeriodHelper('startPeriod', 'endPeriod', 'periodHelperBox', 'periodHelperText');
-        NVL.setupPeriodHelper('startPeriod', 'endPeriod', 'periodHelperBoxEdit', 'periodHelperTextEdit');
-        if (NVL.$('uplRoot')) NVL.initPlanUpload();
-        if (NVL.$('plansRoot')) NVL.initPlanList();
-        if (NVL.$('admRoot')) NVL.initAdminPlans();
-        if (NVL.$('usrRoot')) NVL.initAdminUsers();
-        if (NVL.$('rolRoot')) NVL.initAdminRoles();
+        try { NVL.setupPageTransitions(); } catch (e) { console.warn(e); }
+        try { NVL.setupPeriodHelper('startPeriod', 'endPeriod', 'periodHelperBox', 'periodHelperText'); } catch (e) { console.warn(e); }
+        try { NVL.setupPeriodHelper('startPeriod', 'endPeriod', 'periodHelperBoxEdit', 'periodHelperTextEdit'); } catch (e) { console.warn(e); }
+        try { if (NVL.$('uplRoot')) NVL.initPlanUpload(); } catch (e) { console.warn(e); }
+        try { if (NVL.$('plansRoot')) NVL.initPlanList(); } catch (e) { console.warn(e); }
+        try { if (NVL.$('admRoot')) NVL.initAdminPlans(); } catch (e) { console.warn(e); }
+        try { if (NVL.$('usrRoot')) NVL.initAdminUsers(); } catch (e) { console.warn(e); }
+        try { if (NVL.$('rolRoot')) NVL.initAdminRoles(); } catch (e) { console.warn(e); }
+
+        /* Đảm bảo toàn bộ container luôn hiển thị, chống hiện tượng màn hình trắng nếu có lỗi bất kỳ */
+        setTimeout(function () {
+            var roots = document.querySelectorAll('.dash, .upl, .plans, .adm, .usr, .rol');
+            roots.forEach(function (r) {
+                if (!r.classList.contains('is-ready')) {
+                    r.classList.add('is-ready');
+                }
+            });
+        }, 150);
     };
 
     if (document.readyState === 'loading') {

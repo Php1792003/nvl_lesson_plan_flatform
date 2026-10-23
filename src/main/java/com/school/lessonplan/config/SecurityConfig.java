@@ -56,7 +56,7 @@ public class SecurityConfig {
                         headers.contentTypeOptions(contentType -> {});
                         headers.contentSecurityPolicy(csp -> csp
                                 .policyDirectives(
-                                        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'"));
+                                        "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com"));
                         headers.referrerPolicy(referrer -> referrer
                                 .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN));
                         headers.permissionsPolicy(permissions -> permissions.policy("camera=(), microphone=(), geolocation=()"));
