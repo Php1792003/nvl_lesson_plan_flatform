@@ -414,7 +414,7 @@
         });
 
         var MAX = 10 * 1024 * 1024;
-        var ALLOWED = ['pdf', 'doc', 'docx', 'ppt', 'pptx'];
+        var ALLOWED = ['pdf', 'doc', 'docx'];
         var input = NVL.$('file');
         var wrap = NVL.$('dropWrap');
         var drop = NVL.$('drop');
@@ -447,7 +447,7 @@
             if (ALLOWED.indexOf(ext) === -1) {
                 input.value = '';
                 if (wrap) wrap.classList.remove('has-file');
-                showError('Định dạng .' + ext + ' không được hỗ trợ. Vui lòng chọn tệp PDF, Word hoặc PowerPoint.');
+                showError('Định dạng .' + ext + ' không được hỗ trợ. Vui lòng chọn tệp PDF hoặc Word (.doc, .docx).');
                 updateProgress();
                 return;
             }
@@ -462,7 +462,7 @@
             var badge = NVL.$('chosenExt');
             if (badge) {
                 badge.textContent = ext.toUpperCase().slice(0, 4);
-                badge.className = 'up-ext' + (ext === 'pdf' ? ' pdf' : (ext === 'ppt' || ext === 'pptx') ? ' ppt' : '');
+                badge.className = 'up-ext' + (ext === 'pdf' ? ' pdf' : '');
             }
             var nameEl = NVL.$('chosenName');
             if (nameEl) { nameEl.textContent = f.name; nameEl.title = f.name; }

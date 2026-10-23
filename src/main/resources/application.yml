@@ -89,8 +89,8 @@ app:
     temp-dir: ${APP_STORAGE_TEMP:./uploads/temp}
   upload:
     max-mb: ${APP_UPLOAD_MAX_MB:20}
-    allowed-extensions: pdf,doc,docx,ppt,pptx
-    allowed-content-types: application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation
+    allowed-extensions: pdf,doc,docx
+    allowed-content-types: application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document
     max-concurrent: ${APP_UPLOAD_MAX_CONCURRENT:3}
     min-disk-mb: ${APP_UPLOAD_MIN_DISK_MB:500}
   keep-versions: ${APP_KEEP_VERSIONS:3}

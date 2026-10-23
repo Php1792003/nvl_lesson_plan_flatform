@@ -126,7 +126,7 @@ public class AiReviewService {
             return cached.response();
         }
 
-        // [2] Đọc file giáo án & [3] Trích văn bản (PDF/DOCX/PPTX)
+        // [2] Đọc file giáo án & [3] Trích văn bản (PDF/DOCX)
         ExtractedPlanText extracted = planTextExtractor.extract(version);
 
         // [4] PRE-CHECK trong code (KHÔNG gọi AI nếu textLength < minChars)
