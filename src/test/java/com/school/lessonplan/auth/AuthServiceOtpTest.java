@@ -36,6 +36,7 @@ class AuthServiceOtpTest {
     @Mock private DepartmentRepository departmentRepository;
     @Mock private CampusRepository campusRepository;
     @Mock private EmailVerificationCodeRepository otpRepository;
+    @Mock private PendingRegistrationRepository pendingRegistrationRepository;
     @Mock private PasswordResetTokenRepository resetTokenRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private EmailService emailService;
@@ -52,7 +53,7 @@ class AuthServiceOtpTest {
         appProperties = new AppProperties();
         authService = new AuthService(
             userRepository, roleRepository, departmentRepository, campusRepository,
-            otpRepository, resetTokenRepository, refreshTokenRepository, emailService,
+            otpRepository, pendingRegistrationRepository, resetTokenRepository, refreshTokenRepository, emailService,
             passwordEncoder, jwtService, cookieService, auditService, appProperties
         );
     }
@@ -140,5 +141,78 @@ class AuthServiceOtpTest {
         assertNotNull(sessionToken);
         assertNotNull(token.getConsumedAt());
         verify(resetTokenRepository, atLeastOnce()).save(any(PasswordResetToken.class));
+    }
+
+    @Test
+    @DisplayName("Quy tắc mới: Đăng ký KHÔNG insert vào users table mà lưu vào pending_registrations")
+    void registerDoesNotInsertIntoUsersTable() {
+        com.school.lessonplan.auth.dto.RegisterRequest req = new com.school.lessonplan.auth.dto.RegisterRequest();
+        req.setEmail("teacher.test@school.edu.vn");
+        req.setLastName("Nguyễn");
+        req.setGivenName("Văn An");
+        req.setPassword("Password123");
+        req.setConfirmPassword("Password123");
+        req.setDepartmentId(1L);
+        req.setCampusId(1L);
+        req.setAgreeTerms(true);
+
+        com.school.lessonplan.department.Department dept = new com.school.lessonplan.department.Department();
+        dept.setId(1L);
+        com.school.lessonplan.campus.Campus campus = new com.school.lessonplan.campus.Campus();
+        campus.setId(1L);
+
+        when(userRepository.findByEmail("teacher.test@school.edu.vn")).thenReturn(Optional.empty());
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(dept));
+        when(campusRepository.findById(1L)).thenReturn(Optional.of(campus));
+        when(pendingRegistrationRepository.findByEmail("teacher.test@school.edu.vn")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("Password123")).thenReturn("hashedPass");
+        when(pendingRegistrationRepository.save(any(PendingRegistration.class))).thenAnswer(i -> i.getArgument(0));
+
+        PendingRegistration result = authService.register(req);
+
+        assertNotNull(result);
+        assertEquals("teacher.test@school.edu.vn", result.getEmail());
+        verify(pendingRegistrationRepository).save(any(PendingRegistration.class));
+        verify(userRepository, never()).save(any(User.class)); // Tuyệt đối KHÔNG insert vào users!
+        verify(emailService).sendOtpVerification(eq("teacher.test@school.edu.vn"), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("Quy tắc mới: Xác thực OTP thành công thì MỚI insert tài khoản vào users table và xoá pending")
+    void verifyRegistrationOtpSuccess() {
+        PendingRegistration pending = new PendingRegistration();
+        pending.setEmail("teacher.test@school.edu.vn");
+        pending.setLastName("Nguyễn");
+        pending.setGivenName("Văn An");
+        pending.setPasswordHash("hashedPass");
+        pending.setDepartmentId(1L);
+        pending.setCampusId(1L);
+        pending.setCodeHash(AuthService.hashSha256("123456"));
+        pending.setExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES));
+
+        com.school.lessonplan.department.Department dept = new com.school.lessonplan.department.Department();
+        dept.setId(1L);
+        com.school.lessonplan.campus.Campus campus = new com.school.lessonplan.campus.Campus();
+        campus.setId(1L);
+        com.school.lessonplan.role.Role teacherRole = new com.school.lessonplan.role.Role();
+        teacherRole.setCode("TEACHER");
+
+        when(pendingRegistrationRepository.findByEmail("teacher.test@school.edu.vn")).thenReturn(Optional.of(pending));
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(dept));
+        when(campusRepository.findById(1L)).thenReturn(Optional.of(campus));
+        when(roleRepository.findByCode("TEACHER")).thenReturn(Optional.of(teacherRole));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> {
+            User u = i.getArgument(0);
+            u.setId(99L);
+            return u;
+        });
+
+        User created = authService.verifyRegistrationOtp("teacher.test@school.edu.vn", "123456");
+
+        assertNotNull(created);
+        assertEquals("teacher.test@school.edu.vn", created.getEmail());
+        assertEquals(UserStatus.PENDING_APPROVAL, created.getStatus());
+        verify(userRepository, times(1)).save(any(User.class)); // Chỉ bây giờ mới insert vào users
+        verify(pendingRegistrationRepository).delete(pending); // Đã xoá pending
     }
 }

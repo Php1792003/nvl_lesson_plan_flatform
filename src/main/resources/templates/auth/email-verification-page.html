@@ -19,7 +19,7 @@
             <h1 class="auth-title">Xác thực Email</h1>
             <p class="auth-subtitle">
                 Hệ thống đã gửi mã OTP 6 chữ số tới email:<br>
-                <strong th:text="${user.email}" style="color: var(--dark);">giaovien@school.edu.vn</strong>
+                <strong th:text="${email != null ? email : (user != null ? user.email : '')}" style="color: var(--dark);">giaovien@school.edu.vn</strong>
             </p>
         </div>
 
@@ -30,7 +30,9 @@
             <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
         </div>
 
-        <form th:action="@{/verify-email(userId=${userId})}" th:object="${verifyOtpRequest}" method="post" data-validate novalidate>
+        <form th:action="@{/verify-email}" th:object="${verifyOtpRequest}" method="post" data-validate novalidate>
+            <input type="hidden" name="email" th:value="${email}">
+            <input type="hidden" name="userId" th:if="${userId != null}" th:value="${userId}">
             <div class="form-alert" role="alert" th:if="${#fields.hasGlobalErrors()}" th:text="${#fields.globalErrors()[0]}"></div>
 
             <div class="form-group" style="text-align: center;" th:classappend="${#fields.hasErrors('code')} ? 'has-error'">
@@ -50,8 +52,10 @@
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 14px; padding: 12px;">Xác thực</button>
         </form>
 
-        <form th:action="@{/verify-email/resend(userId=${userId})}" method="post"
+        <form th:action="@{/verify-email/resend}" method="post"
               style="text-align: center; margin-top: 20px;">
+            <input type="hidden" name="email" th:value="${email}">
+            <input type="hidden" name="userId" th:if="${userId != null}" th:value="${userId}">
             <button type="submit" class="btn btn-outline btn-sm">Gửi lại mã</button>
         </form>
     </div>
