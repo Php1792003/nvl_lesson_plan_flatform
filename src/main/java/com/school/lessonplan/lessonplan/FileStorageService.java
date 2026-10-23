@@ -28,14 +28,12 @@ public class FileStorageService {
     private final AppProperties appProperties;
     private final Tika tika = new Tika();
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("pdf", "doc", "docx", "ppt", "pptx");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("pdf", "doc", "docx");
 
     private static final Map<String, Set<String>> MIME_BY_EXT = Map.of(
         "pdf", Set.of("application/pdf"),
         "doc", Set.of("application/msword", "application/x-tika-msoffice"),
-        "docx", Set.of("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip", "application/x-tika-ooxml"),
-        "ppt", Set.of("application/vnd.ms-powerpoint", "application/x-tika-msoffice"),
-        "pptx", Set.of("application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/zip", "application/x-tika-ooxml")
+        "docx", Set.of("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip", "application/x-tika-ooxml")
     );
 
     public FileStorageService(AppProperties appProperties) {
@@ -70,7 +68,7 @@ public class FileStorageService {
         String extension = getFileExtension(originalFilename);
 
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new FieldValidationException("file", "Extension", "Chỉ chấp nhận tệp PDF, Word hoặc PowerPoint.");
+            throw new FieldValidationException("file", "Extension", "Chỉ chấp nhận tệp PDF hoặc Word (.doc, .docx).");
         }
 
         // 3. Kiểm tra MIME khai báo và Magic Bytes với Tika

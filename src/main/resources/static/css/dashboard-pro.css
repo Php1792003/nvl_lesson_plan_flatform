@@ -1102,11 +1102,6 @@
                 color: var(--rose);
             }
 
-            .up-ext.ppt {
-                background: var(--amber-soft);
-                color: var(--amber);
-            }
-
             .up-info {
                 flex: 1;
                 min-width: 0;

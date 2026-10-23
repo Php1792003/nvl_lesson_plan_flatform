@@ -177,13 +177,13 @@
                         <div class="up-sec">
                             <div class="up-sec-head">
                                 <h3>Tệp đính kèm (Phiên bản 1) <span class="req">*</span></h3>
-                                <p>PDF, Word (.doc, .docx) hoặc PowerPoint (.ppt, .pptx), tối đa 10 MB.</p>
+                                <p>PDF, Word (.doc, .docx), tối đa 10 MB.</p>
                             </div>
 
                             <div class="form-group" th:classappend="${#fields.hasErrors('file')} ? 'has-error'">
                                 <div class="up-dropwrap" id="dropWrap">
                                     <input type="file" id="file" name="file" class="up-file-input" required
-                                        accept=".pdf,.doc,.docx,.ppt,.pptx"
+                                        accept=".pdf,.doc,.docx"
                                         data-msg-required="Vui lòng chọn file giáo án."
                                         th:attr="aria-invalid=${#fields.hasErrors('file')},aria-describedby='file-error'">
 
@@ -198,7 +198,7 @@
                                             </svg>
                                         </div>
                                         <strong><u>Nhấp để chọn tệp</u> hoặc kéo thả vào đây</strong>
-                                        <span>PDF, Word, PowerPoint · Tối đa 10 MB</span>
+                                        <span>PDF, Word · Tối đa 10 MB</span>
                                     </label>
 
                                     <div class="up-chosen" id="chosen">
@@ -255,8 +255,7 @@
                                         <span>Định dạng được chấp nhận:</span>
                                         <div class="up-chips">
                                             <span class="up-chip">.pdf</span><span class="up-chip">.doc</span><span
-                                                class="up-chip">.docx</span><span class="up-chip">.ppt</span><span
-                                                class="up-chip">.pptx</span>
+                                                class="up-chip">.docx</span>
                                         </div>
                                     </div>
                                 </li>
@@ -265,7 +264,7 @@
 
                         <div class="up-tip up-tip-card reveal" style="--i:4">
                             <strong>Mẹo tiết kiệm dung lượng</strong>
-                            Thầy/Cô nên nén hình ảnh (Compress Pictures) trong Word / PowerPoint trước khi tải lên để
+                            Thầy/Cô nên nén hình ảnh (Compress Pictures) trong Word trước khi tải lên để
                             tiết kiệm dung lượng lưu trữ của trường.
                         </div>
                     </aside>

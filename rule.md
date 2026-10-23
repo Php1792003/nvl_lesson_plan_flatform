@@ -229,7 +229,7 @@ Index bắt buộc: `users(email)`, `users(status)`, `lesson_plans(owner_id, cre
 - Có CAPTCHA hoặc rate limit chặt cho form đăng ký.
 
 ### 6.3 Upload và tải file
-- Cho phép: `pdf, doc, docx, ppt, pptx`. Giới hạn **10 MB**/file (xem mục 4.7).
+- Cho phép: `pdf, doc, docx`. Giới hạn **10 MB**/file (xem mục 4.7).
 - Kiểm tra **cả đuôi, MIME khai báo và magic bytes** (Tika). Sai một trong ba → từ chối.
 - Tên file lưu trên đĩa là **UUID ngẫu nhiên**; `original_filename` chỉ để hiển thị (làm sạch ký tự đặc biệt, chống path traversal).
 - Thư mục lưu **nằm ngoài web root** (`app.storage.root`), không map thành static resource.

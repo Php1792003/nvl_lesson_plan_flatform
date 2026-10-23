@@ -9,8 +9,6 @@ import com.school.lessonplan.lessonplan.LessonPlanVersion;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.poi.sl.extractor.SlideShowExtractor;
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.slf4j.Logger;
@@ -71,13 +69,6 @@ public class PlanTextExtractor {
                         if (pageOrSlideCount <= 0) {
                             pageOrSlideCount = 1;
                         }
-                    }
-                }
-                case "pptx" -> {
-                    try (XMLSlideShow slideShow = new XMLSlideShow(is);
-                         SlideShowExtractor<?, ?> extractor = new SlideShowExtractor<>(slideShow)) {
-                        pageOrSlideCount = slideShow.getSlides().size();
-                        rawExtractedText = extractor.getText();
                     }
                 }
                 case "txt" -> {

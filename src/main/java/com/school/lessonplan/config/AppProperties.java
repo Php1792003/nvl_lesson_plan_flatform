@@ -140,7 +140,7 @@ public class AppProperties {
 
     public static class Upload {
         private int maxMb = 20;
-        private String allowedExtensions = "pdf,doc,docx,ppt,pptx";
+        private String allowedExtensions = "pdf,doc,docx";
         private String allowedContentTypes = "";
         private int maxConcurrent = 3;
         private int minDiskMb = 500;

@@ -587,7 +587,7 @@ Ghi chú: JS dùng `data-pattern` (RegExp với cờ `u` để hỗ trợ `\p{L}
 | Mã OTP | Chỉ số, đúng độ dài cấu hình, không `autocomplete` gợi ý lại |
 | Lý do khóa tài khoản | Bắt buộc, 5 đến 500 ký tự |
 | Email xác nhận khi xóa | Bắt buộc, phải trùng email của tài khoản cần xóa |
-| Tệp tải lên | Bắt buộc, đuôi pdf/doc/docx/ppt/pptx, tối đa 10 MB (client kiểm tra trước, server kiểm tra lại cả đuôi và content-type) |
+| Tệp tải lên | Bắt buộc, đuôi pdf/doc/docx, tối đa 10 MB (client kiểm tra trước, server kiểm tra lại cả đuôi và content-type) |
 | Nhận xét, đánh giá | Bắt buộc, tối đa độ dài cột trong DB, hiển thị bộ đếm ký tự |
 
 ## 6. Cấm (anti-pattern)

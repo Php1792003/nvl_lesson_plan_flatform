@@ -72,8 +72,8 @@
                 </form>
                 <button type="button" class="btn btn-primary btn-sm" id="btnPreviewTop"
                     onclick="openPreviewCurrentVersion()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
                     </svg>
                     <span>Xem trước</span>
@@ -186,9 +186,9 @@
                                             <button type="button" class="btn btn-outline btn-sm" th:data-vid="${ver.id}"
                                                 th:data-vno="${ver.versionNo}" th:data-vfile="${ver.originalFilename}"
                                                 onclick="openPreviewModalForVersion(this.getAttribute('data-vid'), this.getAttribute('data-vno'), this.getAttribute('data-vfile'))">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                                                     <circle cx="12" cy="12" r="3"></circle>
                                                 </svg>
                                                 <span>Xem trước</span>
@@ -252,7 +252,7 @@
                             enctype="multipart/form-data" class="upload-version-form" data-validate novalidate>
                             <div class="form-group" style="flex: 1; margin: 0;">
                                 <input type="file" id="versionFile" name="file" class="form-control" required
-                                    accept=".pdf,.doc,.docx,.ppt,.pptx" data-msg-required="Vui lòng chọn file tải lên."
+                                    accept=".pdf,.doc,.docx" data-msg-required="Vui lòng chọn file tải lên."
                                     aria-describedby="versionFile-error">
                                 <p class="field-error" id="versionFile-error" role="alert" hidden></p>
                             </div>
@@ -556,8 +556,8 @@
                 <div class="preview-modal-header">
                     <div class="preview-modal-title">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" class="preview-title-icon">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="preview-title-icon">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                         <span class="preview-title-prefix">Xem trước:</span>
@@ -616,7 +616,7 @@
                             <div id="previewDocxPaper" class="preview-docx-paper"></div>
                         </div>
 
-                        <!-- Other formats (PPT, PPTX, etc.) -->
+                        <!-- Other formats (.doc cũ, etc.) -->
                         <div id="previewOtherWrapper" class="preview-other-container" style="display: none;">
                             <div class="preview-unsupported-card">
                                 <div class="preview-unsupported-icon-circle">
@@ -629,10 +629,9 @@
                                         <polyline points="10 9 9 9 8 9"></polyline>
                                     </svg>
                                 </div>
-                                <h4 class="preview-unsupported-heading">Định dạng bài giảng / tài liệu đặc thù</h4>
+                                <h4 class="preview-unsupported-heading">Tài liệu Word định dạng cũ (.doc)</h4>
                                 <p class="preview-unsupported-sub">
-                                    Tệp tài liệu này (PowerPoint hoặc Word cũ) không hỗ trợ render trực tiếp trong trình
-                                    duyệt mà không làm vỡ bố cục trình chiếu.
+                                    Tệp tài liệu này sử dụng định dạng Word cũ (.doc) không hỗ trợ hiển thị trực tiếp trong trình duyệt. Thầy/Cô vui lòng tải về máy hoặc lưu sang định dạng .docx / .pdf để xem trước.
                                 </p>
                                 <div class="preview-unsupported-btn-group">
                                     <a id="previewOtherNewTab" href="#" target="_blank"
