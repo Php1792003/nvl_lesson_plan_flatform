@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/layout-base :: layout(${pageTitle}, ~{::contentBlock})}">
+<body>
+<div th:fragment="contentBlock">
+    <style>
+        /* Header Container */
+        .nq52-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 14px;
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: var(--radius-md, 12px);
+            padding: 16px 22px;
+            box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+        }
+        .nq52-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .nq52-role-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        .admin-tag {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .dept-tag {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+        .teacher-tag {
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+        .nq52-header-subtitle {
+            font-size: 13px;
+            color: var(--text-muted, #64748b);
+        }
+
+        /* Campus Quick Switcher Bar */
+        .nq52-campus-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md, 12px);
+            padding: 12px 18px;
+            margin-bottom: 20px;
+        }
+        .nq52-campus-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.5px;
+            color: #334155;
+            flex-wrap: wrap;
+        }
+        .nq52-campus-current-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            color: #1e40af;
+            font-weight: 700;
+            font-size: 13.5px;
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: 1.5px solid #bfdbfe;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .nq52-campus-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .nq52-campus-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            border-radius: 8px;
+            color: #475569;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .nq52-campus-btn:hover {
+            color: #2563eb;
+            border-color: #93c5fd;
+            background: #eff6ff;
+            text-decoration: none;
+        }
+        .nq52-campus-btn.active {
+            color: #ffffff;
+            background: #2563eb;
+            border-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+        }
+
+        /* Tabs Navigation */
+        .nq52-tabs-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .nq52-tabs {
+            display: inline-flex;
+            padding: 4px;
+            gap: 4px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            border: 1px solid var(--border, #e2e8f0);
+        }
+        .nq52-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .nq52-tab:hover {
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+        }
+        .nq52-tab.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .nq52-tab-cnt {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .nq52-tab.active .cnt-warning {
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .nq52-tab.active .cnt-success {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        /* KPI Stat Cards */
+        .nq52-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .nq52-stat-card {
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: var(--radius-md, 12px);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .nq52-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+            text-decoration: none;
+        }
+        .card-pending { border-left: 4px solid #f59e0b; }
+        .card-completed { border-left: 4px solid #10b981; }
+        .card-total { border-left: 4px solid #3b82f6; }
+        .card-draft { border-left: 4px solid #64748b; }
+
+        .nq52-stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .nq52-stat-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .nq52-stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.2;
+            color: var(--dark, #0f172a);
+        }
+        .nq52-stat-desc {
+            font-size: 12px;
+            color: var(--text-muted, #64748b);
+            margin-top: 4px;
+        }
+
+        /* Pulse indicator */
+        .nq52-pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #f59e0b;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+            animation: pulse-dot 1.8s infinite;
+        }
+        @keyframes pulse-dot {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        /* Single Row Compact Toolbar - Tuyệt đối trên 1 hàng duy nhất, không xuống dòng */
+        .nq52-compact-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            margin-bottom: 16px;
+            background: #ffffff;
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: 8px;
+            padding: 6px 10px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            overflow-x: auto;
+            width: 100%;
+        }
+        .nq52-compact-select {
+            height: 33px;
+            font-size: 12.5px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background-color: #ffffff;
+            color: #334155;
+            font-weight: 500;
+            flex: 1 1 auto;
+            min-width: 95px;
+            transition: border-color 0.15s ease;
+        }
+        .nq52-compact-select:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+        }
+        .nq52-compact-btn {
+            height: 33px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12.5px;
+            font-weight: 600;
+            padding: 0 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Table */
+        .nq52-table {
+            width: 100%;
+            white-space: nowrap !important;
+        }
+        .nq52-table th {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            background: #f8fafc;
+            color: #475569;
+            padding: 12px 10px;
+            vertical-align: middle;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap !important;
+        }
+        .nq52-table td {
+            padding: 12px 10px;
+            vertical-align: middle;
+            font-size: 13.5px;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap !important;
+        }
+
+        /* Cố định cột thao tác trên 1 dòng tuyệt đối */
+        .nq52-table th.col-actions,
+        .nq52-table td.col-actions {
+            width: 210px !important;
+            min-width: 210px !important;
+            text-align: center !important;
+            white-space: nowrap !important;
+            padding: 10px 8px !important;
+        }
+        .nq52-actions-group {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            flex-wrap: nowrap !important;
+            white-space: nowrap !important;
+        }
+        .nq52-actions-group .btn {
+            white-space: nowrap !important;
+            word-break: keep-all !important;
+            overflow-wrap: normal !important;
+            flex-shrink: 0 !important;
+        }
+        .nq52-actions-group .btn span {
+            white-space: nowrap !important;
+            word-break: keep-all !important;
+            overflow-wrap: normal !important;
+            display: inline-block !important;
+        }
+
+        /* Period Tag */
+        .nq52-period-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            color: #1e40af;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        /* Modal popup */
+        .nq52-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .nq52-modal-backdrop.show {
+            display: flex;
+        }
+        .nq52-modal-dialog {
+            background: #ffffff;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+    </style>
+
+    <!-- Header Bar: Tiêu đề rõ ràng, loại bỏ role tag thừa -->
+    <div class="nq52-header-bar">
+        <div class="nq52-header-left">
+            <div>
+                <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.2px;">
+                    Tự đánh giá kết quả thực hiện nhiệm vụ (Mẫu 01TKNV)
+                </h1>
+                <div class="nq52-header-subtitle" style="margin-top: 3px;">
+                    <span th:if="${isAdmin}">Quyền Ban Giám Hiệu: Giám sát và xét duyệt kết quả công tác toàn trường</span>
+                    <span th:if="${!isAdmin and isReviewer}" th:text="'Quản lý & xét duyệt kết quả công tác: ' + (${userDept != null ? userDept.name : ''})">Tổ chuyên môn</span>
+                    <span th:if="${!isReviewer}">Bảng thống kê, tự đánh giá kết quả công tác cá nhân hàng tháng</span>
+                </div>
+            </div>
+        </div>
+        <div>
+            <!-- Nút tạo bảng tự đánh giá mới mở Modal chọn Tháng / Năm -->
+            <button type="button" class="btn btn-primary" onclick="openCreateWorkResultModal()"
+                    style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(37,99,235,0.25); cursor: pointer; border: none; padding: 9px 18px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Tạo bảng tự đánh giá mới</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Campus Bar (Dành cho Reviewer - BGH & Tổ trưởng) -->
+    <div class="nq52-campus-bar" th:if="${isReviewer}">
+        <!-- Dành cho Ban Giám Hiệu: Chuyển đổi toàn quyền 3 điểm trường -->
+        <th:block th:if="${isAdmin}">
+            <div class="nq52-campus-indicator">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>Đang xem Điểm trường / Phân hiệu:</span>
+                <span class="nq52-campus-current-btn">
+                    <span th:if="${currentViewingCampus != null}" th:text="'🏫 ' + ${currentViewingCampus.name}">🏫 Điểm trường chính</span>
+                    <span th:if="${currentViewingCampus == null}">🏛️ Toàn trường (Tất cả điểm trường)</span>
+                </span>
+            </div>
+            <div class="nq52-campus-nav">
+                <span style="font-size: 12px; font-weight: 600; color: #64748b; margin-right: 4px;">Xem nhanh:</span>
+                <a th:href="@{/nq52/work-results(tab=${activeTab}, status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+                   class="nq52-campus-btn" th:classappend="${selectedCampusId == null ? 'active' : ''}"
+                   title="Xem tất cả kết quả toàn trường">
+                    🏛️ Tất cả điểm trường
+                </a>
+                <a th:each="c : ${campuses}"
+                   th:href="@{/nq52/work-results(tab=${activeTab}, campusId=${c.id}, status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+                   class="nq52-campus-btn" th:classappend="${selectedCampusId == c.id ? 'active' : ''}"
+                   th:title="'Lọc kết quả tại: ' + ${c.name}">
+                    <span th:text="'🏫 ' + ${c.name}">🏫 Điểm trường chính</span>
+                </a>
+            </div>
+        </th:block>
+
+        <!-- Dành cho Tổ trưởng: Cố định thông tin quyền hạn tại Điểm trường và Tổ chuyên môn được phân công -->
+        <th:block th:unless="${isAdmin}">
+            <div class="nq52-campus-indicator">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>Đang xem Điểm trường / Phân hiệu:</span>
+                <span class="nq52-campus-current-btn" style="color: #15803d; border-color: #bbf7d0;">
+                    <span th:if="${userCampus != null}" th:text="'🏫 ' + ${userCampus.name}">🏫 Điểm trường chính</span>
+                    <span th:if="${userCampus == null}">Chưa gán điểm trường</span>
+                </span>
+                <span class="badge" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 8px;"
+                      th:if="${userDept != null}" th:text="'📚 Tổ ' + ${userDept.name}">📚 Tổ Toán học</span>
+            </div>
+            <div style="font-size: 12.5px; color: #64748b;">
+                <i class="fas fa-shield-alt" style="color: #16a34a;"></i> Quyền Tổ trưởng: Chỉ xét duyệt giáo viên cùng Tổ môn & Điểm trường này.
+            </div>
+        </th:block>
+    </div>
+
+    <!-- Navigation Tabs (Dành cho Reviewer: Chuyển đổi giữa Duyệt cấp Tổ/Trường và Bảng cá nhân) -->
+    <div class="nq52-tabs-row" th:if="${isReviewer}">
+        <div class="nq52-tabs">
+            <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, deptId=${selectedDeptId}, status=${selectedStatus})}"
+               class="nq52-tab" th:classappend="${activeTab == 'review' ? 'active' : ''}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                <span>Duyệt bảng kết quả giáo viên</span>
+                <span class="nq52-tab-cnt cnt-warning" th:text="${pendingCount}">0</span>
+            </a>
+            <a th:href="@{/nq52/work-results(tab='my')}"
+               class="nq52-tab" th:classappend="${activeTab == 'my' ? 'active' : ''}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>Bảng tự đánh giá của tôi</span>
+                <span class="nq52-tab-cnt" th:text="${totalCount}">0</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash message -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+        <span th:text="${successMessage}">Thao tác thành công!</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+        <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: DUYỆT BẢNG KẾT QUẢ GIÁO VIÊN (Dành cho Reviewer) -->
+    <!-- ========================================================================= -->
+    <th:block th:if="${isReviewer and activeTab == 'review'}">
+        <!-- 3 KPI Cards -->
+        <div class="nq52-stats-grid">
+            <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, status='SUBMITTED', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+               class="nq52-stat-card card-pending"
+               title="Nhấp để xem hồ sơ đang chờ duyệt">
+                <div class="nq52-stat-header">
+                    <div class="nq52-stat-label" style="color: #b45309;">Hồ sơ chờ xét duyệt</div>
+                    <span class="nq52-pulse-dot" th:if="${pendingCount > 0}"></span>
+                </div>
+                <div class="nq52-stat-value" style="color: #d97706;" th:text="${pendingCount}">0</div>
+                <div class="nq52-stat-desc">Giáo viên đã nộp, cần kiểm tra & ký duyệt</div>
+            </a>
+
+            <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, status='REVIEWED', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+               class="nq52-stat-card card-completed"
+               title="Nhấp để xem hồ sơ đã hoàn thành">
+                <div class="nq52-stat-header">
+                    <div class="nq52-stat-label" style="color: #15803d;">Đã ký duyệt xong</div>
+                </div>
+                <div class="nq52-stat-value" style="color: #059669;" th:text="${completedCount}">0</div>
+                <div class="nq52-stat-desc">Đã được xác nhận hoàn tất chữ ký</div>
+            </a>
+
+            <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, status='ALL', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+               class="nq52-stat-card card-total"
+               title="Nhấp để xem toàn bộ hồ sơ đã nộp">
+                <div class="nq52-stat-header">
+                    <div class="nq52-stat-label" style="color: #1e40af;">Tổng hồ sơ đã nộp</div>
+                </div>
+                <div class="nq52-stat-value" style="color: #2563eb;" th:text="${totalReviewCount}">0</div>
+                <div class="nq52-stat-desc">Toàn bộ hồ sơ kết quả giáo viên đã nộp</div>
+            </a>
+        </div>
+
+        <!-- Toolbar Lọc Nằm trên 1 dòng duy nhất - Gọn gàng, tiết kiệm layout -->
+        <form th:action="@{/nq52/work-results}" method="get" class="nq52-compact-toolbar">
+            <input type="hidden" name="tab" value="review"/>
+            
+            <div style="font-size: 13px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Lọc:</span>
+            </div>
+
+            <!-- Điểm trường / Phân hiệu (Chỉ BGH) -->
+            <select name="campusId" class="form-control nq52-compact-select" th:if="${isAdmin}" title="Điểm trường / Phân hiệu">
+                <option value="">-- Tất cả điểm trường --</option>
+                <option th:each="c : ${campuses}"
+                        th:value="${c.id}"
+                        th:text="${c.name}"
+                        th:selected="${selectedCampusId == c.id}"></option>
+            </select>
+
+            <!-- Tổ chuyên môn (Chỉ BGH) -->
+            <select name="deptId" class="form-control nq52-compact-select" th:if="${isAdmin}" title="Tổ chuyên môn">
+                <option value="">-- Tất cả tổ chuyên môn --</option>
+                <option th:each="d : ${departments}"
+                        th:value="${d.id}"
+                        th:text="${d.name}"
+                        th:selected="${selectedDeptId == d.id}"></option>
+            </select>
+
+            <!-- Tháng -->
+            <select name="month" class="form-control nq52-compact-select" title="Tháng đánh giá">
+                <option value="">-- Tất cả các tháng --</option>
+                <option th:each="m : ${#numbers.sequence(1, 12)}"
+                        th:value="${m}"
+                        th:text="'Tháng ' + ${m}"
+                        th:selected="${selectedMonth == m}"></option>
+            </select>
+
+            <!-- Năm -->
+            <select name="year" class="form-control nq52-compact-select" title="Năm đánh giá">
+                <option value="">-- Tất cả các năm --</option>
+                <option th:each="y : ${availableYears}"
+                        th:value="${y}"
+                        th:text="'Năm ' + ${y}"
+                        th:selected="${selectedYear == y}"></option>
+            </select>
+
+            <!-- Trạng thái -->
+            <select name="status" class="form-control nq52-compact-select" title="Trạng thái xử lý">
+                <option value="SUBMITTED" th:selected="${selectedStatus == 'SUBMITTED'}">Chờ duyệt (Đã nộp)</option>
+                <option value="REVIEWED" th:selected="${selectedStatus == 'REVIEWED'}">Đã ký duyệt xong</option>
+                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
+            </select>
+
+            <!-- Buttons -->
+            <button type="submit" class="btn btn-primary nq52-compact-btn">
+                Lọc dữ liệu
+            </button>
+            <a th:href="@{/nq52/work-results(tab='review')}" class="btn btn-outline nq52-compact-btn" title="Đặt lại bộ lọc">
+                Đặt lại
+            </a>
+        </form>
+
+        <!-- Bảng danh sách kết quả cần duyệt -->
+        <div class="card" style="border-radius: var(--radius-md, 12px); border: 1px solid var(--border, #e2e8f0); overflow: hidden; box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05));">
+            <div class="table-responsive">
+                <table class="table nq52-table mb-0" style="min-width: 1150px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 135px; min-width: 135px; white-space: nowrap;">Kỳ đánh giá</th>
+                            <th style="width: 120px; min-width: 120px; text-align: center; white-space: nowrap;">Trạng thái</th>
+                            <th class="col-actions">Thao tác</th>
+                            <th style="min-width: 180px; white-space: nowrap;">Giáo viên</th>
+                            <th style="text-align: center; width: 95px; min-width: 95px; white-space: nowrap;" title="Cột (1): Số nhiệm vụ được giao">Được giao (1)</th>
+                            <th style="text-align: center; width: 100px; min-width: 100px; white-space: nowrap;" title="Cột (2): Số nhiệm vụ hoàn thành">Hoàn thành (2)</th>
+                            <th style="text-align: center; width: 110px; min-width: 110px; white-space: nowrap;" title="Cột (4): Tỷ lệ hoàn thành nhiệm vụ">Tỷ lệ HT (4)</th>
+                            <th style="text-align: center; width: 110px; min-width: 110px; white-space: nowrap;" title="Cột (8): Tỷ lệ hoàn thành đúng hoặc sớm hạn">Đúng hạn (8)</th>
+                            <th style="text-align: center; width: 115px; min-width: 115px; white-space: nowrap;" title="Cột (12): Tỷ lệ hoàn thành đạt chất lượng trở lên">Chất lượng (12)</th>
+                            <th style="text-align: center; width: 130px; min-width: 130px; white-space: nowrap;">File Excel đã xuất</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(reviewWorkResults)}">
+                            <td colspan="10" style="text-align: center; padding: 40px 20px; color: #64748b;">
+                                <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
+                                <div style="font-weight: 600; font-size: 14px;">Không tìm thấy bảng tự đánh giá kết quả nào cần xử lý.</div>
+                                <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">Tất cả hồ sơ trong phạm vi phân công đã được xử lý hoặc chưa có giáo viên nộp.</div>
+                            </td>
+                        </tr>
+                        <tr th:each="item : ${reviewWorkResults}">
+                            <!-- 1. Kỳ đánh giá -->
+                            <td style="white-space: nowrap;">
+                                <span class="nq52-period-tag" th:text="'Tháng ' + ${item.evaluationMonth} + '/' + ${item.evaluationYear}">Tháng 10/2026</span>
+                            </td>
+
+                            <!-- 2. Trạng thái -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.status.name() == 'SUBMITTED'}" class="badge"
+                                      style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
+                                    Chờ duyệt
+                                </span>
+                                <span th:if="${item.status.name() == 'REVIEWED'}" class="badge"
+                                      style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
+                                    ✓ Đã duyệt
+                                </span>
+                            </td>
+
+                            <!-- 3. Thao tác (Không xuống dòng chữ) -->
+                            <td class="col-actions" style="text-align: center; width: 215px; min-width: 215px; white-space: nowrap !important;">
+                                <div class="nq52-actions-group" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; flex-wrap: nowrap !important; white-space: nowrap !important;">
+                                    <a th:if="${item.status.name() == 'SUBMITTED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                       class="btn btn-primary btn-sm" style="font-weight: 700; padding: 5px 12px; box-shadow: 0 1px 3px rgba(37,99,235,0.25); display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                        <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Xét&nbsp;duyệt&nbsp;&amp;&nbsp;Ký</span>
+                                    </a>
+                                    <a th:if="${item.status.name() == 'REVIEWED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                       class="btn btn-outline btn-sm" style="font-weight: 600; padding: 5px 12px; display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Xem&nbsp;chi&nbsp;tiết</span>
+                                    </a>
+                                    <!-- Nút In -->
+                                    <a th:href="@{'/nq52/work-results/' + ${item.id} + '/print'}" target="_blank"
+                                       class="btn btn-outline btn-sm" style="padding: 5px 8px; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; text-decoration: none;" title="In Mẫu 01TKNV">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                            <rect x="6" y="14" width="12" height="8"></rect>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </td>
+
+                            <!-- 4. Thông tin Giáo viên -->
+                            <td style="white-space: nowrap;">
+                                <div style="font-weight: 700; color: #0f172a;" th:text="${item.teacherNameSnapshot}">Nguyễn Văn An</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                                    <span th:text="${item.user != null ? item.user.email : ''}">giaovien@school.edu.vn</span>
+                                    <span style="margin: 0 4px;">•</span>
+                                    <span style="font-weight: 600; color: #2563eb;" th:text="'Tổ ' + ${item.departmentNameSnapshot}">Tổ Toán học</span>
+                                    <span style="margin: 0 4px;" th:if="${item.campusNameSnapshot != null}">•</span>
+                                    <span class="badge badge-light" style="font-size: 11px; border: 1px solid #cbd5e1;" th:if="${item.campusNameSnapshot != null}" th:text="${item.campusNameSnapshot}">Điểm trường chính</span>
+                                </div>
+                            </td>
+
+                            <!-- 5. Được giao (1) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" style="font-weight: 700; font-size: 13.5px; color: #0f172a;" th:text="${item.totalAssigned}">6</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 6. Hoàn thành (2) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" style="font-weight: 700; font-size: 13.5px; color: #15803d;" th:text="${item.totalCompleted}">6</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 7. Tỷ lệ HT (4) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" class="badge"
+                                      style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap;"
+                                      th:text="${item.completionRate != null ? #numbers.formatDecimal(item.completionRate, 1, 'COMMA', 1, 'POINT') + '%' : '100%'}">100%</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 8. Đúng hạn (8) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" class="badge"
+                                      style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap;"
+                                      th:text="${item.onTimeRate != null ? #numbers.formatDecimal(item.onTimeRate, 1, 'COMMA', 1, 'POINT') + '%' : '100%'}">100%</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 9. Chất lượng (12) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" class="badge"
+                                      style="background: #fefce8; color: #854d0e; border: 1px solid #fef08a; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap;"
+                                      th:text="${item.qualityRate != null ? #numbers.formatDecimal(item.qualityRate, 1, 'COMMA', 1, 'POINT') + '%' : '100%'}">100%</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 10. File Excel đã xuất -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <a th:if="${item.exportedFileName != null}" th:href="@{'/nq52/work-results/' + ${item.id} + '/download'}"
+                                   class="btn btn-outline btn-sm" style="font-size: 12px; font-weight: 600; color: #15803d; border-color: #86efac; background: #f0fdf4; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;"
+                                   th:title="'Tải file Excel đã lưu: ' + ${item.exportedFileName}">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span style="white-space: nowrap;">Tải file</span>
+                                </a>
+                                <span th:if="${item.exportedFileName == null}" class="text-muted" style="font-size: 12px; font-style: italic; color: #94a3b8; white-space: nowrap;">Chưa có</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: BẢNG TỰ ĐÁNH GIÁ CỦA CÁ NHÂN (Hoặc Giáo viên thông thường) -->
+    <!-- ========================================================================= -->
+    <th:block th:if="${!isReviewer or activeTab == 'my'}">
+        <!-- 4 KPI Stat Cards cho Cá nhân -->
+        <div class="nq52-stats-grid">
+            <div class="nq52-stat-card card-total">
+                <div class="nq52-stat-label" style="color: #1e40af;">Tổng số bảng kết quả</div>
+                <div class="nq52-stat-value" style="color: #2563eb;" th:text="${totalCount}">0</div>
+                <div class="nq52-stat-desc">Tổng số kỳ đánh giá đã tạo</div>
+            </div>
+            <div class="nq52-stat-card card-draft">
+                <div class="nq52-stat-label" style="color: #475569;">Bản nháp (Đang soạn)</div>
+                <div class="nq52-stat-value" style="color: #475569;" th:text="${draftCount}">0</div>
+                <div class="nq52-stat-desc">Đang lưu nháp, chưa gửi nộp</div>
+            </div>
+            <div class="nq52-stat-card card-pending">
+                <div class="nq52-stat-label" style="color: #b45309;">Chờ xác nhận (Đã nộp)</div>
+                <div class="nq52-stat-value" style="color: #d97706;" th:text="${submittedCount}">0</div>
+                <div class="nq52-stat-desc">Đã nộp cho Tổ trưởng / BGH</div>
+            </div>
+            <div class="nq52-stat-card card-completed">
+                <div class="nq52-stat-label" style="color: #15803d;">Đã duyệt hoàn tất</div>
+                <div class="nq52-stat-value" style="color: #059669;" th:text="${reviewedCount}">0</div>
+                <div class="nq52-stat-desc">Đã được xác nhận hoàn tất</div>
+            </div>
+        </div>
+
+        <!-- Toolbar Lọc Nằm trên 1 dòng cho Cá nhân -->
+        <form th:action="@{/nq52/work-results}" method="get" class="nq52-compact-toolbar">
+            <input type="hidden" name="tab" value="my" th:if="${isReviewer}"/>
+            
+            <div style="font-size: 13px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 5px; margin-right: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Lọc kỳ:</span>
+            </div>
+
+            <!-- Tháng -->
+            <select name="month" class="form-control nq52-compact-select" style="max-width: 170px;" title="Tháng đánh giá">
+                <option value="">-- Tất cả các tháng --</option>
+                <option th:each="m : ${#numbers.sequence(1, 12)}"
+                        th:value="${m}"
+                        th:text="'Tháng ' + ${m}"
+                        th:selected="${selectedMonth == m}"></option>
+            </select>
+
+            <!-- Năm -->
+            <select name="year" class="form-control nq52-compact-select" style="max-width: 150px;" title="Năm đánh giá">
+                <option value="">-- Tất cả các năm --</option>
+                <option th:each="y : ${availableYears}"
+                        th:value="${y}"
+                        th:text="'Năm ' + ${y}"
+                        th:selected="${selectedYear == y}"></option>
+            </select>
+
+            <!-- Buttons -->
+            <button type="submit" class="btn btn-primary nq52-compact-btn">
+                Lọc danh sách
+            </button>
+            <a th:href="@{/nq52/work-results(tab='my')}" class="btn btn-outline nq52-compact-btn" title="Đặt lại bộ lọc">
+                Đặt lại
+            </a>
+        </form>
+
+        <!-- Table Bảng cá nhân -->
+        <div class="card" style="border-radius: var(--radius-md, 12px); border: 1px solid var(--border, #e2e8f0); overflow: hidden; box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05));">
+            <div class="table-responsive">
+                <table class="table nq52-table mb-0" style="min-width: 1050px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 135px; min-width: 135px; white-space: nowrap;">Kỳ đánh giá</th>
+                            <th style="width: 120px; min-width: 120px; text-align: center; white-space: nowrap;">Trạng thái</th>
+                            <th class="col-actions">Thao tác</th>
+                            <th style="text-align: center; width: 95px; min-width: 95px; white-space: nowrap;" title="Cột (1): Số nhiệm vụ được giao">Được giao (1)</th>
+                            <th style="text-align: center; width: 100px; min-width: 100px; white-space: nowrap;" title="Cột (2): Số nhiệm vụ hoàn thành">Hoàn thành (2)</th>
+                            <th style="text-align: center; width: 110px; min-width: 110px; white-space: nowrap;" title="Cột (4): Tỷ lệ hoàn thành nhiệm vụ">Tỷ lệ HT (4)</th>
+                            <th style="text-align: center; width: 115px; min-width: 115px; white-space: nowrap;" title="Cột (8): Tỷ lệ hoàn thành đúng hoặc sớm hạn">Đúng/Sớm hạn (8)</th>
+                            <th style="text-align: center; width: 115px; min-width: 115px; white-space: nowrap;" title="Cột (12): Tỷ lệ hoàn thành đạt chất lượng trở lên">Đạt chất lượng (12)</th>
+                            <th style="text-align: center; width: 130px; min-width: 130px; white-space: nowrap;">File Excel đã xuất</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(workResults)}">
+                            <td colspan="9" style="text-align: center; padding: 40px 20px; color: #64748b;">
+                                <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
+                                <div style="font-weight: 600; font-size: 14px;">Chưa có bảng tự đánh giá kết quả nào trong kỳ này.</div>
+                                <div style="margin-top: 10px;">
+                                    <button type="button" onclick="openCreateWorkResultModal()"
+                                       class="btn btn-sm btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; border: none; cursor: pointer; padding: 6px 14px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        <span>Tạo bảng tự đánh giá mới ngay</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:each="item : ${workResults}">
+                            <!-- 1. Kỳ đánh giá -->
+                            <td style="white-space: nowrap;">
+                                <span class="nq52-period-tag" th:text="'Tháng ' + ${item.evaluationMonth} + '/' + ${item.evaluationYear}">Tháng 10/2026</span>
+                            </td>
+
+                            <!-- 2. Trạng thái -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.status.name() == 'DRAFT'}" class="badge"
+                                      style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
+                                    Bản nháp
+                                </span>
+                                <span th:if="${item.status.name() == 'SUBMITTED'}" class="badge"
+                                      style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
+                                    Chờ duyệt
+                                </span>
+                                <span th:if="${item.status.name() == 'REVIEWED'}" class="badge"
+                                      style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
+                                    ✓ Đã duyệt
+                                </span>
+                            </td>
+
+                            <!-- 3. Thao tác (Tuyệt đối không rớt dòng chữ) -->
+                            <td class="col-actions" style="text-align: center; width: 215px; min-width: 215px; white-space: nowrap !important;">
+                                <div class="nq52-actions-group" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; flex-wrap: nowrap !important; white-space: nowrap !important;">
+                                    <a th:if="${item.status.name() == 'DRAFT'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                       class="btn btn-warning btn-sm" style="font-weight: 600; padding: 5px 12px; display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                        <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Soạn&nbsp;nháp</span>
+                                    </a>
+                                    <a th:if="${item.status.name() != 'DRAFT'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                       class="btn btn-outline btn-sm" style="font-weight: 600; padding: 5px 12px; display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Xem&nbsp;chi&nbsp;tiết</span>
+                                    </a>
+                                    <!-- Nút In -->
+                                    <a th:href="@{'/nq52/work-results/' + ${item.id} + '/print'}" target="_blank"
+                                       class="btn btn-outline btn-sm" style="padding: 5px 8px; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; text-decoration: none;" title="In Mẫu 01TKNV">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                            <rect x="6" y="14" width="12" height="8"></rect>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </td>
+
+                            <!-- 4. Được giao (1) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" style="font-weight: 700; font-size: 13.5px; color: #0f172a;" th:text="${item.totalAssigned}">6</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 5. Hoàn thành (2) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" style="font-weight: 700; font-size: 13.5px; color: #15803d;" th:text="${item.totalCompleted}">6</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 6. Tỷ lệ hoàn thành (4) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" class="badge"
+                                      style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap;"
+                                      th:text="${item.completionRate != null ? #numbers.formatDecimal(item.completionRate, 1, 'COMMA', 1, 'POINT') + '%' : '100%'}">100%</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 7. Đúng/Sớm hạn (8) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" class="badge"
+                                      style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap;"
+                                      th:text="${item.onTimeRate != null ? #numbers.formatDecimal(item.onTimeRate, 1, 'COMMA', 1, 'POINT') + '%' : '100%'}">100%</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 8. Đạt chất lượng (12) -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span th:if="${item.totalAssigned != null and item.totalAssigned > 0}" class="badge"
+                                      style="background: #fefce8; color: #854d0e; border: 1px solid #fef08a; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap;"
+                                      th:text="${item.qualityRate != null ? #numbers.formatDecimal(item.qualityRate, 1, 'COMMA', 1, 'POINT') + '%' : '100%'}">100%</span>
+                                <span th:if="${item.totalAssigned == null or item.totalAssigned == 0}" class="text-muted" style="color: #94a3b8; font-size: 13px;">—</span>
+                            </td>
+
+                            <!-- 9. File Excel đã xuất -->
+                            <td style="text-align: center; white-space: nowrap;">
+                                <a th:if="${item.exportedFileName != null}" th:href="@{'/nq52/work-results/' + ${item.id} + '/download'}"
+                                   class="btn btn-outline btn-sm" style="font-size: 12px; font-weight: 600; color: #15803d; border-color: #86efac; background: #f0fdf4; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;"
+                                   th:title="'Tải file Excel đã lưu: ' + ${item.exportedFileName}">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span style="white-space: nowrap;">Tải file</span>
+                                </a>
+                                <span th:if="${item.exportedFileName == null}" class="text-muted" style="font-size: 12px; font-style: italic; color: #94a3b8; white-space: nowrap;">Chưa xuất file</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- Modal Tạo bảng tự đánh giá kết quả mới (Mẫu 01TKNV) -->
+    <div id="createWorkResultModalBackdrop" class="nq52-modal-backdrop" onclick="if(event.target === this) closeCreateWorkResultModal()">
+        <div class="nq52-modal-dialog">
+            <div style="padding: 18px 22px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="margin: 0; font-size: 16.5px; font-weight: 700; color: #0f172a;">Tạo bảng tự đánh giá kết quả mới</h3>
+                <button type="button" onclick="closeCreateWorkResultModal()" style="background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <div style="padding: 22px;">
+                <p style="font-size: 13.5px; color: #475569; margin: 0 0 16px 0; line-height: 1.5;">
+                    Chọn kỳ đánh giá (Tháng và Năm) để tạo bảng thống kê, tự đánh giá kết quả thực hiện nhiệm vụ (Mẫu 01TKNV):
+                </p>
+                <div style="display: flex; gap: 14px; margin-bottom: 18px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; color: #334155;">Tháng đánh giá:</label>
+                        <select id="modalWorkResultMonth" class="form-control" style="height: 40px; font-size: 14px; border-radius: 8px;">
+                            <option th:each="m : ${#numbers.sequence(1, 12)}" 
+                                    th:value="${m}" 
+                                    th:text="'Tháng ' + ${m}" 
+                                    th:selected="${m == (selectedMonth != null ? selectedMonth : currentMonth)}"></option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; color: #334155;">Năm đánh giá:</label>
+                        <select id="modalWorkResultYear" class="form-control" style="height: 40px; font-size: 14px; border-radius: 8px;">
+                            <option th:each="y : ${availableYears}" 
+                                    th:value="${y}" 
+                                    th:text="'Năm ' + ${y}" 
+                                    th:selected="${y == (selectedYear != null ? selectedYear : currentYear)}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin-bottom: 6px;">
+                    <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; font-size: 13.5px; font-weight: 700; color: #166534;">
+                        <input type="checkbox" id="modalWorkResultFresh" checked style="width: 17px; height: 17px; accent-color: #16a34a; cursor: pointer;">
+                        <span>Làm mới mẫu trắng để tự nhập nhiệm vụ</span>
+                    </label>
+                    <div style="font-size: 12px; color: #15803d; margin-top: 4px; margin-left: 25px;">
+                        Tạo bảng sạch với 4 nhóm công việc I, II, III, IV để bạn tự nhập nội dung công việc thực tế của mình.
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 14px 22px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="closeCreateWorkResultModal()" style="font-weight: 600; padding: 7px 16px;">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="submitCreateWorkResultModal()" style="font-weight: 700; padding: 7px 20px;">
+                    Bắt đầu đánh giá &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var createWorkResultUrl = /*[[@{/nq52/work-results/create}]]*/ '/portal/nq52/work-results/create';
+
+        function openCreateWorkResultModal() {
+            var modal = document.getElementById('createWorkResultModalBackdrop');
+            if (modal) modal.classList.add('show');
+        }
+
+        function closeCreateWorkResultModal() {
+            var modal = document.getElementById('createWorkResultModalBackdrop');
+            if (modal) modal.classList.remove('show');
+        }
+
+        function submitCreateWorkResultModal() {
+            var m = document.getElementById('modalWorkResultMonth').value;
+            var y = document.getElementById('modalWorkResultYear').value;
+            var fresh = document.getElementById('modalWorkResultFresh') && document.getElementById('modalWorkResultFresh').checked ? 'true' : 'false';
+            window.location.href = createWorkResultUrl + '?month=' + encodeURIComponent(m) + '&year=' + encodeURIComponent(y) + '&fresh=' + fresh;
+        }
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>
