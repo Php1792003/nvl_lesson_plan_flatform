@@ -32,6 +32,32 @@
     /** Trả về thông báo lỗi, hoặc chuỗi rỗng nếu hợp lệ. */
     function check(form, field) {
         var d = field.dataset;
+
+        if (field.type === 'file') {
+            if (field.required && (!field.files || field.files.length === 0)) {
+                return d.msgRequired || DEFAULT_REQUIRED;
+            }
+            if (field.files && field.files[0]) {
+                var f = field.files[0];
+                var maxMb = Number(d.maxSizeMb) || 10;
+                var maxBytes = maxMb * 1024 * 1024;
+                if (f.size > maxBytes) {
+                    var actualMb = (f.size / (1024 * 1024)).toFixed(1).replace('.', ',');
+                    return d.msgMaxSize || ('Tệp quá lớn (' + actualMb + ' MB). Giới hạn tối đa cho phép là ' + maxMb + ' MB.');
+                }
+                if (field.accept) {
+                    var allowedExts = field.accept.split(',').map(function (s) {
+                        return s.trim().toLowerCase().replace(/^\./, '');
+                    });
+                    var ext = (f.name.split('.').pop() || '').toLowerCase();
+                    if (allowedExts.indexOf(ext) === -1) {
+                        return 'Định dạng .' + ext + ' không được hỗ trợ. Vui lòng chọn tệp đúng định dạng (' + field.accept + ').';
+                    }
+                }
+            }
+            return '';
+        }
+
         var isPassword = field.type === 'password';
         var val = isPassword ? field.value : String(field.value || '').trim();
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
     th:replace="~{layout/layout-base :: layout('Tải lên Giáo án mới', ~{::contentBlock})}">
 
@@ -212,8 +212,7 @@
                                         <button type="button" class="up-remove" id="removeFile">Đổi tệp</button>
                                     </div>
                                 </div>
-                                <p class="field-error" id="file-error" role="alert" th:if="${#fields.hasErrors('file')}"
-                                    th:text="${#fields.errors('file')[0]}"></p>
+                                <p class="field-error" id="file-error" role="alert" th:attr="hidden=${!#fields.hasErrors('file')}" th:text="${#fields.hasErrors('file') ? #fields.errors('file')[0] : ''}"></p>
                             </div>
                         </div>
 

@@ -13,6 +13,8 @@ import com.school.lessonplan.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +24,25 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
+    private String getClientIp(HttpServletRequest request) {
+        if (request == null) return "unknown";
+        String cfIp = request.getHeader("CF-Connecting-IP");
+        if (cfIp != null && !cfIp.isBlank()) {
+            return cfIp.trim();
+        }
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isBlank()) {
+            return xRealIp.trim();
+        }
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
 
     private final AuthService authService;
     private final DepartmentRepository departmentRepository;
@@ -78,7 +99,7 @@ public class AuthController {
         }
 
         try {
-            rateLimiterService.checkLoginRateLimit(request.getRemoteAddr() + ":" + loginRequest.getEmail());
+            rateLimiterService.checkLoginRateLimit(getClientIp(request) + ":" + loginRequest.getEmail());
             authService.login(loginRequest, request, response);
             return "redirect:/dashboard";
         } catch (BusinessException | RateLimitException e) {
@@ -127,7 +148,7 @@ public class AuthController {
                            RedirectAttributes redirectAttributes) {
         if (!bindingResult.hasErrors()) {
             try {
-                rateLimiterService.checkRegisterRateLimit(request.getRemoteAddr());
+                rateLimiterService.checkRegisterRateLimit(getClientIp(request));
                 PendingRegistration pending = authService.register(registerRequest);
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Đăng ký thành công! Vui lòng nhập mã xác thực OTP đã được gửi đến email của bạn.");
@@ -135,7 +156,7 @@ public class AuthController {
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException | RateLimitException e) {
-                bindingResult.reject("form.error", e.getMessage());
+                bindingResult.reject(null, e.getMessage());
             }
         }
 
@@ -232,7 +253,7 @@ public class AuthController {
 
         if (!bindingResult.hasErrors()) {
             try {
-                rateLimiterService.checkOtpRateLimit(request.getRemoteAddr() + ":" + targetEmail);
+                rateLimiterService.checkOtpRateLimit(getClientIp(request) + ":" + targetEmail);
                 if (authService.hasPendingRegistration(targetEmail)) {
                     authService.verifyRegistrationOtp(targetEmail, verifyOtpRequest.getCode());
                 } else if (userId != null) {
@@ -247,7 +268,7 @@ public class AuthController {
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException | RateLimitException e) {
-                bindingResult.reject("form.error", e.getMessage());
+                bindingResult.reject(null, e.getMessage());
             }
         }
 
@@ -276,7 +297,7 @@ public class AuthController {
         targetEmail = targetEmail.trim().toLowerCase();
 
         try {
-            rateLimiterService.checkOtpRateLimit(request.getRemoteAddr() + ":" + targetEmail);
+            rateLimiterService.checkOtpRateLimit(getClientIp(request) + ":" + targetEmail);
             if (authService.hasPendingRegistration(targetEmail)) {
                 authService.resendRegistrationOtp(targetEmail);
             } else if (userId != null) {
@@ -313,13 +334,13 @@ public class AuthController {
         }
 
         try {
-            rateLimiterService.checkOtpRateLimit(request.getRemoteAddr() + ":" + forgotPasswordForm.getEmail());
+            rateLimiterService.checkOtpRateLimit(getClientIp(request) + ":" + forgotPasswordForm.getEmail());
             authService.sendPasswordResetOtp(forgotPasswordForm.getEmail());
             redirectAttributes.addFlashAttribute("successMessage",
                     "Nếu email tồn tại trong hệ thống, mã xác thực đã được gửi đến email của bạn.");
             return "redirect:/forgot-password/verify?email=" + forgotPasswordForm.getEmail().trim().toLowerCase();
         } catch (RateLimitException e) {
-            bindingResult.reject("form.error", e.getMessage());
+            bindingResult.reject(null, e.getMessage());
             return "auth/password-recovery-request";
         }
     }
@@ -343,14 +364,14 @@ public class AuthController {
                                          RedirectAttributes redirectAttributes) {
         if (!bindingResult.hasErrors()) {
             try {
-                rateLimiterService.checkOtpRateLimit(request.getRemoteAddr() + ":" + form.getEmail());
+                rateLimiterService.checkOtpRateLimit(getClientIp(request) + ":" + form.getEmail());
                 String sessionToken = authService.verifyPasswordResetOtp(form.getEmail(), form.getCode());
                 redirectAttributes.addFlashAttribute("successMessage", "Xác thực OTP thành công. Vui lòng thiết lập mật khẩu mới.");
                 return "redirect:/reset-password?email=" + form.getEmail().trim().toLowerCase() + "&token=" + sessionToken;
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException | RateLimitException e) {
-                bindingResult.reject("form.error", e.getMessage());
+                bindingResult.reject(null, e.getMessage());
             }
         }
 
@@ -389,7 +410,7 @@ public class AuthController {
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException e) {
-                bindingResult.reject("form.error", e.getMessage());
+                bindingResult.reject(null, e.getMessage());
             }
         }
 
@@ -418,7 +439,7 @@ public class AuthController {
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException e) {
-                bindingResult.reject("form.error", e.getMessage());
+                bindingResult.reject(null, e.getMessage());
             }
         }
 
