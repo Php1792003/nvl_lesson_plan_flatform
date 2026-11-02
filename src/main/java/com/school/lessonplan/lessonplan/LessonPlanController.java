@@ -106,7 +106,7 @@ public class LessonPlanController {
             if (canViewOrphan) {
                 Page<LessonPlan> orphanPage = lessonPlanService.getOrphanPlans(pageRequest);
                 model.addAttribute("orphanPage", orphanPage);
-                departments = lessonPlanRepository.findDistinctOrphanDepartmentNames();
+                departments = lessonPlanService.getDistinctOrphanDepartmentNames();
             } else {
                 departments = List.of();
             }

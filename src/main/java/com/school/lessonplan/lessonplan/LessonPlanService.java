@@ -103,6 +103,10 @@ public class LessonPlanService {
         return lessonPlanRepository.findByOwnerIsNull(pageable);
     }
 
+    public List<String> getDistinctOrphanDepartmentNames() {
+        return lessonPlanRepository.findDistinctOrphanDepartmentNames();
+    }
+
     public List<String> getDistinctFavoriteDepartmentNames(CurrentUser user) {
         boolean isAdmin = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
