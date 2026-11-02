@@ -40,11 +40,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CookieService cookieService;
     private final UserRepository userRepository;
+    private final ActiveUserService activeUserService;
 
-    public JwtAuthFilter(JwtService jwtService, CookieService cookieService, UserRepository userRepository) {
+    public JwtAuthFilter(JwtService jwtService, CookieService cookieService, UserRepository userRepository,
+                         ActiveUserService activeUserService) {
         this.jwtService = jwtService;
         this.cookieService = cookieService;
         this.userRepository = userRepository;
+        this.activeUserService = activeUserService;
     }
 
     @Override
@@ -66,6 +69,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (user != null
                         && user.getStatus() == UserStatus.ACTIVE
                         && user.getTokenVersion() == tokenVersion) {
+
+                    // Ghi nhận hoạt động người dùng trực tuyến (an toàn, không ảnh hưởng chuỗi filter)
+                    try {
+                        activeUserService.recordActivity(user, request.getRequestURI());
+                    } catch (Exception ex) {
+                        log.debug("Active user record error: {}", ex.getMessage());
+                    }
 
                     // Tải quyền từ DB (không tin JWT)
                     Set<GrantedAuthority> authorities = loadAuthorities(user);

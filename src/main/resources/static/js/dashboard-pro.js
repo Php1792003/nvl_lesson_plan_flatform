@@ -400,6 +400,116 @@
                 }
             }
         }
+
+        /* Giám sát người dùng trực tuyến theo thời gian thực (Dành riêng cho Ban Giám Hiệu) */
+        if (isAdmin) {
+            var contextPath = window.location.pathname.startsWith('/portal') ? '/portal' : '';
+            var onlineCountEl = NVL.$('kpiOnlineCount');
+            var modalList = NVL.$('activeUsersList');
+            var modalCount = NVL.$('activeUsersModalCount');
+            var refreshBtn = NVL.$('btnRefreshActiveUsers');
+            var activeModal = NVL.$('activeUsersModal');
+
+            function esc(s) {
+                if (!s) return '';
+                return String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function formatTimeAgo(dateStr) {
+                if (!dateStr) return 'Vừa xong';
+                var d = new Date(dateStr);
+                var diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+                if (diffSec < 30) return 'Vừa xong';
+                if (diffSec < 60) return diffSec + ' giây trước';
+                var diffMin = Math.floor(diffSec / 60);
+                if (diffMin < 60) return diffMin + ' phút trước';
+                return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            }
+
+            function renderActiveUsers(users) {
+                if (!modalList) return;
+                if (!users || !users.length) {
+                    modalList.innerHTML = '<div style="text-align:center; padding:32px 16px; color:var(--text-muted);"><p style="margin:0; font-weight:500;">Hiện tại không có người dùng nào trực tuyến.</p></div>';
+                    return;
+                }
+                var html = '';
+                users.forEach(function (u) {
+                    var initial = (u.fullName || 'U').trim().slice(-1).toUpperCase();
+                    var isAdminRole = (u.roleName || '').indexOf('Ban Giám Hiệu') !== -1;
+                    var badgeStyle = isAdminRole ? 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;' : 'background:#ecfdf5; color:#047857; border:1px solid #a7f3d0;';
+                    var dept = u.departmentName || 'Chưa phân môn';
+                    var campus = u.campusName || 'Điểm trường chính';
+                    var timeAgo = formatTimeAgo(u.lastActiveAt);
+                    var pageTitle = u.lastPageTitle || u.lastUri || 'Đang hoạt động';
+
+                    html += '<div class="online-user-item">'
+                          +   '<div class="online-user-avatar" style="background:' + (isAdminRole ? '#2563eb' : '#0d9488') + '">' + esc(initial) + '</div>'
+                          +   '<div class="online-user-info">'
+                          +     '<div class="online-user-top">'
+                          +       '<span class="online-user-name">' + esc(u.fullName) + '</span>'
+                          +       '<span style="display:inline-block; font-size:11px; font-weight:600; padding:1px 8px; border-radius:12px; ' + badgeStyle + '">' + esc(u.roleName) + '</span>'
+                          +     '</div>'
+                          +     '<div class="online-user-email">' + esc(u.email) + ' • <span style="color:var(--text-muted);">' + esc(dept) + ' (' + esc(campus) + ')</span></div>'
+                          +     '<div class="online-user-status">'
+                          +       '<span class="live-dot" style="width:6px; height:6px;"></span>'
+                          +       '<span>Đang xem: <b>' + esc(pageTitle) + '</b></span>'
+                          +       '<span style="margin:0 5px; opacity:0.5;">•</span>'
+                          +       '<span style="color:var(--text-muted);">' + timeAgo + '</span>'
+                          +     '</div>'
+                          +   '</div>'
+                          + '</div>';
+                });
+                modalList.innerHTML = html;
+            }
+
+            function fetchActiveUsers() {
+                if (refreshBtn) refreshBtn.classList.add('loading');
+                fetch(contextPath + '/api/dashboard/active-users', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && typeof data.count !== 'undefined') {
+                        if (onlineCountEl) onlineCountEl.textContent = data.count;
+                        if (modalCount) modalCount.textContent = data.count;
+                        renderActiveUsers(data.users || []);
+                    }
+                })
+                .catch(function (err) {
+                    console.warn('Lỗi lấy dữ liệu người dùng trực tuyến:', err);
+                })
+                .finally(function () {
+                    if (refreshBtn) refreshBtn.classList.remove('loading');
+                });
+            }
+
+            // Tự động cập nhật mỗi 15 giây
+            setInterval(function () {
+                if (document.visibilityState === 'visible') {
+                    fetchActiveUsers();
+                }
+            }, 15000);
+
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    fetchActiveUsers();
+                });
+            }
+
+            var activeCard = NVL.$('kpiActiveUsersCard');
+            if (activeCard && activeModal) {
+                activeCard.addEventListener('click', function () {
+                    activeModal.classList.add('open');
+                    fetchActiveUsers();
+                });
+            }
+        }
     };
 
     /* ==========================================================================

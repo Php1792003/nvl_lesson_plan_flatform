@@ -374,6 +374,11 @@
                 color: var(--ink-2);
             }
 
+            .kpi-ico.green {
+                background: #ecfdf5;
+                color: #059669;
+            }
+
             .kpi-label {
                 color: var(--muted);
                 font-size: .82rem;
@@ -4139,3 +4144,85 @@ button.alert-close:active {
 .alert-close svg {
     display: block !important;
 }
+
+/* ==========================================================================
+   REAL-TIME ACTIVE USERS MONITORING
+   ========================================================================== */
+.live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    margin-right: 6px;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: livePulse 1.8s infinite;
+    flex-shrink: 0;
+}
+@keyframes livePulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+.online-user-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--paper, #fff);
+    border: 1px solid var(--line, #e2e8f0);
+    margin-bottom: 8px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.online-user-item:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+.online-user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+.online-user-info {
+    flex: 1;
+    min-width: 0;
+}
+.online-user-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.online-user-name {
+    font-weight: 600;
+    font-size: 0.93rem;
+    color: var(--text-dark, #0f172a);
+}
+.online-user-email {
+    font-size: 0.8rem;
+    color: var(--text-muted, #64748b);
+    margin-top: 2px;
+}
+.online-user-status {
+    display: flex;
+    align-items: center;
+    font-size: 0.78rem;
+    color: #059669;
+    margin-top: 4px;
+}
