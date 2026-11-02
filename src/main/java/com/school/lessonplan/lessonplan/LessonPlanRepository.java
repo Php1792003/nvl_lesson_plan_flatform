@@ -48,6 +48,9 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
      */
     Page<LessonPlan> findByOwnerIsNull(Pageable pageable);
 
+    @Query("SELECT DISTINCT d.name FROM LessonPlan lp JOIN lp.department d WHERE lp.owner IS NULL ORDER BY d.name")
+    List<String> findDistinctOrphanDepartmentNames();
+
     /**
      * Giáo án mà user được xem (chủ sở hữu HOẶC được chia sẻ)
      */
