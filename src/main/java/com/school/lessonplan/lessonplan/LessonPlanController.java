@@ -69,9 +69,14 @@ public class LessonPlanController {
     public String myPlans(
             @AuthenticationPrincipal CurrentUser currentUser,
             @RequestParam(name = "tab", defaultValue = "my") String tab,
+            @RequestParam(name = "dept", required = false) String dept,
+            @RequestParam(name = "search", required = false) String search,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "12") int size,
             Model model) {
+
+        String cleanDept = (dept != null && !dept.isBlank()) ? dept.trim() : null;
+        String cleanSearch = (search != null && !search.isBlank()) ? search.trim() : null;
 
         boolean canViewFavorites = currentUser.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -83,14 +88,17 @@ public class LessonPlanController {
         }
 
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<String> departments;
 
         if ("shared".equals(tab)) {
             PageRequest sharePageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "grantedAt"));
-            Page<LessonPlanShare> sharedPage = shareService.getSharedWithMe(currentUser, sharePageRequest);
+            Page<LessonPlanShare> sharedPage = shareService.searchSharedWithMe(currentUser, cleanDept, cleanSearch, sharePageRequest);
             model.addAttribute("sharedPage", sharedPage);
+            departments = shareService.getDistinctSharedDepartmentNames(currentUser.getId());
         } else if ("favorite".equals(tab) && canViewFavorites) {
-            Page<LessonPlan> favoritePage = lessonPlanService.getFavoriteAccessiblePlans(currentUser, pageRequest);
+            Page<LessonPlan> favoritePage = lessonPlanService.searchFavoritePlans(currentUser, cleanDept, cleanSearch, pageRequest);
             model.addAttribute("favoritePage", favoritePage);
+            departments = lessonPlanService.getDistinctFavoriteDepartmentNames(currentUser);
         } else if ("orphan".equals(tab)) {
             boolean canViewOrphan = currentUser.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -98,10 +106,14 @@ public class LessonPlanController {
             if (canViewOrphan) {
                 Page<LessonPlan> orphanPage = lessonPlanService.getOrphanPlans(pageRequest);
                 model.addAttribute("orphanPage", orphanPage);
+                departments = lessonPlanRepository.findDistinctOrphanDepartmentNames();
+            } else {
+                departments = List.of();
             }
         } else {
-            Page<LessonPlan> plansPage = lessonPlanService.getAccessiblePlans(currentUser, pageRequest);
+            Page<LessonPlan> plansPage = lessonPlanService.searchMyPlans(currentUser.getId(), cleanDept, cleanSearch, pageRequest);
             model.addAttribute("plansPage", plansPage);
+            departments = lessonPlanService.getDistinctDepartmentNamesByOwner(currentUser.getId());
         }
 
         // Lấy số lượng giáo án yêu thích để hiển thị badge trên tab (chỉ khi có quyền)
@@ -110,6 +122,9 @@ public class LessonPlanController {
             model.addAttribute("favoriteCount", favCount);
         }
 
+        model.addAttribute("departments", departments);
+        model.addAttribute("selectedDept", cleanDept);
+        model.addAttribute("search", cleanSearch);
         model.addAttribute("currentTab", tab);
         return "plans/plan-catalog";
     }
@@ -159,6 +174,7 @@ public class LessonPlanController {
                     planForm.getSchoolYear(),
                     planForm.getSemester(),
                     planForm.getWeekNo(),
+                    planForm.getEndWeekNo(),
                     planForm.getStartPeriod(),
                     planForm.getEndPeriod(),
                     planForm.getDescription(),
@@ -169,7 +185,7 @@ public class LessonPlanController {
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException e) {
-                bindingResult.reject("form.error", e.getMessage());
+                bindingResult.reject(null, e.getMessage());
             } finally {
                 uploadThrottleService.release();
             }
@@ -235,6 +251,7 @@ public class LessonPlanController {
             form.setSchoolYear(plan.getSchoolYear());
             form.setSemester(plan.getSemester());
             form.setWeekNo(plan.getWeekNo());
+            form.setEndWeekNo(plan.getEndWeekNo());
             form.setStartPeriod(plan.getStartPeriod());
             form.setEndPeriod(plan.getEndPeriod());
             form.setDescription(plan.getDescription());
@@ -261,14 +278,14 @@ public class LessonPlanController {
                 lessonPlanService.updateMetadata(
                     id, currentUser, planForm.getTitle(), planForm.getDepartmentId(),
                     planForm.getGrade(), planForm.getSchoolYear(), planForm.getSemester(),
-                    planForm.getWeekNo(), planForm.getStartPeriod(), planForm.getEndPeriod(),
+                    planForm.getWeekNo(), planForm.getEndWeekNo(), planForm.getStartPeriod(), planForm.getEndPeriod(),
                     planForm.getDescription());
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin giáo án thành công!");
                 return "redirect:/plans/" + id;
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException e) {
-                bindingResult.reject("form.error", e.getMessage());
+                bindingResult.reject(null, e.getMessage());
             }
         }
 

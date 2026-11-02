@@ -54,6 +54,49 @@ public interface LessonPlanShareRepository extends JpaRepository<LessonPlanShare
     """)
     Page<LessonPlanShare> findSharedWithUser(@Param("userId") Long userId, Pageable pageable);
 
+    @Query("""
+        SELECT DISTINCT d.name FROM LessonPlanShare s
+        JOIN s.plan p
+        JOIN p.department d
+        WHERE s.sharedWithUser.id = :userId
+          AND s.revokedAt IS NULL
+          AND (s.expiresAt IS NULL OR s.expiresAt > CURRENT_TIMESTAMP)
+        ORDER BY d.name
+    """)
+    List<String> findDistinctDepartmentNamesBySharedUser(@Param("userId") Long userId);
+
+    @Query(value = """
+        SELECT s FROM LessonPlanShare s
+        JOIN FETCH s.plan p
+        LEFT JOIN FETCH p.owner
+        LEFT JOIN FETCH p.department d
+        WHERE s.sharedWithUser.id = :userId
+          AND s.revokedAt IS NULL
+          AND (s.expiresAt IS NULL OR s.expiresAt > CURRENT_TIMESTAMP)
+          AND (:dept IS NULL OR :dept = '' OR d.name = :dept)
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """,
+    countQuery = """
+        SELECT COUNT(s) FROM LessonPlanShare s
+        JOIN s.plan p
+        LEFT JOIN p.department d
+        WHERE s.sharedWithUser.id = :userId
+          AND s.revokedAt IS NULL
+          AND (s.expiresAt IS NULL OR s.expiresAt > CURRENT_TIMESTAMP)
+          AND (:dept IS NULL OR :dept = '' OR d.name = :dept)
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """)
+    Page<LessonPlanShare> searchSharedWithUser(
+        @Param("userId") Long userId,
+        @Param("dept") String dept,
+        @Param("search") String search,
+        Pageable pageable
+    );
+
     /**
      * Xoá share khi user bị xoá (shared_with_user_id = userId)
      */

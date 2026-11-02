@@ -84,12 +84,33 @@ public class LessonPlanService {
      * Áp dụng cho cả Giáo viên lẫn Ban Giám Hiệu: chỉ hiển thị giáo án do chính tài khoản đó tải lên.
      * (Để xem toàn bộ giáo án toàn trường, BGH sử dụng mục "Toàn bộ giáo án" /admin/plans).
      */
+    public List<String> getDistinctDepartmentNamesByOwner(Long userId) {
+        return lessonPlanRepository.findDistinctDepartmentNamesByOwnerId(userId);
+    }
+
     public Page<LessonPlan> getAccessiblePlans(CurrentUser user, Pageable pageable) {
         return lessonPlanRepository.findByOwnerId(user.getId(), pageable);
     }
 
+    public Page<LessonPlan> searchMyPlans(Long userId, String dept, String search, Pageable pageable) {
+        if ((dept == null || dept.isBlank()) && (search == null || search.isBlank())) {
+            return lessonPlanRepository.findByOwnerId(userId, pageable);
+        }
+        return lessonPlanRepository.searchMyPlans(userId, dept, search, pageable);
+    }
+
     public Page<LessonPlan> getOrphanPlans(Pageable pageable) {
         return lessonPlanRepository.findByOwnerIsNull(pageable);
+    }
+
+    public List<String> getDistinctFavoriteDepartmentNames(CurrentUser user) {
+        boolean isAdmin = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("PLAN_FAVORITE_VIEW") || a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
+        if (isAdmin) {
+            return lessonPlanRepository.findDistinctAllFavoriteDepartmentNames();
+        }
+        return lessonPlanRepository.findDistinctFavoriteDepartmentNames(user.getId());
     }
 
     public Page<LessonPlan> getFavoriteAccessiblePlans(CurrentUser user, Pageable pageable) {
@@ -101,6 +122,16 @@ public class LessonPlanService {
             return lessonPlanRepository.findByFavoriteTrue(pageable);
         }
         return lessonPlanRepository.findFavoriteAccessiblePlans(user.getId(), pageable);
+    }
+
+    public Page<LessonPlan> searchFavoritePlans(CurrentUser user, String dept, String search, Pageable pageable) {
+        boolean isAdmin = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("PLAN_FAVORITE_VIEW") || a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
+        if (isAdmin) {
+            return lessonPlanRepository.searchAdminFavoritePlans(dept, search, pageable);
+        }
+        return lessonPlanRepository.searchFavoriteAccessiblePlans(user.getId(), dept, search, pageable);
     }
 
     public List<String> getAvailableSchoolYears() {
@@ -141,6 +172,14 @@ public class LessonPlanService {
             String grade, String schoolYear, Integer semester,
             Integer weekNo, Integer startPeriod, Integer endPeriod,
             String description, MultipartFile file) {
+        return createPlan(user, title, departmentId, grade, schoolYear, semester, weekNo, weekNo, startPeriod, endPeriod, description, file);
+    }
+
+    @Transactional
+    public LessonPlan createPlan(CurrentUser user, String title, Long departmentId,
+            String grade, String schoolYear, Integer semester,
+            Integer weekNo, Integer endWeekNo, Integer startPeriod, Integer endPeriod,
+            String description, MultipartFile file) {
         User owner = userRepository.findById(user.getId())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy thông tin người dùng."));
 
@@ -150,6 +189,21 @@ public class LessonPlanService {
         // Lưu file vật lý
         FileStorageService.StoredFileResult stored = fileStorageService.storeFile(file);
 
+        // Chuẩn hoá tuần học
+        if (weekNo != null && endWeekNo == null) {
+            endWeekNo = weekNo;
+        } else if (weekNo == null && endWeekNo != null) {
+            weekNo = endWeekNo;
+        }
+        if (weekNo != null && endWeekNo != null && endWeekNo < weekNo) {
+            throw new FieldValidationException("endWeekNo", "invalid", "Đến tuần phải lớn hơn hoặc bằng Từ tuần.");
+        }
+
+        String weekRange = null;
+        if (weekNo != null) {
+            weekRange = weekNo.equals(endWeekNo) ? weekNo.toString() : (weekNo + "-" + endWeekNo);
+        }
+
         // Chuẩn hoá tiết học
         if (startPeriod != null && endPeriod == null) {
             endPeriod = startPeriod;
@@ -157,7 +211,7 @@ public class LessonPlanService {
             startPeriod = endPeriod;
         }
         if (startPeriod != null && endPeriod != null && endPeriod < startPeriod) {
-            throw new BusinessException("Tiết kết thúc phải lớn hơn hoặc bằng tiết bắt đầu.");
+            throw new FieldValidationException("endPeriod", "invalid", "Đến tiết phải lớn hơn hoặc bằng Từ tiết.");
         }
 
         String periodRange = null;
@@ -174,6 +228,8 @@ public class LessonPlanService {
         plan.setSchoolYear(schoolYear.trim());
         plan.setSemester(semester);
         plan.setWeekNo(weekNo);
+        plan.setEndWeekNo(endWeekNo);
+        plan.setWeekRange(weekRange);
         plan.setStartPeriod(startPeriod);
         plan.setEndPeriod(endPeriod);
         plan.setPeriodRange(periodRange);
@@ -309,6 +365,13 @@ public class LessonPlanService {
     public LessonPlan updateMetadata(Long planId, CurrentUser user, String title,
             Long departmentId, String grade, String schoolYear,
             Integer semester, Integer weekNo, Integer startPeriod, Integer endPeriod, String description) {
+        return updateMetadata(planId, user, title, departmentId, grade, schoolYear, semester, weekNo, weekNo, startPeriod, endPeriod, description);
+    }
+
+    @Transactional
+    public LessonPlan updateMetadata(Long planId, CurrentUser user, String title,
+            Long departmentId, String grade, String schoolYear,
+            Integer semester, Integer weekNo, Integer endWeekNo, Integer startPeriod, Integer endPeriod, String description) {
         LessonPlan plan = lessonPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giáo án."));
 
@@ -316,6 +379,21 @@ public class LessonPlanService {
 
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new BusinessException("Bộ môn không tồn tại."));
+
+        // Chuẩn hoá tuần học
+        if (weekNo != null && endWeekNo == null) {
+            endWeekNo = weekNo;
+        } else if (weekNo == null && endWeekNo != null) {
+            weekNo = endWeekNo;
+        }
+        if (weekNo != null && endWeekNo != null && endWeekNo < weekNo) {
+            throw new FieldValidationException("endWeekNo", "invalid", "Đến tuần phải lớn hơn hoặc bằng Từ tuần.");
+        }
+
+        String weekRange = null;
+        if (weekNo != null) {
+            weekRange = weekNo.equals(endWeekNo) ? weekNo.toString() : (weekNo + "-" + endWeekNo);
+        }
 
         // Chuẩn hoá tiết học
         if (startPeriod != null && endPeriod == null) {
@@ -338,6 +416,8 @@ public class LessonPlanService {
         plan.setSchoolYear(schoolYear.trim());
         plan.setSemester(semester);
         plan.setWeekNo(weekNo);
+        plan.setEndWeekNo(endWeekNo);
+        plan.setWeekRange(weekRange);
         plan.setStartPeriod(startPeriod);
         plan.setEndPeriod(endPeriod);
         plan.setPeriodRange(periodRange);

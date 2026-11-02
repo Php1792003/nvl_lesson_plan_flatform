@@ -30,9 +30,13 @@ public class PlanCreateForm {
     @NotNull
     private Integer semester;
 
-    @Min(value = 1, message = "Tuần học từ 1 trở lên.")
+    @Min(value = 1, message = "Từ tuần phải từ 1 trở lên.")
     @Max(value = 35, message = "Tuần học tối đa là 35.")
     private Integer weekNo;
+
+    @Min(value = 1, message = "Đến tuần phải từ 1 trở lên.")
+    @Max(value = 35, message = "Tuần học tối đa là 35.")
+    private Integer endWeekNo;
 
     @Min(value = 1, message = "Từ tiết phải từ 1 trở lên.")
     @Max(value = 200, message = "Tiết học không hợp lệ.")
@@ -93,6 +97,14 @@ public class PlanCreateForm {
 
     public void setWeekNo(Integer weekNo) {
         this.weekNo = weekNo;
+    }
+
+    public Integer getEndWeekNo() {
+        return endWeekNo;
+    }
+
+    public void setEndWeekNo(Integer endWeekNo) {
+        this.endWeekNo = endWeekNo;
     }
 
     public Integer getStartPeriod() {

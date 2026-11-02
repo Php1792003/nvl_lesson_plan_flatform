@@ -30,9 +30,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
         LEFT JOIN FETCH u.department
         LEFT JOIN FETCH u.campus
         WHERE (:search IS NULL OR
-               u.lastName LIKE CONCAT('%', :search, '%') OR
-               u.givenName LIKE CONCAT('%', :search, '%') OR
-               u.email LIKE CONCAT('%', :search, '%'))
+               LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(u.givenName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(CONCAT(u.lastName, ' ', u.givenName)) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(CONCAT(u.givenName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))
           AND (:status IS NULL OR u.status = :status)
           AND (:departmentId IS NULL OR u.department.id = :departmentId)
           AND (:campusId IS NULL OR u.campus.id = :campusId)

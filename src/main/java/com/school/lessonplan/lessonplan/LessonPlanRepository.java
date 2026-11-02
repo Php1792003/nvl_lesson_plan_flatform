@@ -15,6 +15,34 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
      */
     Page<LessonPlan> findByOwnerId(Long ownerId, Pageable pageable);
 
+    @Query("SELECT DISTINCT d.name FROM LessonPlan lp JOIN lp.department d WHERE lp.owner.id = :userId ORDER BY d.name")
+    List<String> findDistinctDepartmentNamesByOwnerId(@Param("userId") Long userId);
+
+    @Query(value = """
+        SELECT lp FROM LessonPlan lp
+        LEFT JOIN FETCH lp.department d
+        WHERE lp.owner.id = :userId
+          AND (:dept IS NULL OR :dept = '' OR d.name = :dept)
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """,
+    countQuery = """
+        SELECT COUNT(lp) FROM LessonPlan lp
+        LEFT JOIN lp.department d
+        WHERE lp.owner.id = :userId
+          AND (:dept IS NULL OR :dept = '' OR d.name = :dept)
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """)
+    Page<LessonPlan> searchMyPlans(
+        @Param("userId") Long userId,
+        @Param("dept") String dept,
+        @Param("search") String search,
+        Pageable pageable
+    );
+
     /**
      * Giáo án mồ côi (giáo viên đã bị xoá khỏi hệ thống)
      */
@@ -48,24 +76,38 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
      */
     @Query(value = """
         SELECT lp FROM LessonPlan lp
-        LEFT JOIN FETCH lp.department
-        LEFT JOIN FETCH lp.owner
+        LEFT JOIN FETCH lp.department d
+        LEFT JOIN FETCH lp.owner o
         WHERE (:search IS NULL OR :search = '' 
-               OR lp.title LIKE CONCAT('%', :search, '%') 
-               OR lp.department.name LIKE CONCAT('%', :search, '%') 
-               OR lp.ownerSnapshotName LIKE CONCAT('%', :search, '%'))
-          AND (:departmentId IS NULL OR lp.department.id = :departmentId)
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.lastName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.givenName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(CONCAT(o.lastName, ' ', o.givenName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(CONCAT(o.givenName, ' ', o.lastName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.email) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(lp.ownerSnapshotName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(lp.ownerSnapshotEmail) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:departmentId IS NULL OR d.id = :departmentId)
           AND (:schoolYear IS NULL OR :schoolYear = '' OR lp.schoolYear = :schoolYear)
           AND (:semester IS NULL OR lp.semester = :semester)
           AND (:favorite IS NULL OR lp.favorite = :favorite)
     """,
     countQuery = """
         SELECT COUNT(lp) FROM LessonPlan lp
+        LEFT JOIN lp.department d
+        LEFT JOIN lp.owner o
         WHERE (:search IS NULL OR :search = '' 
-               OR lp.title LIKE CONCAT('%', :search, '%') 
-               OR lp.department.name LIKE CONCAT('%', :search, '%') 
-               OR lp.ownerSnapshotName LIKE CONCAT('%', :search, '%'))
-          AND (:departmentId IS NULL OR lp.department.id = :departmentId)
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.lastName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.givenName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(CONCAT(o.lastName, ' ', o.givenName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(CONCAT(o.givenName, ' ', o.lastName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.email) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(lp.ownerSnapshotName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(lp.ownerSnapshotEmail) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:departmentId IS NULL OR d.id = :departmentId)
           AND (:schoolYear IS NULL OR :schoolYear = '' OR lp.schoolYear = :schoolYear)
           AND (:semester IS NULL OR lp.semester = :semester)
           AND (:favorite IS NULL OR lp.favorite = :favorite)
@@ -105,10 +147,83 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
     """)
     Page<LessonPlan> findFavoriteAccessiblePlans(@Param("userId") Long userId, Pageable pageable);
 
+    @Query("""
+        SELECT DISTINCT d.name FROM LessonPlan lp
+        JOIN lp.department d
+        WHERE lp.favorite = true
+          AND (lp.owner.id = :userId OR EXISTS (
+              SELECT 1 FROM LessonPlanShare s WHERE s.plan.id = lp.id AND s.sharedWithUser.id = :userId AND s.revokedAt IS NULL AND (s.expiresAt IS NULL OR s.expiresAt > CURRENT_TIMESTAMP)
+          ))
+        ORDER BY d.name
+    """)
+    List<String> findDistinctFavoriteDepartmentNames(@Param("userId") Long userId);
+
+    @Query("SELECT DISTINCT d.name FROM LessonPlan lp JOIN lp.department d WHERE lp.favorite = true ORDER BY d.name")
+    List<String> findDistinctAllFavoriteDepartmentNames();
+
+    @Query(value = """
+        SELECT DISTINCT lp FROM LessonPlan lp
+        LEFT JOIN FETCH lp.department d
+        LEFT JOIN LessonPlanShare s ON s.plan.id = lp.id
+            AND s.sharedWithUser.id = :userId
+            AND s.revokedAt IS NULL
+            AND (s.expiresAt IS NULL OR s.expiresAt > CURRENT_TIMESTAMP)
+        WHERE (lp.owner.id = :userId OR s.id IS NOT NULL)
+          AND lp.favorite = true
+          AND (:dept IS NULL OR :dept = '' OR d.name = :dept)
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """,
+    countQuery = """
+        SELECT COUNT(DISTINCT lp) FROM LessonPlan lp
+        LEFT JOIN lp.department d
+        LEFT JOIN LessonPlanShare s ON s.plan.id = lp.id
+            AND s.sharedWithUser.id = :userId
+            AND s.revokedAt IS NULL
+            AND (s.expiresAt IS NULL OR s.expiresAt > CURRENT_TIMESTAMP)
+        WHERE (lp.owner.id = :userId OR s.id IS NOT NULL)
+          AND lp.favorite = true
+          AND (:dept IS NULL OR :dept = '' OR d.name = :dept)
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """)
+    Page<LessonPlan> searchFavoriteAccessiblePlans(
+        @Param("userId") Long userId,
+        @Param("dept") String dept,
+        @Param("search") String search,
+        Pageable pageable
+    );
+
     /**
      * Danh sách tất cả giáo án yêu thích (dành cho Admin / BGH)
      */
     Page<LessonPlan> findByFavoriteTrue(Pageable pageable);
+
+    @Query(value = """
+        SELECT lp FROM LessonPlan lp
+        LEFT JOIN FETCH lp.department d
+        WHERE lp.favorite = true
+          AND (:dept IS NULL OR :dept = '' OR d.name = :dept)
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """,
+    countQuery = """
+        SELECT COUNT(lp) FROM LessonPlan lp
+        LEFT JOIN lp.department d
+        WHERE lp.favorite = true
+          AND (:dept IS NULL OR :dept = '' OR d.name = :dept)
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """)
+    Page<LessonPlan> searchAdminFavoritePlans(
+        @Param("dept") String dept,
+        @Param("search") String search,
+        Pageable pageable
+    );
 
     /**
      * Tìm tất cả giáo án theo năm học và học kỳ (dùng cho BGH dọn dẹp sau học kỳ)

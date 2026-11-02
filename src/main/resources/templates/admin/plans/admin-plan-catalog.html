@@ -182,7 +182,7 @@
                                                 <div th:if="${plan.weekNo != null or plan.startPeriod != null}"
                                                     style="display: flex; gap: 6px; font-size: 11px; color: var(--text-muted); margin-top: 2px;">
                                                     <span th:if="${plan.weekNo != null}"
-                                                        th:text="#{table.week_prefix} + ' ' + ${plan.weekNo}">Tuần
+                                                        th:text="${plan.displayWeekText}">Tuần
                                                         1</span>
                                                     <span
                                                         th:if="${plan.weekNo != null and plan.startPeriod != null}">•</span>

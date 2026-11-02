@@ -82,7 +82,7 @@ public class UserController {
             } catch (FieldValidationException e) {
                 bindingResult.rejectValue(e.getField(), e.getCode(), e.getMessage());
             } catch (BusinessException e) {
-                bindingResult.reject("form.error", e.getMessage());
+                bindingResult.reject(null, e.getMessage());
             }
         }
 
