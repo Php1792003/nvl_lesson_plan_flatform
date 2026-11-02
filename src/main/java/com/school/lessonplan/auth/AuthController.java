@@ -50,19 +50,22 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RateLimiterService rateLimiterService;
     private final com.school.lessonplan.security.CookieService cookieService;
+    private final com.school.lessonplan.security.ActiveUserService activeUserService;
 
     public AuthController(AuthService authService,
                           DepartmentRepository departmentRepository,
                           CampusRepository campusRepository,
                           UserRepository userRepository,
                           RateLimiterService rateLimiterService,
-                          com.school.lessonplan.security.CookieService cookieService) {
+                          com.school.lessonplan.security.CookieService cookieService,
+                          com.school.lessonplan.security.ActiveUserService activeUserService) {
         this.authService = authService;
         this.departmentRepository = departmentRepository;
         this.campusRepository = campusRepository;
         this.userRepository = userRepository;
         this.rateLimiterService = rateLimiterService;
         this.cookieService = cookieService;
+        this.activeUserService = activeUserService;
     }
 
     // ======================== LOGIN ========================
@@ -112,7 +115,10 @@ public class AuthController {
     // ======================== LOGOUT ========================
 
     @PostMapping("/logout")
-    public String logout(HttpServletRequest request, HttpServletResponse response) {
+    public String logout(@AuthenticationPrincipal CurrentUser currentUser, HttpServletRequest request, HttpServletResponse response) {
+        if (currentUser != null) {
+            activeUserService.removeUser(currentUser.getId());
+        }
         authService.logout(request, response);
         return "redirect:/login?logout";
     }

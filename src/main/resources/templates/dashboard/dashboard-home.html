@@ -124,6 +124,30 @@
                         <div class="kpi-val"><span data-count id="kpiDepts" data-value="0">0</span></div>
                     </div>
                 </div>
+                <div class="kpi reveal" style="--i:6; cursor: pointer;" id="kpiActiveUsersCard" title="Bấm để xem danh sách chi tiết giáo viên và BGH đang trực tuyến">
+                    <div class="kpi-ico green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="kpi-label" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span>Đang trực tuyến</span>
+                            <span class="live-dot" title="Thời gian thực"></span>
+                        </div>
+                        <div class="kpi-val">
+                            <span id="kpiOnlineCount" th:text="${activeUsersCount != null ? activeUsersCount : 1}">1</span>
+                            <small>người</small>
+                        </div>
+                        <div style="margin-top: 4px; font-size: 0.76rem; color: var(--blue, #2563eb); font-weight: 500;">
+                            Xem chi tiết ›
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Biểu đồ -->
@@ -180,6 +204,62 @@
                     </div>
                     <ul class="dept-list" id="deptList"></ul>
                 </section>
+            </div>
+
+            <!-- Modal Giám sát người dùng trực tuyến thực tế (Ban Giám Hiệu) -->
+            <div id="activeUsersModal" class="modal-overlay" th:if="${isAdmin}" role="dialog" aria-modal="true" aria-labelledby="activeUsersTitle">
+                <div class="modal-box" style="max-width: 620px; max-height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 16px;">
+                    <!-- Modal Header -->
+                    <div style="padding: 18px 22px; border-bottom: 1px solid var(--line, #e2e8f0); display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="kpi-ico green" style="width: 32px; height: 32px; flex: 0 0 32px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 id="activeUsersTitle" style="font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 6px;">
+                                    Đang trực tuyến (<span id="activeUsersModalCount" th:text="${activeUsersCount != null ? activeUsersCount : 1}">1</span>)
+                                </h3>
+                                <div style="font-size: 0.78rem; color: var(--text-muted, #64748b); margin-top: 1px;">
+                                    Giám sát người dùng đang truy cập hệ thống theo thời gian thực
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" id="btnRefreshActiveUsers" class="ad-btn ghost" style="padding: 6px 10px; font-size: 0.8rem;" title="Làm mới dữ liệu">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                </svg>
+                                <span>Làm mới</span>
+                            </button>
+                            <button type="button" class="alert-close" data-modal-close aria-label="Đóng modal" style="position: static; font-size: 1.2rem; cursor: pointer; background: transparent; border: none; padding: 4px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal Body: Danh sách người dùng -->
+                    <div id="activeUsersList" style="padding: 16px 20px; overflow-y: auto; max-height: 55vh; min-height: 120px;">
+                        <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            <span class="live-dot"></span> Đang tải danh sách người dùng trực tuyến...
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div style="padding: 12px 20px; border-top: 1px solid var(--line, #e2e8f0); background: #fafafa; display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-muted);">
+                        <span>Tự động cập nhật mỗi 15 giây • Cửa sổ hoạt động: 5 phút gần nhất</span>
+                        <button type="button" class="btn btn-secondary" data-modal-close style="padding: 6px 14px; font-size: 0.82rem;">Đóng</button>
+                    </div>
+                </div>
             </div>
         </div>
 

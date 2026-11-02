@@ -776,6 +776,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         translateElementTree(document.body);
     }
+
+    // ==========================================
+    // Real-time Presence Heartbeat (Ghi nhận trạng thái online thực tế)
+    // ==========================================
+    try {
+        const isAuthPage = !document.body.classList.contains('auth-page') &&
+                           !window.location.pathname.includes('/login') &&
+                           !window.location.pathname.includes('/register') &&
+                           !window.location.pathname.includes('/forgot-password');
+        if (isAuthPage) {
+            const contextPath = window.location.pathname.startsWith('/portal') ? '/portal' : '';
+            setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    fetch(contextPath + '/api/dashboard/heartbeat', {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).catch(() => {});
+                }
+            }, 60000);
+        }
+    } catch (e) {}
 });
 
 

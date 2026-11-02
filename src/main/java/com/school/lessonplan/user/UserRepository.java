@@ -18,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
         SELECT DISTINCT u FROM User u
         LEFT JOIN FETCH u.roles r
         LEFT JOIN FETCH r.permissions
+        LEFT JOIN FETCH u.department
+        LEFT JOIN FETCH u.campus
         WHERE u.id = :id
     """)
     Optional<User> findByIdWithRolesAndPermissions(@Param("id") Long id);

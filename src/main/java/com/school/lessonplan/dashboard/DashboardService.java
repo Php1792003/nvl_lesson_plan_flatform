@@ -16,11 +16,14 @@ public class DashboardService {
 
     private final LessonPlanRepository lessonPlanRepository;
     private final LessonPlanVersionRepository versionRepository;
+    private final com.school.lessonplan.security.ActiveUserService activeUserService;
 
     public DashboardService(LessonPlanRepository lessonPlanRepository,
-            LessonPlanVersionRepository versionRepository) {
+            LessonPlanVersionRepository versionRepository,
+            com.school.lessonplan.security.ActiveUserService activeUserService) {
         this.lessonPlanRepository = lessonPlanRepository;
         this.versionRepository = versionRepository;
+        this.activeUserService = activeUserService;
     }
 
     public Map<String, Object> getTeacherDashboardStats(CurrentUser user) {
@@ -48,6 +51,8 @@ public class DashboardService {
         stats.put("storageBytes", storageBytes);
         stats.put("storageMb", String.format("%.2f", (double) storageBytes / (1024 * 1024)));
         stats.put("purgedVersionsCount", purgedCount);
+        stats.put("activeUsersCount", activeUserService.getActiveCount());
+        stats.put("activeUsers", activeUserService.getActiveUsersList());
 
         List<LessonPlan> allPlans = lessonPlanRepository.findAll();
 
