@@ -197,8 +197,17 @@
                         </table>
                     </div>
 
+                    <div class="us-nomatch" id="usNoMatch" style="display:none; text-align:center; padding:36px 16px; color:var(--text-muted);">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px; opacity:0.6;">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <p style="font-size:0.95rem; font-weight:600; margin:0 0 4px;">Không tìm thấy giáo viên phù hợp</p>
+                        <span style="font-size:0.85rem;">Không có tài khoản nào khớp với từ khoá tìm kiếm trên trang này. Nhấn <b>Enter</b> hoặc bấm nút <b>Lọc</b> để tìm kiếm trên toàn hệ thống.</span>
+                    </div>
+
                     <div class="us-foot">
-                        <span>Hiển thị <b th:text="${usersPage.numberOfElements}">0</b> trên tổng <b
+                        <span>Hiển thị <b id="usShown" th:text="${usersPage.numberOfElements}">0</b> trên tổng <b
                                 th:text="${usersPage.totalElements}">0</b> tài khoản</span>
                         <nav class="us-pager" th:if="${usersPage.totalPages > 1}" aria-label="Phân trang">
                             <a th:if="${!usersPage.first}" class="us-pg"

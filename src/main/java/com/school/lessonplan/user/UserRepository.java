@@ -25,11 +25,25 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.code = 'ADMIN'")
     long countAdmins();
 
-    @Query("""
+    @Query(value = """
         SELECT u FROM User u
         LEFT JOIN FETCH u.department
         LEFT JOIN FETCH u.campus
-        WHERE (:search IS NULL OR
+        WHERE (:search IS NULL OR :search = '' OR
+               LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(u.givenName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(CONCAT(u.lastName, ' ', u.givenName)) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(CONCAT(u.givenName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:status IS NULL OR u.status = :status)
+          AND (:departmentId IS NULL OR u.department.id = :departmentId)
+          AND (:campusId IS NULL OR u.campus.id = :campusId)
+    """,
+    countQuery = """
+        SELECT COUNT(u) FROM User u
+        LEFT JOIN u.department
+        LEFT JOIN u.campus
+        WHERE (:search IS NULL OR :search = '' OR
                LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR
                LOWER(u.givenName) LIKE LOWER(CONCAT('%', :search, '%')) OR
                LOWER(CONCAT(u.lastName, ' ', u.givenName)) LIKE LOWER(CONCAT('%', :search, '%')) OR
