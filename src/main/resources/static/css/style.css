@@ -463,11 +463,11 @@ html, body {
   white-space: nowrap;
 }
 
-.badge-success { background-color: var(--success-light); color: var(--success); }
-.badge-warning { background-color: var(--warning-light); color: var(--warning); }
-.badge-danger { background-color: var(--danger-light); color: var(--danger); }
+.badge-success, .badge--success { background-color: var(--success-light); color: var(--success); }
+.badge-warning, .badge--warning { background-color: var(--warning-light); color: var(--warning); }
+.badge-danger, .badge--danger { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 .badge-primary { background-color: var(--primary-light); color: var(--primary); }
-.badge-secondary { background-color: #f1f5f9; color: var(--secondary); }
+.badge-secondary, .badge--secondary { background-color: #f1f5f9; color: var(--secondary); }
 .badge-orphan { background-color: #fef3c7; color: #92400e; border: 1px dashed #f59e0b; }
 
 /* ================= REUSABLE RESPONSIVE PATTERNS (UI-RESPONSIVE-RULES) ================= */
@@ -2672,5 +2672,6 @@ html, body {
   padding: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
+
 
 
