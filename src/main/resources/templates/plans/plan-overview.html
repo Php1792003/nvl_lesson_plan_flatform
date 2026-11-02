@@ -44,7 +44,7 @@
                     <span th:text="'Năm học ' + ${plan.schoolYear} + ' (HK ' + ${plan.semester} + ')'">2025-2026</span>
                     <th:block th:if="${plan.weekNo != null}">
                         <span>•</span>
-                        <span th:text="'Tuần ' + ${plan.weekNo}">Tuần 3</span>
+                        <span th:text="${plan.displayWeekText}">Tuần 3</span>
                     </th:block>
                     <th:block th:if="${plan.startPeriod != null}">
                         <span>•</span>
@@ -473,7 +473,7 @@
                         </div>
                         <div th:if="${plan.weekNo != null}">
                             <span style="color: var(--text-muted);">Tuần học:</span><br>
-                            <strong th:text="'Tuần ' + ${plan.weekNo}">Tuần 3</strong>
+                            <strong th:text="${plan.displayWeekText}">Tuần 3</strong>
                         </div>
                         <div th:if="${plan.startPeriod != null}">
                             <span style="color: var(--text-muted);">Tiết học :</span><br>

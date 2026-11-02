@@ -48,6 +48,12 @@ public class LessonPlan {
     @Column(name = "week_no")
     private Integer weekNo;
 
+    @Column(name = "end_week_no")
+    private Integer endWeekNo;
+
+    @Column(name = "week_range", length = 50)
+    private String weekRange;
+
     @Column(name = "period_no")
     private Integer periodNo;
 
@@ -116,6 +122,28 @@ public class LessonPlan {
 
     public Integer getWeekNo() { return weekNo; }
     public void setWeekNo(Integer weekNo) { this.weekNo = weekNo; }
+
+    public Integer getEndWeekNo() { return endWeekNo; }
+    public void setEndWeekNo(Integer endWeekNo) { this.endWeekNo = endWeekNo; }
+
+    public String getWeekRange() { return weekRange; }
+    public void setWeekRange(String weekRange) { this.weekRange = weekRange; }
+
+    public String getDisplayWeekText() {
+        if (weekRange != null && !weekRange.isBlank()) {
+            if (weekNo != null && endWeekNo != null && !weekNo.equals(endWeekNo)) {
+                return "Tuần " + weekNo + " - " + endWeekNo;
+            }
+            return "Tuần " + weekRange;
+        }
+        if (weekNo != null && endWeekNo != null && !weekNo.equals(endWeekNo)) {
+            return "Tuần " + weekNo + " - " + endWeekNo;
+        }
+        if (weekNo != null) {
+            return "Tuần " + weekNo;
+        }
+        return null;
+    }
 
     public Integer getPeriodNo() { return periodNo; }
     public void setPeriodNo(Integer periodNo) { this.periodNo = periodNo; }

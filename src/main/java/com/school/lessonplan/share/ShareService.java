@@ -60,6 +60,10 @@ public class ShareService {
         return shareRepository.findActiveSharesByPlanId(planId);
     }
 
+    public List<String> getDistinctSharedDepartmentNames(Long userId) {
+        return shareRepository.findDistinctDepartmentNamesBySharedUser(userId);
+    }
+
     public Page<LessonPlanShare> getSharedWithMe(CurrentUser user, Pageable pageable) {
         if (pageable != null && pageable.getSort().isSorted()) {
             boolean hasCreatedAt = pageable.getSort().stream().anyMatch(o -> "createdAt".equals(o.getProperty()));
@@ -71,6 +75,22 @@ public class ShareService {
             }
         }
         return shareRepository.findSharedWithUser(user.getId(), pageable);
+    }
+
+    public Page<LessonPlanShare> searchSharedWithMe(CurrentUser user, String dept, String search, Pageable pageable) {
+        if ((dept == null || dept.isBlank()) && (search == null || search.isBlank())) {
+            return getSharedWithMe(user, pageable);
+        }
+        if (pageable != null && pageable.getSort().isSorted()) {
+            boolean hasCreatedAt = pageable.getSort().stream().anyMatch(o -> "createdAt".equals(o.getProperty()));
+            if (hasCreatedAt) {
+                List<Sort.Order> safeOrders = pageable.getSort().stream()
+                    .map(o -> "createdAt".equals(o.getProperty()) ? new Sort.Order(o.getDirection(), "grantedAt") : o)
+                    .toList();
+                pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(safeOrders));
+            }
+        }
+        return shareRepository.searchSharedWithUser(user.getId(), dept, search, pageable);
     }
 
     @Transactional

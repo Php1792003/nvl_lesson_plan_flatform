@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THCS Nguyễn Văn Linh — Lesson Plan Platform (Dashboard Pro Shared JavaScript)
  * Provides smooth transitions, shared utilities, and page initializers.
  */
@@ -616,8 +616,9 @@
             requestAnimationFrame(function () { root.classList.add('is-ready'); });
         });
 
-        if (!rows.length) return;
-        NVL.setupRowClicks(rows);
+        if (rows.length) {
+            NVL.setupRowClicks(rows);
+        }
 
         /* Huy hiệu hạn chia sẻ */
         document.querySelectorAll('[data-expires]').forEach(function (el) {
@@ -639,37 +640,59 @@
         var totalEl = NVL.$('plTotalPage');
         var noMatch = NVL.$('plNoMatch');
 
-        if (search && deptSel) {
-            var depts = {};
+        // Khi thay đổi bộ môn: điều hướng URL với param `dept` để phân trang & lọc đúng trên toàn bộ giáo án
+        if (deptSel) {
+            deptSel.addEventListener('change', function () {
+                var val = this.value;
+                var url = new URL(window.location.href);
+                if (val) {
+                    url.searchParams.set('dept', val);
+                } else {
+                    url.searchParams.delete('dept');
+                }
+                url.searchParams.set('page', '0');
+                window.location.href = url.toString();
+            });
+        }
+
+        if (search) {
             rows.forEach(function (tr) {
-                var d = tr.getAttribute('data-dept');
-                if (d) depts[d] = true;
                 tr.__text = NVL.norm(tr.textContent);
             });
-            Object.keys(depts).sort(function (a, b) { return a.localeCompare(b, 'vi'); }).forEach(function (d) {
-                var o = document.createElement('option');
-                o.value = d; o.textContent = d;
-                deptSel.appendChild(o);
-            });
-            if (totalEl) totalEl.textContent = rows.length;
 
-            function apply() {
+            function applyLocal() {
                 var q = NVL.norm(search.value.trim());
-                var dept = deptSel.value;
                 var shown = 0;
                 rows.forEach(function (tr) {
-                    var ok = (!q || tr.__text.indexOf(q) !== -1) && (!dept || tr.getAttribute('data-dept') === dept);
+                    var ok = (!q || (tr.__text && tr.__text.indexOf(q) !== -1));
                     tr.style.display = ok ? '' : 'none';
                     tr.classList.remove('row-in');
                     if (ok) shown++;
                 });
                 if (shownEl) shownEl.textContent = shown;
-                if (noMatch) noMatch.classList.toggle('show', shown === 0);
+                if (noMatch) noMatch.classList.toggle('show', shown === 0 && rows.length > 0);
             }
-            search.addEventListener('input', apply);
-            deptSel.addEventListener('change', apply);
-            apply();
+
+            search.addEventListener('input', applyLocal);
+
+            search.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var q = this.value.trim();
+                    var url = new URL(window.location.href);
+                    if (q) {
+                        url.searchParams.set('search', q);
+                    } else {
+                        url.searchParams.delete('search');
+                    }
+                    url.searchParams.set('page', '0');
+                    window.location.href = url.toString();
+                }
+            });
         }
+
+        if (totalEl) totalEl.textContent = rows.length;
+        if (shownEl) shownEl.textContent = rows.length;
     };
 
     /* ==========================================================================
