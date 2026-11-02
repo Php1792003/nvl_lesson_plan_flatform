@@ -79,15 +79,13 @@ public class LessonPlanService {
         this.appProperties = appProperties;
     }
 
+    /**
+     * Lấy danh sách giáo án của chính người dùng đăng nhập ("Giáo án của tôi").
+     * Áp dụng cho cả Giáo viên lẫn Ban Giám Hiệu: chỉ hiển thị giáo án do chính tài khoản đó tải lên.
+     * (Để xem toàn bộ giáo án toàn trường, BGH sử dụng mục "Toàn bộ giáo án" /admin/plans).
+     */
     public Page<LessonPlan> getAccessiblePlans(CurrentUser user, Pageable pageable) {
-        boolean isAdmin = user.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(a -> a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
-
-        if (isAdmin) {
-            return lessonPlanRepository.findAll(pageable);
-        }
-        return lessonPlanRepository.findAccessibleByUser(user.getId(), pageable);
+        return lessonPlanRepository.findByOwnerId(user.getId(), pageable);
     }
 
     public Page<LessonPlan> getOrphanPlans(Pageable pageable) {
