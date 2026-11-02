@@ -121,7 +121,10 @@
 </head>
 <body>
 
-<button class="no-print" onclick="window.print()">🖨️ In trang này</button>
+<button class="no-print" onclick="window.print()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+    In trang này
+</button>
 
 <table class="header-table">
     <tr>
@@ -292,20 +295,50 @@
 
 <table class="sig-table">
     <tr>
-        <td>
+        <td style="vertical-align: top; width: 33%;">
             <div style="font-weight: bold;">PHÓ HIỆU TRƯỞNG PHỤ TRÁCH</div>
-            <div style="font-style: italic; font-size: 12px;">(Ký, ghi rõ họ tên)</div>
-            <div style="margin-top: 50px; font-weight: bold;" th:if="${wr.reviewerNameSnapshot != null and wr.reviewer != null and #strings.contains(wr.reviewer.email, 'admin')}" th:text="${wr.reviewerNameSnapshot}">Ban Giám Hiệu</div>
+            <div style="font-style: italic; font-size: 12px; margin-bottom: 10px;">(Ký, đóng dấu cơ quan)</div>
+            
+            <div th:if="${sigPrincipal != null}" style="border: 2px solid #b91c1c; background: #fff5f5; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 240px; text-align: left; font-size: 10.5px;">
+                <div style="font-weight: 800; color: #991b1b; font-size: 11px;">ĐÃ KÝ DUYỆT CHÍNH THỨC</div>
+                <img th:if="${sigPrincipal.signatureImageBase64 != null and !sigPrincipal.signatureImageBase64.isBlank()}" 
+                     th:src="${sigPrincipal.signatureImageBase64}" alt="Con dấu BGH" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                <div style="font-weight: bold; color: #7f1d1d;" th:text="${sigPrincipal.signerName}">TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+                <div>Thiết bị: <span th:text="${sigPrincipal.signatureTypeDisplayName}">USB Token PKI</span></div>
+                <div>Ngày ký: <span th:text="${sigPrincipal.signedAtFormatted}">02/11/2026 15:30</span></div>
+                <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+            </div>
+            <div th:unless="${sigPrincipal != null}" style="margin-top: 50px; font-weight: bold;" th:if="${wr.reviewerNameSnapshot != null and wr.reviewer != null and #strings.contains(wr.reviewer.email, 'admin')}" th:text="${wr.reviewerNameSnapshot}">Ban Giám Hiệu</div>
         </td>
-        <td>
+        <td style="vertical-align: top; width: 33%;">
             <div style="font-weight: bold;">TỔ TRƯỞNG CHUYÊN MÔN</div>
-            <div style="font-style: italic; font-size: 12px;">(Ký, ghi rõ họ tên)</div>
-            <div style="margin-top: 50px; font-weight: bold;" th:if="${wr.reviewerNameSnapshot != null and (wr.reviewer == null or !#strings.contains(wr.reviewer.email, 'admin'))}" th:text="${wr.reviewerNameSnapshot}">Lê Hoàng Long</div>
+            <div style="font-style: italic; font-size: 12px; margin-bottom: 10px;">(Ký, ghi rõ họ tên)</div>
+
+            <div th:if="${sigDeptLeader != null}" style="border: 2px solid #16a34a; background: #f0fdf4; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 240px; text-align: left; font-size: 10.5px;">
+                <div style="font-weight: 800; color: #15803d; font-size: 11px;">ĐÃ KÝ SỐ THẨM ĐỊNH TỔ</div>
+                <img th:if="${sigDeptLeader.signatureImageBase64 != null and !sigDeptLeader.signatureImageBase64.isBlank()}" 
+                     th:src="${sigDeptLeader.signatureImageBase64}" alt="Chữ ký Tổ trưởng" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                <div style="font-weight: bold; color: #14532d;" th:text="${sigDeptLeader.signerName}">Lê Hoàng Long</div>
+                <div>Dịch vụ: <span th:text="${sigDeptLeader.caProvider}">VNPT SmartCA</span></div>
+                <div>Ngày ký: <span th:text="${sigDeptLeader.signedAtFormatted}">02/11/2026 15:20</span></div>
+                <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+            </div>
+            <div th:unless="${sigDeptLeader != null}" style="margin-top: 50px; font-weight: bold;" th:if="${wr.reviewerNameSnapshot != null and (wr.reviewer == null or !#strings.contains(wr.reviewer.email, 'admin'))}" th:text="${wr.reviewerNameSnapshot}">Lê Hoàng Long</div>
         </td>
-        <td>
+        <td style="vertical-align: top; width: 33%;">
             <div style="font-weight: bold;">CÁ NHÂN TỰ ĐÁNH GIÁ</div>
-            <div style="font-style: italic; font-size: 12px;">(Ký, ghi rõ họ tên)</div>
-            <div style="margin-top: 50px; font-weight: bold;" th:text="${wr.teacherNameSnapshot}">Nguyễn Văn An</div>
+            <div style="font-style: italic; font-size: 12px; margin-bottom: 10px;">(Ký, ghi rõ họ tên)</div>
+
+            <div th:if="${sigTeacher != null}" style="border: 2px solid #2563eb; background: #eff6ff; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 240px; text-align: left; font-size: 10.5px;">
+                <div style="font-weight: 800; color: #1d4ed8; font-size: 11px;">ĐÃ KÝ SỐ ĐIỆN TỬ</div>
+                <img th:if="${sigTeacher.signatureImageBase64 != null and !sigTeacher.signatureImageBase64.isBlank()}" 
+                     th:src="${sigTeacher.signatureImageBase64}" alt="Chữ ký cá nhân" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                <div style="font-weight: bold; color: #1e3a8a;" th:text="${sigTeacher.signerName}">Nguyễn Văn An</div>
+                <div>Dịch vụ: <span th:text="${sigTeacher.caProvider}">VNPT SmartCA</span></div>
+                <div>Ngày ký: <span th:text="${sigTeacher.signedAtFormatted}">01/11/2026 10:15</span></div>
+                <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+            </div>
+            <div th:unless="${sigTeacher != null}" style="margin-top: 50px; font-weight: bold;" th:text="${wr.teacherNameSnapshot}">Nguyễn Văn An</div>
         </td>
     </tr>
 </table>

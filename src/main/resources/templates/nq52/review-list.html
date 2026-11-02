@@ -362,8 +362,8 @@
                 </svg>
                 <span>Đang xem tại:</span>
                 <span class="nq52-campus-current-btn">
-                    <span th:if="${currentViewingCampus != null}" th:text="'🏫 ' + ${currentViewingCampus.name}">🏫 Điểm trường chính</span>
-                    <span th:if="${currentViewingCampus == null}">🏛️ Toàn trường (Tất cả 3 điểm trường)</span>
+                    <span th:if="${currentViewingCampus != null}" th:text="${currentViewingCampus.name}">Điểm trường chính</span>
+                    <span th:if="${currentViewingCampus == null}">Toàn trường (Tất cả 3 điểm trường)</span>
                 </span>
             </div>
             <div class="nq52-campus-nav">
@@ -371,13 +371,13 @@
                 <a th:href="@{/nq52/reviews(status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
                    class="nq52-campus-btn" th:classappend="${selectedCampusId == null ? 'active' : ''}"
                    title="Xem tất cả hồ sơ toàn trường">
-                    🏛️ Tất cả điểm trường
+                    Tất cả điểm trường
                 </a>
                 <a th:each="c : ${campuses}"
                    th:href="@{/nq52/reviews(campusId=${c.id}, status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
                    class="nq52-campus-btn" th:classappend="${selectedCampusId == c.id ? 'active' : ''}"
                    th:title="'Lọc hồ sơ tại: ' + ${c.name}">
-                    <span th:text="'🏫 ' + ${c.name}">🏫 Điểm trường chính</span>
+                    <span th:text="${c.name}">Điểm trường chính</span>
                 </a>
             </div>
         </th:block>
@@ -391,11 +391,11 @@
                 </svg>
                 <span>Đang xem Điểm trường / Phân hiệu:</span>
                 <span class="nq52-campus-current-btn" style="color: #15803d; border-color: #bbf7d0;">
-                    <span th:if="${userCampus != null}" th:text="'🏫 ' + ${userCampus.name}">🏫 Điểm trường chính</span>
+                    <span th:if="${userCampus != null}" th:text="${userCampus.name}">Điểm trường chính</span>
                     <span th:if="${userCampus == null}">Chưa gán điểm trường</span>
                 </span>
                 <span class="badge" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 8px;"
-                      th:if="${userDept != null}" th:text="'📚 Tổ ' + ${userDept.name}">📚 Tổ Toán học</span>
+                      th:if="${userDept != null}" th:text="'Tổ ' + ${userDept.name}">Tổ Toán học</span>
             </div>
             <div style="font-size: 12.5px; color: #64748b;">
                 <i class="fas fa-shield-alt" style="color: #16a34a;"></i> Quyền Tổ trưởng: Chỉ xét duyệt giáo viên cùng Tổ môn & Điểm trường này.
@@ -718,7 +718,7 @@
                                     <div style="display: inline-flex; align-items: center; gap: 4px;">
                                         <span th:if="${eval.user != null and eval.user.campus != null}"
                                               class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500;">
-                                            🏫 <span th:text="${eval.user.campus.name}">Điểm trường chính</span>
+                                            <span th:text="${eval.user.campus.name}">Điểm trường chính</span>
                                         </span>
                                     </div>
                                 </div>
@@ -760,12 +760,14 @@
                                     <span th:if="${eval.bghClassification != null}" 
                                           style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 4px; font-weight: 700;" 
                                           title="Đã được Hội đồng thi đua khen thưởng (BGH) duyệt chính thức">
-                                        <span>✓ BGH duyệt</span>
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        <span>BGH duyệt</span>
                                     </span>
                                     <span th:if="${eval.bghClassification == null and eval.reviewer != null}" 
                                           style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #15803d; background: #dcfce7; border: 1px solid #bbf7d0; padding: 2px 7px; border-radius: 4px; font-weight: 600;" 
                                           th:title="'Duyệt bởi: ' + ${eval.reviewer.fullName}">
-                                        <span>✓ Tổ duyệt</span>
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        <span>Tổ duyệt</span>
                                     </span>
                                     <span th:if="${eval.bghClassification == null and eval.reviewer == null}" 
                                           style="font-size: 11px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 4px; font-weight: 500;">

@@ -42,19 +42,22 @@ public class Nq52EvaluationService {
     private final ObjectMapper objectMapper;
     private final Nq52DocxExportService docxExportService;
     private final AppProperties appProperties;
+    private final com.school.lessonplan.nq52.signature.Nq52DigitalSignatureRepository signatureRepository;
 
     public Nq52EvaluationService(Nq52EvaluationRepository evaluationRepository,
                                  DepartmentRepository departmentRepository,
                                  UserRepository userRepository,
                                  ObjectMapper objectMapper,
                                  Nq52DocxExportService docxExportService,
-                                 AppProperties appProperties) {
+                                 AppProperties appProperties,
+                                 com.school.lessonplan.nq52.signature.Nq52DigitalSignatureRepository signatureRepository) {
         this.evaluationRepository = evaluationRepository;
         this.departmentRepository = departmentRepository;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
         this.docxExportService = docxExportService;
         this.appProperties = appProperties;
+        this.signatureRepository = signatureRepository;
         initStorageDirectories();
     }
 
@@ -701,7 +704,9 @@ public class Nq52EvaluationService {
         Nq52Evaluation eval = getEvaluationForView(id, currentUser);
         Nq52EvaluationForm form = populateForm(eval);
 
-        byte[] docxBytes = docxExportService.generateM03Docx(eval, form);
+        List<com.school.lessonplan.nq52.signature.Nq52DigitalSignature> signatures =
+                signatureRepository.findByDocumentTypeAndDocumentIdOrderBySignedAtAsc("EVALUATION", id);
+        byte[] docxBytes = docxExportService.generateM03Docx(eval, form, signatures);
 
         String cleanName = removeAccents(eval.getTeacherNameSnapshot()).replaceAll("[^a-zA-Z0-9_]", "_");
         String filename = "Phieu_Danh_Gia_NQ52_Thang_" + eval.getEvaluationMonth() + "_" + eval.getEvaluationYear() + "_" + cleanName + ".docx";
@@ -738,30 +743,11 @@ public class Nq52EvaluationService {
     /**
      * Lấy dữ liệu file đã xuất lưu trong CSDL hoặc đọc từ file vật lý
      */
-    @Transactional(readOnly = true)
     public byte[] getExportedFileData(Long id, User currentUser) {
         Nq52Evaluation eval = getEvaluationForView(id, currentUser);
-        if (eval.getExportedFileData() != null && eval.getExportedFileData().length > 0) {
-            return eval.getExportedFileData();
-        }
-        // Thử đọc từ đĩa nếu có filePath
-        if (eval.getExportedFilePath() != null && appProperties != null && appProperties.getStorage() != null) {
-            try {
-                Path rootPath = Paths.get(appProperties.getStorage().getRoot()).toAbsolutePath().normalize();
-                Path targetPath = rootPath.resolve(eval.getExportedFilePath());
-                if (Files.exists(targetPath)) {
-                    return Files.readAllBytes(targetPath);
-                }
-                // Hỗ trợ ngược file cũ lưu ở rootPath
-                Path legacyPath = rootPath.resolve(Paths.get(eval.getExportedFilePath()).getFileName().toString());
-                if (Files.exists(legacyPath)) {
-                    return Files.readAllBytes(legacyPath);
-                }
-            } catch (Exception e) {
-                log.error("Không thể đọc file từ đĩa: {}", eval.getExportedFilePath(), e);
-            }
-        }
-        throw new IllegalStateException("Phiếu này chưa được xuất file hoặc file chưa được lưu trong cơ sở dữ liệu.");
+        // Luôn làm mới file Word kèm đầy đủ con dấu chữ ký số mới nhất
+        eval = exportAndSaveDocx(id, currentUser);
+        return eval.getExportedFileData();
     }
 
     private String removeAccents(String text) {

@@ -133,6 +133,27 @@ app:
     email: ${INITIAL_ADMIN_EMAIL:admin@school.edu.vn}
     password: ${INITIAL_ADMIN_PASSWORD:Admin@123456}
 
+  signature:
+    mode: ${SIGNATURE_MODE:REAL}
+    vnpt-smartca:
+      enabled: true
+      base-url: ${VNPT_SMARTCA_URL:https://rmgateway.vnptit.vn/sca/sp769}
+      client-id: ${VNPT_CLIENT_ID:school_nvl_vnpt}
+      client-secret: ${VNPT_CLIENT_SECRET:smartca_sec_2026}
+      timeout-seconds: 15
+    viettel-cloud-ca:
+      enabled: true
+      base-url: ${VIETTEL_CA_URL:https://remotesigning.viettel.vn}
+      client-id: ${VIETTEL_CLIENT_ID:school_nvl_viettel}
+      client-secret: ${VIETTEL_CLIENT_SECRET:viettel_sec_2026}
+      timeout-seconds: 15
+    vneid:
+      enabled: true
+      base-url: ${VNEID_CA_URL:https://dvc.dancuquocgia.gov.vn}
+      client-id: ${VNEID_CLIENT_ID:school_nvl_vneid}
+      client-secret: ${VNEID_CLIENT_SECRET:vneid_sec_2026}
+      timeout-seconds: 15
+
 ai:
   review:
     min-chars: 100

@@ -29,15 +29,18 @@ public class Nq52WorkResultController {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final CampusRepository campusRepository;
+    private final com.school.lessonplan.nq52.signature.Nq52SignatureService signatureService;
 
     public Nq52WorkResultController(Nq52WorkResultService workResultService,
                                     UserRepository userRepository,
                                     DepartmentRepository departmentRepository,
-                                    CampusRepository campusRepository) {
+                                    CampusRepository campusRepository,
+                                    com.school.lessonplan.nq52.signature.Nq52SignatureService signatureService) {
         this.workResultService = workResultService;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
         this.campusRepository = campusRepository;
+        this.signatureService = signatureService;
     }
 
     /**
@@ -193,6 +196,15 @@ public class Nq52WorkResultController {
         model.addAttribute("canEdit", canEdit);
         model.addAttribute("canReview", canReview);
         model.addAttribute("isReviewer", workResultService.isReviewer(user));
+        model.addAttribute("isAdmin", workResultService.isAdmin(user));
+
+        List<com.school.lessonplan.nq52.signature.dto.SignatureItemDto> signatures = signatureService.getSignaturesForDocument("WORK_RESULT", id);
+        model.addAttribute("signatures", signatures);
+        model.addAttribute("sigTeacher", getSigByRole(signatures, "TEACHER"));
+        model.addAttribute("sigDeptLeader", getSigByRole(signatures, "DEPT_LEADER"));
+        model.addAttribute("sigPrincipal", getSigByRole(signatures, "PRINCIPAL"));
+        model.addAttribute("docType", "WORK_RESULT");
+        model.addAttribute("docId", id);
 
         return "nq52/work-result-form";
     }
@@ -243,6 +255,7 @@ public class Nq52WorkResultController {
         try {
             if ("REJECT".equalsIgnoreCase(action)) {
                 workResultService.rejectWorkResult(id, reviewerNotes, user);
+                signatureService.revokeSignatures("WORK_RESULT", id, reviewerNotes, user);
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Đã trả lại bảng tự đánh giá để giáo viên bổ sung, chỉnh sửa.");
             } else {
@@ -314,7 +327,24 @@ public class Nq52WorkResultController {
         model.addAttribute("wr", wr);
         model.addAttribute("form", form);
 
+        List<com.school.lessonplan.nq52.signature.dto.SignatureItemDto> signatures = signatureService.getSignaturesForDocument("WORK_RESULT", id);
+        model.addAttribute("signatures", signatures);
+        model.addAttribute("sigTeacher", getSigByRole(signatures, "TEACHER"));
+        model.addAttribute("sigDeptLeader", getSigByRole(signatures, "DEPT_LEADER"));
+        model.addAttribute("sigPrincipal", getSigByRole(signatures, "PRINCIPAL"));
+        model.addAttribute("docType", "WORK_RESULT");
+        model.addAttribute("docId", id);
+
         return "nq52/work-result-print";
+    }
+
+    private com.school.lessonplan.nq52.signature.dto.SignatureItemDto getSigByRole(
+            List<com.school.lessonplan.nq52.signature.dto.SignatureItemDto> list, String role) {
+        if (list == null) return null;
+        return list.stream()
+                .filter(s -> role.equalsIgnoreCase(s.getSigningRole()) && s.isValid())
+                .reduce((first, second) -> second)
+                .orElse(null);
     }
 
     private User getUser(CurrentUser currentUser) {

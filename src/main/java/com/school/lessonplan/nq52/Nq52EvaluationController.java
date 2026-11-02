@@ -31,15 +31,18 @@ public class Nq52EvaluationController {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final CampusRepository campusRepository;
+    private final com.school.lessonplan.nq52.signature.Nq52SignatureService signatureService;
 
     public Nq52EvaluationController(Nq52EvaluationService evaluationService,
                                     UserRepository userRepository,
                                     DepartmentRepository departmentRepository,
-                                    CampusRepository campusRepository) {
+                                    CampusRepository campusRepository,
+                                    com.school.lessonplan.nq52.signature.Nq52SignatureService signatureService) {
         this.evaluationService = evaluationService;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
         this.campusRepository = campusRepository;
+        this.signatureService = signatureService;
     }
 
     /**
@@ -128,6 +131,14 @@ public class Nq52EvaluationController {
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("isDeptLeader", isDeptLeader);
         model.addAttribute("isReviewer", evaluationService.isReviewer(user));
+
+        List<com.school.lessonplan.nq52.signature.dto.SignatureItemDto> signatures = signatureService.getSignaturesForDocument("EVALUATION", id);
+        model.addAttribute("signatures", signatures);
+        model.addAttribute("sigTeacher", getSigByRole(signatures, "TEACHER"));
+        model.addAttribute("sigDeptLeader", getSigByRole(signatures, "DEPT_LEADER"));
+        model.addAttribute("sigPrincipal", getSigByRole(signatures, "PRINCIPAL"));
+        model.addAttribute("docType", "EVALUATION");
+        model.addAttribute("docId", id);
 
         return "nq52/evaluation-form";
     }
@@ -358,7 +369,25 @@ public class Nq52EvaluationController {
 
         model.addAttribute("eval", eval);
         model.addAttribute("form", form);
+
+        List<com.school.lessonplan.nq52.signature.dto.SignatureItemDto> signatures = signatureService.getSignaturesForDocument("EVALUATION", id);
+        model.addAttribute("signatures", signatures);
+        model.addAttribute("sigTeacher", getSigByRole(signatures, "TEACHER"));
+        model.addAttribute("sigDeptLeader", getSigByRole(signatures, "DEPT_LEADER"));
+        model.addAttribute("sigPrincipal", getSigByRole(signatures, "PRINCIPAL"));
+        model.addAttribute("docType", "EVALUATION");
+        model.addAttribute("docId", id);
+
         return "nq52/evaluation-print";
+    }
+
+    private com.school.lessonplan.nq52.signature.dto.SignatureItemDto getSigByRole(
+            List<com.school.lessonplan.nq52.signature.dto.SignatureItemDto> list, String role) {
+        if (list == null) return null;
+        return list.stream()
+                .filter(s -> role.equalsIgnoreCase(s.getSigningRole()) && s.isValid())
+                .reduce((first, second) -> second)
+                .orElse(null);
     }
 
     private User getUser(CurrentUser currentUser) {

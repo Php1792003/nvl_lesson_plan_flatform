@@ -430,8 +430,8 @@
                 </svg>
                 <span>Đang xem Điểm trường / Phân hiệu:</span>
                 <span class="nq52-campus-current-btn">
-                    <span th:if="${currentViewingCampus != null}" th:text="'🏫 ' + ${currentViewingCampus.name}">🏫 Điểm trường chính</span>
-                    <span th:if="${currentViewingCampus == null}">🏛️ Toàn trường (Tất cả điểm trường)</span>
+                    <span th:if="${currentViewingCampus != null}" th:text="${currentViewingCampus.name}">Điểm trường chính</span>
+                    <span th:if="${currentViewingCampus == null}">Toàn trường (Tất cả điểm trường)</span>
                 </span>
             </div>
             <div class="nq52-campus-nav">
@@ -439,13 +439,13 @@
                 <a th:href="@{/nq52/work-results(tab=${activeTab}, status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
                    class="nq52-campus-btn" th:classappend="${selectedCampusId == null ? 'active' : ''}"
                    title="Xem tất cả kết quả toàn trường">
-                    🏛️ Tất cả điểm trường
+                    Tất cả điểm trường
                 </a>
                 <a th:each="c : ${campuses}"
                    th:href="@{/nq52/work-results(tab=${activeTab}, campusId=${c.id}, status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
                    class="nq52-campus-btn" th:classappend="${selectedCampusId == c.id ? 'active' : ''}"
                    th:title="'Lọc kết quả tại: ' + ${c.name}">
-                    <span th:text="'🏫 ' + ${c.name}">🏫 Điểm trường chính</span>
+                    <span th:text="${c.name}">Điểm trường chính</span>
                 </a>
             </div>
         </th:block>
@@ -459,11 +459,11 @@
                 </svg>
                 <span>Đang xem Điểm trường / Phân hiệu:</span>
                 <span class="nq52-campus-current-btn" style="color: #15803d; border-color: #bbf7d0;">
-                    <span th:if="${userCampus != null}" th:text="'🏫 ' + ${userCampus.name}">🏫 Điểm trường chính</span>
+                    <span th:if="${userCampus != null}" th:text="${userCampus.name}">Điểm trường chính</span>
                     <span th:if="${userCampus == null}">Chưa gán điểm trường</span>
                 </span>
                 <span class="badge" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 8px;"
-                      th:if="${userDept != null}" th:text="'📚 Tổ ' + ${userDept.name}">📚 Tổ Toán học</span>
+                      th:if="${userDept != null}" th:text="'Tổ ' + ${userDept.name}">Tổ Toán học</span>
             </div>
             <div style="font-size: 12.5px; color: #64748b;">
                 <i class="fas fa-shield-alt" style="color: #16a34a;"></i> Quyền Tổ trưởng: Chỉ xét duyệt giáo viên cùng Tổ môn & Điểm trường này.
@@ -625,7 +625,9 @@
                     <tbody>
                         <tr th:if="${#lists.isEmpty(reviewWorkResults)}">
                             <td colspan="10" style="text-align: center; padding: 40px 20px; color: #64748b;">
-                                <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
+                                <div style="margin-bottom: 8px; color: #94a3b8;">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                </div>
                                 <div style="font-weight: 600; font-size: 14px;">Không tìm thấy bảng tự đánh giá kết quả nào cần xử lý.</div>
                                 <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">Tất cả hồ sơ trong phạm vi phân công đã được xử lý hoặc chưa có giáo viên nộp.</div>
                             </td>
@@ -643,8 +645,9 @@
                                     Chờ duyệt
                                 </span>
                                 <span th:if="${item.status.name() == 'REVIEWED'}" class="badge"
-                                      style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
-                                    ✓ Đã duyệt
+                                      style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    Đã duyệt
                                 </span>
                             </td>
 
@@ -835,7 +838,9 @@
                     <tbody>
                         <tr th:if="${#lists.isEmpty(workResults)}">
                             <td colspan="9" style="text-align: center; padding: 40px 20px; color: #64748b;">
-                                <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
+                                <div style="margin-bottom: 8px; color: #94a3b8;">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </div>
                                 <div style="font-weight: 600; font-size: 14px;">Chưa có bảng tự đánh giá kết quả nào trong kỳ này.</div>
                                 <div style="margin-top: 10px;">
                                     <button type="button" onclick="openCreateWorkResultModal()"
@@ -866,8 +871,9 @@
                                     Chờ duyệt
                                 </span>
                                 <span th:if="${item.status.name() == 'REVIEWED'}" class="badge"
-                                      style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
-                                    ✓ Đã duyệt
+                                      style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    Đã duyệt
                                 </span>
                             </td>
 

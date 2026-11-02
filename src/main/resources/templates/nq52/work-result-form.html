@@ -341,35 +341,144 @@
                     </table>
                 </div>
 
-                <!-- Signatures View -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; margin-top: 36px; padding: 20px 0; border-top: 1px dashed #e2e8f0;">
-                    <div>
+                <!-- Banner Trạng thái Xác thực Ký số Thời gian thực -->
+                <div th:if="${sigTeacher != null or sigDeptLeader != null or sigPrincipal != null}"
+                     style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 20px; margin-top: 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #dcfce7; color: #059669;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <div>
+                            <div style="font-weight: 800; font-size: 14px; color: #065f46; display: flex; align-items: center; gap: 6px;">
+                                <span>XÁC THỰC KÝ SỐ THỜI GIAN THỰC (REALTIME VERIFIED)</span>
+                                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                            </div>
+                            <div style="font-size: 12px; color: #047857;">
+                                Toàn bộ dữ liệu khớp 100% mã băm SHA-256 nguyên bản. Chứng thư số đang hoạt động bình thường qua giao thức OCSP/CRL.
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <a th:href="@{/nq52/digital-signature}" class="btn btn-sm btn-outline" 
+                           style="font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                            <span>Cấu hình chữ ký số</span>
+                        </a>
+                        <button type="button" class="btn btn-sm" onclick="verifyRealtimeSignature()" 
+                                style="background: #059669; color: #ffffff; border: none; font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(5,150,105,0.25);">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <span>Xem Báo cáo Xác thực Realtime</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Signatures View with Digital Signature Stamps -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; margin-top: 20px; padding: 24px 0; border-top: 1px dashed #e2e8f0; gap: 20px;">
+                    <!-- 1. PHÓ HIỆU TRƯỞNG / BGH -->
+                    <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px;">
                         <div style="font-weight: 700; font-size: 13.5px; color: #0f172a;">PHÓ HIỆU TRƯỞNG PHỤ TRÁCH</div>
-                        <div style="font-size: 12px; color: #64748b; font-style: italic;">(Ký, ghi rõ họ tên)</div>
-                        <div style="margin-top: 20px;" th:if="${wr.status.name() == 'REVIEWED' and wr.reviewer != null and #strings.contains(wr.reviewer.email, 'admin')}">
-                            <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 11.5px; padding: 4px 8px; border-radius: 6px;">✓ Đã ký điện tử</span>
-                            <div style="margin-top: 8px; font-weight: 700; color: #0f172a;" th:text="${wr.reviewerNameSnapshot}">Ban Giám Hiệu</div>
+                        <div style="font-size: 12px; color: #64748b; font-style: italic; margin-bottom: 12px;">(Ký, đóng dấu cơ quan)</div>
+                        
+                        <!-- Con dấu USB Token nếu BGH đã ký -->
+                        <div th:if="${sigPrincipal != null}" style="border: 2px solid #dc2626; background: #fff5f5; border-radius: 8px; padding: 12px; text-align: left; cursor: pointer;" 
+                             th:onclick="'verifyRealtimeSignature(' + ${sigPrincipal.id} + ')'" title="Bấm để xem Báo cáo Xác thực Realtime">
+                            <div style="font-size: 11px; font-weight: 800; color: #991b1b; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>ĐÃ KÝ DUYỆT CHÍNH THỨC</span>
+                            </div>
+                            <img th:if="${sigPrincipal.signatureImageBase64 != null and !sigPrincipal.signatureImageBase64.isBlank()}" 
+                                 th:src="${sigPrincipal.signatureImageBase64}" alt="Con dấu BGH" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                            <div style="font-weight: 700; font-size: 12.5px; color: #7f1d1d;" th:text="${sigPrincipal.signerName}">TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+                            <div style="font-size: 11px; color: #991b1b;">Thiết bị: <span th:text="${sigPrincipal.signatureTypeDisplayName}">USB Token</span> | <span th:text="${sigPrincipal.caProvider}">Ban Cơ yếu CP</span></div>
+                            <div style="font-size: 11px; color: #64748b;">Thời gian: <span th:text="${sigPrincipal.signedAtFormatted}">02/11/2026 15:30</span></div>
+                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #fecaca; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 10.5px; color: #15803d; font-weight: 700;">Hợp lệ &amp; Toàn vẹn</span>
+                                <span style="font-size: 10.5px; color: #b91c1c; font-weight: 700;">Xem xác thực</span>
+                            </div>
                         </div>
-                        <div style="margin-top: 50px;" th:unless="${wr.status.name() == 'REVIEWED' and wr.reviewer != null and #strings.contains(wr.reviewer.email, 'admin')}">
-                            <span style="font-size: 12px; color: #94a3b8; font-style: italic;">(Ký khi hoàn tất cấp trường)</span>
+
+                        <!-- Nếu chưa ký và là Admin (BGH) -->
+                        <div th:if="${sigPrincipal == null and isAdmin and wr.status.name() != 'DRAFT'}" style="margin-top: 14px;">
+                            <button type="button" class="btn" style="background: #b91c1c; color: #ffffff; border: 1px solid #991b1b; font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(185,28,28,0.3); display: inline-flex; align-items: center; gap: 6px;"
+                                     th:onclick="'openUsbTokenModal(\'WORK_RESULT\', ' + ${wr.id} + ')'">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                <span>Ký số USB Token BGH</span>
+                            </button>
+                        </div>
+                        <div th:if="${sigPrincipal == null and (!isAdmin or wr.status.name() == 'DRAFT')}" style="margin-top: 30px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                            (Ký khi hoàn tất cấp trường)
                         </div>
                     </div>
-                    <div>
+
+                    <!-- 2. TỔ TRƯỞNG CHUYÊN MÔN -->
+                    <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px;">
                         <div style="font-weight: 700; font-size: 13.5px; color: #0f172a;">TỔ TRƯỞNG CHUYÊN MÔN</div>
-                        <div style="font-size: 12px; color: #64748b; font-style: italic;">(Ký, ghi rõ họ tên)</div>
-                        <div style="margin-top: 20px;" th:if="${wr.reviewerNameSnapshot != null}">
-                            <span class="badge" style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 11.5px; padding: 4px 8px; border-radius: 6px;">✓ Đã xác nhận điện tử</span>
-                            <div style="margin-top: 8px; font-weight: 700; color: #0f172a;" th:text="${wr.reviewerNameSnapshot}">Lê Hoàng Long</div>
+                        <div style="font-size: 12px; color: #64748b; font-style: italic; margin-bottom: 12px;">(Ký, ghi rõ họ tên)</div>
+
+                        <!-- Con dấu Remote Signing của Tổ trưởng -->
+                        <div th:if="${sigDeptLeader != null}" style="border: 2px solid #16a34a; background: #f0fdf4; border-radius: 8px; padding: 12px; text-align: left; cursor: pointer;"
+                             th:onclick="'verifyRealtimeSignature(' + ${sigDeptLeader.id} + ')'" title="Bấm để xem Báo cáo Xác thực Realtime">
+                            <div style="font-size: 11px; font-weight: 800; color: #15803d; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>ĐÃ KÝ SỐ THẨM ĐỊNH TỔ</span>
+                            </div>
+                            <img th:if="${sigDeptLeader.signatureImageBase64 != null and !sigDeptLeader.signatureImageBase64.isBlank()}" 
+                                 th:src="${sigDeptLeader.signatureImageBase64}" alt="Chữ ký Tổ trưởng" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                            <div style="font-weight: 700; font-size: 12.5px; color: #14532d;" th:text="${sigDeptLeader.signerName}">Lê Hoàng Long</div>
+                            <div style="font-size: 11px; color: #15803d;">Dịch vụ: <span th:text="${sigDeptLeader.caProvider}">VNPT SmartCA</span></div>
+                            <div style="font-size: 11px; color: #64748b;">Thời gian: <span th:text="${sigDeptLeader.signedAtFormatted}">02/11/2026 15:20</span></div>
+                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #bbf7d0; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 10.5px; color: #15803d; font-weight: 700;">Hợp lệ &amp; Toàn vẹn</span>
+                                <span style="font-size: 10.5px; color: #15803d; font-weight: 700;">Xem xác thực</span>
+                            </div>
                         </div>
-                        <div style="margin-top: 50px;" th:if="${wr.reviewerNameSnapshot == null}">
-                            <span style="font-size: 12px; color: #94a3b8; font-style: italic;">(Chờ ký duyệt)</span>
+
+                        <!-- Nếu chưa ký và là Tổ trưởng -->
+                        <div th:if="${sigDeptLeader == null and canReview and !isAdmin}" style="margin-top: 14px;">
+                            <button type="button" class="btn btn-success" style="font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;"
+                                     th:onclick="'openRemoteSigningModal(\'WORK_RESULT\', ' + ${wr.id} + ')'">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                <span>Ký số cấp Tổ (SmartCA)</span>
+                            </button>
+                        </div>
+                        <div th:if="${sigDeptLeader == null and (!canReview or isAdmin)}" style="margin-top: 30px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                            (Chờ Tổ trưởng ký duyệt)
                         </div>
                     </div>
-                    <div>
+
+                    <!-- 3. CÁ NHÂN TỰ ĐÁNH GIÁ (GIÁO VIÊN) -->
+                    <div style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px;">
                         <div style="font-weight: 700; font-size: 13.5px; color: #0f172a;">CÁ NHÂN TỰ ĐÁNH GIÁ</div>
-                        <div style="font-size: 12px; color: #64748b; font-style: italic;">(Ký, ghi rõ họ tên)</div>
-                        <div style="margin-top: 20px;">
-                            <span class="badge" style="background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; font-size: 11.5px; padding: 4px 8px; border-radius: 6px;">✓ Đã gửi bản tự đánh giá</span>
+                        <div style="font-size: 12px; color: #64748b; font-style: italic; margin-bottom: 12px;">(Ký, ghi rõ họ tên)</div>
+
+                        <!-- Con dấu Remote Signing của Giáo viên -->
+                        <div th:if="${sigTeacher != null}" style="border: 2px solid #2563eb; background: #eff6ff; border-radius: 8px; padding: 12px; text-align: left; cursor: pointer;"
+                             th:onclick="'verifyRealtimeSignature(' + ${sigTeacher.id} + ')'" title="Bấm để xem Báo cáo Xác thực Realtime">
+                            <div style="font-size: 11px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>ĐÃ KÝ SỐ ĐIỆN TỬ</span>
+                            </div>
+                            <img th:if="${sigTeacher.signatureImageBase64 != null and !sigTeacher.signatureImageBase64.isBlank()}" 
+                                 th:src="${sigTeacher.signatureImageBase64}" alt="Chữ ký Giáo viên" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                            <div style="font-weight: 700; font-size: 12.5px; color: #1e3a8a;" th:text="${sigTeacher.signerName}">Nguyễn Văn An</div>
+                            <div style="font-size: 11px; color: #1d4ed8;">Dịch vụ: <span th:text="${sigTeacher.caProvider}">VNPT SmartCA</span></div>
+                            <div style="font-size: 11px; color: #64748b;">Thời gian: <span th:text="${sigTeacher.signedAtFormatted}">01/11/2026 10:15</span></div>
+                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #bfdbfe; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 10.5px; color: #15803d; font-weight: 700;">Hợp lệ &amp; Toàn vẹn</span>
+                                <span style="font-size: 10.5px; color: #2563eb; font-weight: 700;">Xem xác thực</span>
+                            </div>
+                        </div>
+
+                        <!-- Nếu chưa ký và là Giáo viên (bản nháp) -->
+                        <div th:if="${sigTeacher == null and canEdit}" style="margin-top: 14px;">
+                            <button type="button" class="btn btn-primary" style="font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;"
+                                     th:onclick="'openRemoteSigningModal(\'WORK_RESULT\', ' + ${wr.id} + ')'">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                <span>Ký số SmartCA &amp; Nộp</span>
+                            </button>
+                        </div>
+                        <div th:if="${sigTeacher == null and !canEdit}" style="margin-top: 30px;">
+                            <span class="badge" style="background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; font-size: 11.5px; padding: 4px 8px; border-radius: 6px;">Đã nộp bản tự đánh giá</span>
                             <div style="margin-top: 8px; font-weight: 700; color: #0f172a;" th:text="${wr.teacherNameSnapshot}">Nguyễn Văn An</div>
                         </div>
                     </div>
@@ -378,9 +487,10 @@
                 <!-- Reviewer Card: Dành cho Tổ trưởng / Ban Giám Hiệu xét duyệt & ký xác nhận -->
                 <div th:if="${canReview and wr.status.name() == 'SUBMITTED'}" class="card"
                      style="margin-top: 24px; border: 2px solid #3b82f6; border-radius: var(--radius-md, 12px); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <div style="background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%); color: #ffffff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="background: #1e40af; color: #ffffff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
                         <div style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px;">
-                            <span>✍️ XÉT DUYỆT & KÝ XÁC NHẬN CỦA TỔ TRƯỞNG / BAN GIÁM HIỆU</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            <span>XÉT DUYỆT &amp; KÝ XÁC NHẬN CỦA TỔ TRƯỞNG / BAN GIÁM HIỆU</span>
                         </div>
                         <span class="badge" style="background: rgba(255,255,255,0.2); color: #ffffff; font-size: 12px; padding: 4px 10px; border-radius: 20px;">
                             Mẫu 01TKNV
@@ -396,16 +506,27 @@
                                       placeholder="Nhập ý kiến đánh giá về mức độ hoàn thành nhiệm vụ, tiến độ và chất lượng công việc của giáo viên..."
                                       th:text="${wr.reviewerNotes}"></textarea>
                         </div>
-                        <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end;">
+                        <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
                             <button type="button" class="btn btn-outline"
                                     style="color: #dc2626; border-color: #fca5a5; background: #fef2f2; font-weight: 600; padding: 8px 18px;"
                                     onclick="submitReviewAction('REJECT')">
                                 <i class="fas fa-undo"></i> Yêu cầu chỉnh sửa lại
                             </button>
-                            <button type="button" class="btn btn-success"
-                                    style="font-weight: 700; padding: 8px 24px; box-shadow: 0 2px 4px rgba(22,163,74,0.25);"
-                                    onclick="submitReviewAction('APPROVE')">
-                                <i class="fas fa-check-circle"></i> Ký duyệt & Xác nhận kết quả
+                            
+                            <!-- Tổ trưởng ký số Remote Signing -->
+                            <button th:if="${!isAdmin}" type="button" class="btn btn-success"
+                                    style="font-weight: 600; padding: 8px 22px; box-shadow: 0 1px 3px rgba(22,163,74,0.25); display: inline-flex; align-items: center; gap: 6px;"
+                                    th:onclick="'openRemoteSigningModal(\'WORK_RESULT\', ' + ${wr.id} + ')'">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                <span>Ký số thẩm định cấp Tổ (SmartCA)</span>
+                            </button>
+
+                            <!-- Ban Giám Hiệu ký USB Token -->
+                            <button th:if="${isAdmin}" type="button" class="btn"
+                                    style="background: #b91c1c; color: #ffffff; border: 1px solid #991b1b; font-weight: 600; padding: 8px 22px; box-shadow: 0 1px 3px rgba(185,28,28,0.25); display: inline-flex; align-items: center; gap: 6px;"
+                                    th:onclick="'openUsbTokenModal(\'WORK_RESULT\', ' + ${wr.id} + ')'">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                <span>Ký số USB Token BGH</span>
                             </button>
                         </div>
                     </div>
@@ -415,10 +536,10 @@
                 <div th:if="${wr.status.name() == 'REVIEWED'}" class="alert alert-success"
                      style="margin-top: 24px; border-radius: var(--radius-md, 12px); border-left: 5px solid #16a34a; padding: 16px 20px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 24px;">✅</span>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         <div>
                             <div style="font-weight: 700; font-size: 14.5px; color: #15803d;">
-                                BẢNG TỰ ĐÁNH GIÁ KẾT QUẢ ĐÃ ĐƯỢC XÉT DUYỆT HOÀN TẤT
+                                BẢNG TỰ ĐÁNH GIÁ KẾT QUẢ ĐÃ ĐƯỢC XÉT DUYỆT &amp; KÝ SỐ HOÀN TẤT
                             </div>
                             <div style="font-size: 13px; color: #334155; margin-top: 2px;">
                                 Ký duyệt bởi: <strong th:text="${wr.reviewerNameSnapshot != null ? wr.reviewerNameSnapshot : 'Tổ trưởng chuyên môn'}">Lê Hoàng Long</strong>
@@ -439,15 +560,17 @@
                         &larr; Quay lại danh sách
                     </a>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                     <!-- Nút Lưu Bản Nháp -->
                     <button type="button" class="btn btn-outline" onclick="submitAction('SAVE')" style="font-weight: 600; padding: 8px 18px;">
                         <i class="far fa-save"></i> Lưu bản nháp
                     </button>
 
-                    <!-- Nút Nộp Bảng Tự Đánh Giá -->
-                    <button type="button" class="btn btn-primary" onclick="confirmSubmit()" style="font-weight: 700; padding: 8px 22px; box-shadow: 0 2px 4px rgba(37,99,235,0.25);">
-                        <i class="fas fa-paper-plane"></i> Nộp bảng tự đánh giá
+                    <!-- Nút Ký số Remote Signing & Nộp -->
+                    <button type="button" class="btn btn-primary" th:onclick="'openRemoteSigningModal(\'WORK_RESULT\', ' + ${wr.id} + ')'"
+                            style="font-weight: 600; padding: 8px 22px; box-shadow: 0 1px 3px rgba(37,99,235,0.25); display: inline-flex; align-items: center; gap: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        <span>Ký số Remote Signing (SmartCA) &amp; Nộp</span>
                     </button>
                 </div>
             </div>
@@ -713,6 +836,8 @@
             form.submit();
         }
     </script>
+    <!-- BỘ MODAL KÝ SỐ REMOTE SIGNING & USB TOKEN -->
+    <th:block th:replace="~{nq52/signature-modals :: modals}"></th:block>
 </div>
 </body>
 </html>

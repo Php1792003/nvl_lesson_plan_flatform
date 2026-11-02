@@ -2,6 +2,9 @@ package com.school.lessonplan.nq52;
 
 import com.school.lessonplan.nq52.dto.Nq52WorkResultForm;
 import com.school.lessonplan.nq52.dto.Nq52WorkResultTaskItem;
+import com.school.lessonplan.nq52.signature.Nq52DigitalSignature;
+import com.school.lessonplan.nq52.signature.Nq52SignatureType;
+import com.school.lessonplan.nq52.signature.Nq52SigningRole;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -10,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,6 +104,91 @@ public class Nq52ExcelExportServiceTest {
             try (FileOutputStream fos = new FileOutputStream("build/test_export.xlsx")) {
                 fos.write(bytes);
             }
+        }
+    }
+
+    @Test
+    public void testGenerateWorkResultExcelWithDigitalSignatures() throws Exception {
+        Nq52ExcelExportService service = new Nq52ExcelExportService();
+
+        Nq52WorkResult wr = new Nq52WorkResult();
+        wr.setId(10L);
+        wr.setEvaluationMonth(11);
+        wr.setEvaluationYear(2026);
+        wr.setTeacherNameSnapshot("Nguyễn Văn An");
+
+        Nq52WorkResultForm form = new Nq52WorkResultForm();
+        form.setId(10L);
+        form.setMonth(11);
+        form.setYear(2026);
+        form.setTasks(new ArrayList<>());
+
+        List<Nq52DigitalSignature> sigs = new ArrayList<>();
+
+        Nq52DigitalSignature sigTeacher = new Nq52DigitalSignature();
+        sigTeacher.setSigningRole(Nq52SigningRole.TEACHER);
+        sigTeacher.setSignerNameSnapshot("Nguyễn Văn An");
+        sigTeacher.setSignatureType(Nq52SignatureType.REMOTE_SIGNING);
+        sigTeacher.setCaProvider("VNPT_SMARTCA");
+        sigTeacher.setSignedAt(Instant.parse("2026-11-01T10:15:00Z"));
+        sigs.add(sigTeacher);
+
+        Nq52DigitalSignature sigDept = new Nq52DigitalSignature();
+        sigDept.setSigningRole(Nq52SigningRole.DEPT_LEADER);
+        sigDept.setSignerNameSnapshot("Lê Hoàng Long");
+        sigDept.setSignatureType(Nq52SignatureType.REMOTE_SIGNING);
+        sigDept.setCaProvider("VIETTEL_CLOUD_CA");
+        sigDept.setSignedAt(Instant.parse("2026-11-02T14:20:00Z"));
+        sigs.add(sigDept);
+
+        Nq52DigitalSignature sigBgh = new Nq52DigitalSignature();
+        sigBgh.setSigningRole(Nq52SigningRole.PRINCIPAL);
+        sigBgh.setSignerNameSnapshot("TRƯỜNG THCS NGUYỄN VĂN LINH");
+        sigBgh.setSignatureType(Nq52SignatureType.USB_TOKEN);
+        sigBgh.setCaProvider("BAN_CO_YEU_CHINH_PHU");
+        sigBgh.setSignedAt(Instant.parse("2026-11-02T16:00:00Z"));
+        sigs.add(sigBgh);
+
+        byte[] bytes = service.generateWorkResultExcel(wr, form, sigs);
+        assertNotNull(bytes);
+        assertTrue(bytes.length > 0);
+
+        try (Workbook wb = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
+            Sheet sheet = wb.getSheet("Mau_01TKNV");
+            assertNotNull(sheet);
+
+            // Find rows where stamps are placed (around summary row + 5)
+            // Look for signature stamps text in sheet
+            boolean foundBgh = false;
+            boolean foundDept = false;
+            boolean foundTeacher = false;
+
+            for (int r = sheet.getFirstRowNum(); r <= sheet.getLastRowNum(); r++) {
+                var row = sheet.getRow(r);
+                if (row == null) continue;
+                for (int c = 0; c <= 17; c++) {
+                    var cell = row.getCell(c);
+                    if (cell != null && cell.getCellType() == org.apache.poi.ss.usermodel.CellType.STRING) {
+                        String val = cell.getStringCellValue();
+                        if (val.contains("🏛️ ĐÃ KÝ SỐ DUYỆT BGH")) {
+                            foundBgh = true;
+                            assertTrue(c >= 1 && c <= 4, "BGH stamp header must be in cols 1-4, found at col " + c);
+                        }
+                        if (val.contains("✍️ ĐÃ KÝ SỐ THẨM ĐỊNH TỔ")) {
+                            foundDept = true;
+                            assertTrue(c >= 6 && c <= 10, "Dept leader stamp header must be in cols 6-10, found at col " + c);
+                        }
+                        if (val.contains("✍️ ĐÃ KÝ SỐ ĐIỆN TỬ")) {
+                            foundTeacher = true;
+                            assertTrue(c >= 13 && c <= 17, "Teacher stamp header must be in cols 13-17, found at col " + c);
+                        }
+                    }
+                }
+            }
+
+            assertTrue(foundBgh, "BGH stamp should be present in Excel export");
+            assertTrue(foundDept, "Dept leader stamp should be present in Excel export");
+            assertTrue(foundTeacher, "Teacher stamp should be present in Excel export");
         }
     }
 }

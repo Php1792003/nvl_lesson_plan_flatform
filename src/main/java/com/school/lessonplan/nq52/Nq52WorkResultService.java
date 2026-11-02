@@ -34,15 +34,18 @@ public class Nq52WorkResultService {
     private final ObjectMapper objectMapper;
     private final Nq52ExcelExportService excelExportService;
     private final AppProperties appProperties;
+    private final com.school.lessonplan.nq52.signature.Nq52DigitalSignatureRepository signatureRepository;
 
     public Nq52WorkResultService(Nq52WorkResultRepository workResultRepository,
                                  ObjectMapper objectMapper,
                                  Nq52ExcelExportService excelExportService,
-                                 AppProperties appProperties) {
+                                 AppProperties appProperties,
+                                 com.school.lessonplan.nq52.signature.Nq52DigitalSignatureRepository signatureRepository) {
         this.workResultRepository = workResultRepository;
         this.objectMapper = objectMapper;
         this.excelExportService = excelExportService;
         this.appProperties = appProperties;
+        this.signatureRepository = signatureRepository;
         initStorageDirectory();
     }
 
@@ -268,7 +271,9 @@ public class Nq52WorkResultService {
         ensureDefaultTasksIfEmpty(wr);
         Nq52WorkResultForm form = populateForm(wr);
 
-        byte[] excelBytes = excelExportService.generateWorkResultExcel(wr, form);
+        List<com.school.lessonplan.nq52.signature.Nq52DigitalSignature> signatures =
+                signatureRepository.findByDocumentTypeAndDocumentIdOrderBySignedAtAsc("WORK_RESULT", id);
+        byte[] excelBytes = excelExportService.generateWorkResultExcel(wr, form, signatures);
 
         String cleanName = removeAccents(wr.getTeacherNameSnapshot()).replaceAll("[^a-zA-Z0-9_]", "_");
         String filename = "Bang_Tu_Danh_Gia_Ket_Qua_Thang_" + wr.getEvaluationMonth() + "_" + wr.getEvaluationYear() + "_" + cleanName + ".xlsx";
@@ -300,24 +305,11 @@ public class Nq52WorkResultService {
         return workResultRepository.save(wr);
     }
 
-    @Transactional(readOnly = true)
     public byte[] getExportedFileData(Long id, User currentUser) {
         Nq52WorkResult wr = getWorkResultForView(id, currentUser);
-        if (wr.getExportedFileData() != null && wr.getExportedFileData().length > 0) {
-            return wr.getExportedFileData();
-        }
-        if (wr.getExportedFilePath() != null && appProperties != null && appProperties.getStorage() != null) {
-            try {
-                Path rootPath = Paths.get(appProperties.getStorage().getRoot()).toAbsolutePath().normalize();
-                Path targetPath = rootPath.resolve(wr.getExportedFilePath());
-                if (Files.exists(targetPath)) {
-                    return Files.readAllBytes(targetPath);
-                }
-            } catch (Exception e) {
-                log.error("Không thể đọc file Excel từ đĩa: {}", wr.getExportedFilePath(), e);
-            }
-        }
-        throw new IllegalStateException("Bảng này chưa được xuất file Excel hoặc file chưa được lưu trữ.");
+        // Luôn làm mới file kèm chữ ký số mới nhất
+        wr = exportAndSaveExcel(id, currentUser);
+        return wr.getExportedFileData();
     }
 
     public Nq52WorkResultForm populateForm(Nq52WorkResult wr) {
