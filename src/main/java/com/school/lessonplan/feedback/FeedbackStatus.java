@@ -1,10 +1,10 @@
 package com.school.lessonplan.feedback;
 
 public enum FeedbackStatus {
-    PENDING("Chờ tiếp nhận", "badge--warning"),
-    IN_PROGRESS("Đang xử lý", "badge--info"),
-    RESOLVED("Đã giải quyết", "badge--success"),
-    CLOSED("Đã đóng", "badge--secondary");
+    PENDING("Chờ tiếp nhận", "badge-warning"),
+    IN_PROGRESS("Đang xử lý", "badge-primary"),
+    RESOLVED("Đã giải quyết", "badge-success"),
+    CLOSED("Đã đóng", "badge-danger");
 
     private final String displayName;
     private final String badgeClass;

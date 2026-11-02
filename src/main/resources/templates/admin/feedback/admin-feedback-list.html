@@ -210,7 +210,8 @@
                 </div>
 
                 <!-- BGH Response Form -->
-                <form id="respondForm" method="post" action="">
+                <form id="respondForm" method="post" th:action="@{/admin/feedbacks}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <h3 style="font-size: 15px; font-weight: 700; color: var(--dark); margin: 0 0 12px;">Ý kiến xử lý của Ban Giám Hiệu</h3>
 
                     <div class="form-group" style="margin-bottom: 16px;">
@@ -235,7 +236,7 @@
     </div>
 
     <!-- Script mở/đóng modal phản hồi -->
-    <script>
+    <script th:inline="javascript">
         (function() {
             var modal = document.getElementById('respondModalOverlay');
             var btnClose = document.getElementById('btnModalClose');
@@ -268,7 +269,8 @@
             document.querySelectorAll('.btn-respond-feedback').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var id = btn.getAttribute('data-id');
-                    form.action = '/portal/admin/feedbacks/' + id + '/respond';
+                    var baseFeedbackUrl = /*[[@{/admin/feedbacks/}]]*/ '/portal/admin/feedbacks/';
+                    form.action = baseFeedbackUrl + id + '/respond';
 
                     if (modalCode) modalCode.textContent = 'Mã ý kiến: #' + id;
                     if (modalSender) modalSender.textContent = btn.getAttribute('data-sender') || '';
@@ -292,3 +294,4 @@
     </script>
 </th:block>
 </html>
+
