@@ -99,6 +99,38 @@ public class Nq52Evaluation {
     @Column(name = "reviewer_name_snapshot", length = 400)
     private String reviewerNameSnapshot;
 
+    // === Điểm đánh giá chính thức của Hội đồng thi đua, khen thưởng (Ban Giám Hiệu) ===
+    @Column(name = "bgh_score_a", precision = 5, scale = 2)
+    private BigDecimal bghScoreA;
+
+    @Column(name = "bgh_score_b", precision = 5, scale = 2)
+    private BigDecimal bghScoreB;
+
+    @Column(name = "bgh_score_c_plus", precision = 5, scale = 2)
+    private BigDecimal bghScoreCPlus;
+
+    @Column(name = "bgh_score_c_minus", precision = 5, scale = 2)
+    private BigDecimal bghScoreCMinus;
+
+    @Column(name = "bgh_total_score", precision = 5, scale = 2)
+    private BigDecimal bghTotalScore;
+
+    @Column(name = "bgh_classification", length = 100)
+    private String bghClassification;
+
+    @Column(name = "bgh_notes", length = 2000)
+    private String bghNotes;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bgh_reviewer_id")
+    private User bghReviewer;
+
+    @Column(name = "bgh_reviewer_name_snapshot", length = 400)
+    private String bghReviewerNameSnapshot;
+
+    @Column(name = "bgh_reviewed_at")
+    private Instant bghReviewedAt;
+
     @Lob
     @Column(name = "criteria_data_json", columnDefinition = "NVARCHAR(MAX)")
     private String criteriaDataJson;
@@ -230,6 +262,36 @@ public class Nq52Evaluation {
 
     public String getReviewerNameSnapshot() { return reviewerNameSnapshot; }
     public void setReviewerNameSnapshot(String reviewerNameSnapshot) { this.reviewerNameSnapshot = reviewerNameSnapshot; }
+
+    public BigDecimal getBghScoreA() { return bghScoreA; }
+    public void setBghScoreA(BigDecimal bghScoreA) { this.bghScoreA = bghScoreA; }
+
+    public BigDecimal getBghScoreB() { return bghScoreB; }
+    public void setBghScoreB(BigDecimal bghScoreB) { this.bghScoreB = bghScoreB; }
+
+    public BigDecimal getBghScoreCPlus() { return bghScoreCPlus; }
+    public void setBghScoreCPlus(BigDecimal bghScoreCPlus) { this.bghScoreCPlus = bghScoreCPlus; }
+
+    public BigDecimal getBghScoreCMinus() { return bghScoreCMinus; }
+    public void setBghScoreCMinus(BigDecimal bghScoreCMinus) { this.bghScoreCMinus = bghScoreCMinus; }
+
+    public BigDecimal getBghTotalScore() { return bghTotalScore; }
+    public void setBghTotalScore(BigDecimal bghTotalScore) { this.bghTotalScore = bghTotalScore; }
+
+    public String getBghClassification() { return bghClassification; }
+    public void setBghClassification(String bghClassification) { this.bghClassification = bghClassification; }
+
+    public String getBghNotes() { return bghNotes; }
+    public void setBghNotes(String bghNotes) { this.bghNotes = bghNotes; }
+
+    public User getBghReviewer() { return bghReviewer; }
+    public void setBghReviewer(User bghReviewer) { this.bghReviewer = bghReviewer; }
+
+    public String getBghReviewerNameSnapshot() { return bghReviewerNameSnapshot; }
+    public void setBghReviewerNameSnapshot(String bghReviewerNameSnapshot) { this.bghReviewerNameSnapshot = bghReviewerNameSnapshot; }
+
+    public Instant getBghReviewedAt() { return bghReviewedAt; }
+    public void setBghReviewedAt(Instant bghReviewedAt) { this.bghReviewedAt = bghReviewedAt; }
 
     public String getCriteriaDataJson() { return criteriaDataJson; }
     public void setCriteriaDataJson(String criteriaDataJson) { this.criteriaDataJson = criteriaDataJson; }

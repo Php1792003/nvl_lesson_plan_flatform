@@ -1,5 +1,6 @@
 package com.school.lessonplan.nq52.dto;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +36,15 @@ public class Nq52EvaluationForm {
     private String reviewerNotes;
     private String reviewerClassification;
 
-    // Hành động submit: "SAVE" (Lưu nháp), "SUBMIT" (Nộp cho Tổ trưởng), "REVIEW" (Tổ trưởng đánh giá)
+    // Dành cho Ban Giám Hiệu / Hội đồng thi đua, khen thưởng (Cấp 3)
+    private String bghSelectedB1;
+    private String bghSelectedB2;
+    private String bghSelectedB3;
+    private Map<String, Double> bghScores = new HashMap<>();
+    private String bghNotes;
+    private String bghClassification;
+
+    // Hành động submit: "SAVE" (Lưu nháp), "SUBMIT" (Nộp cho Tổ trưởng), "REVIEW" (Tổ trưởng đánh giá), "COUNCIL_REVIEW" (Hội đồng TĐ-KT đánh giá)
     private String action;
 
     public Nq52EvaluationForm() {}
@@ -96,6 +105,24 @@ public class Nq52EvaluationForm {
 
     public String getReviewerClassification() { return reviewerClassification; }
     public void setReviewerClassification(String reviewerClassification) { this.reviewerClassification = reviewerClassification; }
+
+    public String getBghSelectedB1() { return bghSelectedB1; }
+    public void setBghSelectedB1(String bghSelectedB1) { this.bghSelectedB1 = bghSelectedB1; }
+
+    public String getBghSelectedB2() { return bghSelectedB2; }
+    public void setBghSelectedB2(String bghSelectedB2) { this.bghSelectedB2 = bghSelectedB2; }
+
+    public String getBghSelectedB3() { return bghSelectedB3; }
+    public void setBghSelectedB3(String bghSelectedB3) { this.bghSelectedB3 = bghSelectedB3; }
+
+    public Map<String, Double> getBghScores() { return bghScores; }
+    public void setBghScores(Map<String, Double> bghScores) { this.bghScores = bghScores; }
+
+    public String getBghNotes() { return bghNotes; }
+    public void setBghNotes(String bghNotes) { this.bghNotes = bghNotes; }
+
+    public String getBghClassification() { return bghClassification; }
+    public void setBghClassification(String bghClassification) { this.bghClassification = bghClassification; }
 
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
@@ -283,6 +310,100 @@ public class Nq52EvaluationForm {
     public Double getReviewerTotalScore() {
         if (!hasReviewerData()) return null;
         return Math.max(0.0, getReviewerScoreAb() + getReviewerScoreCi() - getReviewerScoreCii());
+    }
+
+    // --- BAN GIÁM HIỆU / HỘI ĐỒNG THI ĐUA, KHEN THƯỞNG (BGH / COUNCIL) ---
+    public boolean hasBghData() {
+        if (bghSelectedB1 != null || bghSelectedB2 != null || bghSelectedB3 != null) return true;
+        if (bghScores != null && !bghScores.isEmpty()) {
+            for (Double v : bghScores.values()) {
+                if (v != null) return true;
+            }
+        }
+        return false;
+    }
+
+    public Double getBghScoreAi1() {
+        return hasBghData() ? Math.min(5.0, sumScores(bghScores, "A_I_1_a", "A_I_1_b", "A_I_1_c", "A_I_1_d", "A_I_1_dd", "A_I_1_e", "A_I_1_ee", "A_I_1_g")) : null;
+    }
+
+    public Double getBghScoreAi2() {
+        return hasBghData() ? Math.min(5.0, sumScores(bghScores, "A_I_2_a", "A_I_2_b", "A_I_2_c", "A_I_2_d")) : null;
+    }
+
+    public Double getBghScoreAi() {
+        if (!hasBghData()) return null;
+        return Math.min(10.0, (getBghScoreAi1() != null ? getBghScoreAi1() : 0.0) + (getBghScoreAi2() != null ? getBghScoreAi2() : 0.0));
+    }
+
+    public Double getBghScoreAii1() {
+        return hasBghData() ? Math.min(2.5, sumScores(bghScores, "A_II_1_a", "A_II_1_b", "A_II_1_c")) : null;
+    }
+
+    public Double getBghScoreAii2() {
+        return hasBghData() ? Math.min(2.5, sumScores(bghScores, "A_II_2_a", "A_II_2_b")) : null;
+    }
+
+    public Double getBghScoreAii3() {
+        return hasBghData() ? Math.min(2.5, sumScores(bghScores, "A_II_3_a", "A_II_3_b")) : null;
+    }
+
+    public Double getBghScoreAii4() {
+        return hasBghData() ? Math.min(2.5, sumScores(bghScores, "A_II_4_a", "A_II_4_b")) : null;
+    }
+
+    public Double getBghScoreAii() {
+        if (!hasBghData()) return null;
+        return Math.min(10.0, (getBghScoreAii1() != null ? getBghScoreAii1() : 0.0) + (getBghScoreAii2() != null ? getBghScoreAii2() : 0.0) + (getBghScoreAii3() != null ? getBghScoreAii3() : 0.0) + (getBghScoreAii4() != null ? getBghScoreAii4() : 0.0));
+    }
+
+    public Double getBghScoreAiii() {
+        return hasBghData() ? Math.min(10.0, sumScores(bghScores, "A_III_1", "A_III_2", "A_III_3", "A_III_4")) : null;
+    }
+
+    public Double getBghScoreA() {
+        if (!hasBghData()) return null;
+        return Math.min(30.0, (getBghScoreAi() != null ? getBghScoreAi() : 0.0) + (getBghScoreAii() != null ? getBghScoreAii() : 0.0) + (getBghScoreAiii() != null ? getBghScoreAiii() : 0.0));
+    }
+
+    public Double getBghScoreB1() {
+        return hasBghData() ? com.school.lessonplan.nq52.Nq52CriteriaCatalog.getScoreB1(bghSelectedB1) : null;
+    }
+
+    public Double getBghScoreB2() {
+        return hasBghData() ? com.school.lessonplan.nq52.Nq52CriteriaCatalog.getScoreB2(bghSelectedB2) : null;
+    }
+
+    public Double getBghScoreB3() {
+        return hasBghData() ? com.school.lessonplan.nq52.Nq52CriteriaCatalog.getScoreB3(bghSelectedB3) : null;
+    }
+
+    public Double getBghScoreB() {
+        if (!hasBghData()) return null;
+        return Math.min(70.0, (getBghScoreB1() != null ? getBghScoreB1() : 0.0) + (getBghScoreB2() != null ? getBghScoreB2() : 0.0) + (getBghScoreB3() != null ? getBghScoreB3() : 0.0));
+    }
+
+    public Double getBghScoreAb() {
+        if (!hasBghData()) return null;
+        return (getBghScoreA() != null ? getBghScoreA() : 0.0) + (getBghScoreB() != null ? getBghScoreB() : 0.0);
+    }
+
+    public Double getBghScoreCi() {
+        return hasBghData() ? Math.min(6.0, sumScores(bghScores, "C_I_1", "C_I_2", "C_I_3", "C_I_4")) : null;
+    }
+
+    public Double getBghScoreCii() {
+        return hasBghData() ? sumScores(bghScores, "C_II_1", "C_II_2", "C_II_3") : null;
+    }
+
+    public Double getBghScoreC() {
+        if (!hasBghData()) return null;
+        return (getBghScoreCi() != null ? getBghScoreCi() : 0.0) - (getBghScoreCii() != null ? getBghScoreCii() : 0.0);
+    }
+
+    public Double getBghTotalScore() {
+        if (!hasBghData()) return null;
+        return Math.max(0.0, (getBghScoreAb() != null ? getBghScoreAb() : 0.0) + (getBghScoreCi() != null ? getBghScoreCi() : 0.0) - (getBghScoreCii() != null ? getBghScoreCii() : 0.0));
     }
 }
 

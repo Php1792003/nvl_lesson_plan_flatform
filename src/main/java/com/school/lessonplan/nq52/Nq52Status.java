@@ -3,7 +3,8 @@ package com.school.lessonplan.nq52;
 public enum Nq52Status {
     DRAFT("Bản nháp", "badge-draft"),
     SUBMITTED("Đã nộp Tổ trưởng", "badge-submitted"),
-    REVIEWED("Tổ trưởng đã đánh giá", "badge-reviewed");
+    REVIEWED("Tổ trưởng đã đánh giá", "badge-reviewed"),
+    COUNCIL_REVIEWED("Hội đồng TĐ-KT đã đánh giá", "badge-approved");
 
     private final String displayName;
     private final String cssClass;
@@ -21,4 +22,3 @@ public enum Nq52Status {
         return cssClass;
     }
 }
-

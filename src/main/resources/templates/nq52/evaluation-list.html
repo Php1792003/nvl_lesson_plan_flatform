@@ -381,7 +381,11 @@
                                 </span>
                                 <span th:if="${eval.status.name() == 'REVIEWED'}" class="badge" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; font-size: 11.5px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
                                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #10b981;"></span>
-                                    Đã đánh giá
+                                    Tổ đã đánh giá
+                                </span>
+                                <span th:if="${eval.status.name() == 'COUNCIL_REVIEWED'}" class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 4px 10px; font-size: 11.5px; border-radius: 20px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #d97706;"></span>
+                                    Hội đồng TĐ-KT đã duyệt
                                 </span>
                             </td>
 
@@ -444,28 +448,37 @@
                                 </div>
                             </td>
 
-                            <!-- 7. Điểm Tổ trưởng: điểm số và / 100 nằm ngang trên 1 dòng -->
+                            <!-- 7. Điểm Tổ trưởng / BGH: điểm số và / 100 nằm ngang trên 1 dòng -->
                             <td style="text-align: center;">
-                                <div th:if="${eval.reviewerTotalScore != null}" style="display: inline-flex; align-items: baseline; gap: 4px;">
+                                <div th:if="${eval.bghTotalScore != null}" style="display: inline-flex; align-items: baseline; gap: 4px;" title="Điểm chính thức của Hội đồng thi đua, khen thưởng">
+                                    <span class="nq52-score-box" style="color: #b45309; font-weight: 800;" th:text="${#numbers.formatDecimal(eval.bghTotalScore, 1, 'COMMA', 2, 'POINT')}">92,00</span>
+                                    <span style="font-size: 11.5px; color: #94a3b8; font-weight: 500;">/ 100</span>
+                                </div>
+                                <div th:if="${eval.bghTotalScore == null and eval.reviewerTotalScore != null}" style="display: inline-flex; align-items: baseline; gap: 4px;" title="Điểm Tổ trưởng chấm">
                                     <span class="nq52-score-box text-success" style="color: #059669;" th:text="${#numbers.formatDecimal(eval.reviewerTotalScore, 1, 'COMMA', 2, 'POINT')}">90,00</span>
                                     <span style="font-size: 11.5px; color: #94a3b8; font-weight: 500;">/ 100</span>
                                 </div>
-                                <span th:if="${eval.reviewerTotalScore == null}" class="text-muted" style="font-size: 13px;">-</span>
+                                <span th:if="${eval.bghTotalScore == null and eval.reviewerTotalScore == null}" class="text-muted" style="font-size: 13px;">-</span>
                             </td>
 
                             <!-- 8. Kết quả xếp loại: chữ và tag kiểm duyệt nằm ngang trên 1 dòng -->
                             <td>
                                 <div style="display: inline-flex; align-items: center; gap: 8px;">
                                     <span style="font-size: 13px; font-weight: 700; color: var(--dark, #0f172a);" 
-                                          th:text="${eval.reviewerClassification != null ? eval.reviewerClassification : (eval.selfClassification != null ? eval.selfClassification : 'Chưa xếp loại')}">
+                                          th:text="${eval.bghClassification != null ? eval.bghClassification : (eval.reviewerClassification != null ? eval.reviewerClassification : (eval.selfClassification != null ? eval.selfClassification : 'Chưa xếp loại'))}">
                                         Hoàn thành xuất sắc nhiệm vụ
                                     </span>
-                                    <span th:if="${eval.reviewerClassification != null}" 
+                                    <span th:if="${eval.bghClassification != null}" 
+                                          style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 4px; font-weight: 700;" 
+                                          title="Đã được Hội đồng thi đua khen thưởng (BGH) duyệt chính thức">
+                                        ✓ BGH duyệt
+                                    </span>
+                                    <span th:if="${eval.bghClassification == null and eval.reviewerClassification != null}" 
                                           style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #15803d; background: #dcfce7; border: 1px solid #bbf7d0; padding: 2px 7px; border-radius: 4px; font-weight: 600;" 
-                                          title="Đã được Tổ trưởng duyệt chính thức">
+                                          title="Đã được Tổ trưởng duyệt">
                                         ✓ Tổ duyệt
                                     </span>
-                                    <span th:if="${eval.reviewerClassification == null and eval.selfClassification != null}" 
+                                    <span th:if="${eval.bghClassification == null and eval.reviewerClassification == null and eval.selfClassification != null}" 
                                           style="font-size: 11px; color: #64748b; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 4px; font-weight: 500;" 
                                           title="Cá nhân tự đề xuất">
                                         Tự đề xuất

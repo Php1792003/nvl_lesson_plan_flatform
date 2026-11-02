@@ -347,6 +347,103 @@ public class Nq52EvaluationService {
     }
 
     /**
+     * Ban Giám Hiệu / Hội đồng thi đua, khen thưởng chấm điểm và xếp loại chính thức (Cấp 3)
+     */
+    public Nq52Evaluation councilReviewEvaluation(Long id, Nq52EvaluationForm form, User bghAdmin) {
+        Nq52Evaluation eval = evaluationRepository.findByIdWithDetails(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu đánh giá ID: " + id));
+
+        if (!isAdmin(bghAdmin)) {
+            throw new AccessDeniedException("Chỉ Ban Giám Hiệu mới có thẩm quyền đánh giá chính thức của Hội đồng thi đua, khen thưởng.");
+        }
+
+        if (eval.getStatus() == Nq52Status.DRAFT) {
+            throw new IllegalStateException("Giáo viên chưa nộp phiếu, Hội đồng thi đua khen thưởng chưa thể đánh giá.");
+        }
+
+        // 1. Tính điểm Hội đồng Phần A (Tối đa 30)
+        double scoreA = 0.0;
+        Map<String, Double> bghScores = sanitizeAndClampScores(form.getBghScores());
+        for (Map.Entry<String, Double> entry : Nq52CriteriaCatalog.MAX_SCORES_PART_A.entrySet()) {
+            Double val = bghScores.get(entry.getKey());
+            if (val != null && val > 0) {
+                scoreA += val;
+            }
+        }
+        scoreA = Math.min(scoreA, 30.0);
+        eval.setBghScoreA(BigDecimal.valueOf(scoreA).setScale(2, RoundingMode.HALF_UP));
+
+        // 2. Tính điểm Hội đồng Phần B (Tối đa 70)
+        double scoreB = Nq52CriteriaCatalog.getScoreB1(form.getBghSelectedB1())
+                      + Nq52CriteriaCatalog.getScoreB2(form.getBghSelectedB2())
+                      + Nq52CriteriaCatalog.getScoreB3(form.getBghSelectedB3());
+        scoreB = Math.min(scoreB, 70.0);
+        eval.setBghScoreB(BigDecimal.valueOf(scoreB).setScale(2, RoundingMode.HALF_UP));
+
+        // 3. Tính điểm Hội đồng Phần C (Điểm cộng & trừ)
+        double scoreCPlus = 0.0;
+        for (Map.Entry<String, Double> entry : Nq52CriteriaCatalog.MAX_SCORES_PART_C1.entrySet()) {
+            Double val = bghScores.get(entry.getKey());
+            if (val != null && val > 0) {
+                scoreCPlus += Math.min(val, entry.getValue());
+            }
+        }
+        scoreCPlus = Math.min(scoreCPlus, 6.0);
+
+        double scoreCMinus = 0.0;
+        Double cMinus1 = bghScores.get("C_II_1");
+        if (cMinus1 != null && cMinus1 > 0) scoreCMinus += cMinus1;
+        Double cMinus2 = bghScores.get("C_II_2");
+        if (cMinus2 != null && cMinus2 > 0) scoreCMinus += cMinus2;
+        Double cMinus3 = bghScores.get("C_II_3");
+        if (cMinus3 != null && cMinus3 > 0) scoreCMinus += cMinus3;
+
+        eval.setBghScoreCPlus(BigDecimal.valueOf(scoreCPlus).setScale(2, RoundingMode.HALF_UP));
+        eval.setBghScoreCMinus(BigDecimal.valueOf(scoreCMinus).setScale(2, RoundingMode.HALF_UP));
+
+        // Tổng điểm Hội đồng
+        double total = scoreA + scoreB + scoreCPlus - scoreCMinus;
+        if (total < 0) total = 0.0;
+        eval.setBghTotalScore(BigDecimal.valueOf(total).setScale(2, RoundingMode.HALF_UP));
+
+        // Xếp loại Hội đồng đề xuất
+        if (form.getBghClassification() != null && !form.getBghClassification().isBlank()) {
+            eval.setBghClassification(form.getBghClassification().trim());
+        } else {
+            eval.setBghClassification(Nq52CriteriaCatalog.determineClassification(eval.getBghTotalScore()));
+        }
+
+        eval.setBghNotes(form.getBghNotes());
+        eval.setBghReviewer(bghAdmin);
+        eval.setBghReviewerNameSnapshot(bghAdmin.getFullName());
+        eval.setStatus(Nq52Status.COUNCIL_REVIEWED);
+        eval.setBghReviewedAt(Instant.now());
+
+        // Cập nhật JSON
+        Map<String, Object> data = parseJson(eval.getCriteriaDataJson());
+        data.put("bghSelectedB1", form.getBghSelectedB1());
+        data.put("bghSelectedB2", form.getBghSelectedB2());
+        data.put("bghSelectedB3", form.getBghSelectedB3());
+        data.put("bghScores", bghScores);
+        try {
+            eval.setCriteriaDataJson(objectMapper.writeValueAsString(data));
+        } catch (Exception e) {
+            log.error("Lỗi cập nhật JSON tiêu chí BGH", e);
+        }
+
+        log.info("Ban Giám Hiệu {} đã hoàn tất đánh giá chính thức của Hội đồng TĐ-KT cho phiếu NQ52 ID {}", bghAdmin.getEmail(), eval.getId());
+        Nq52Evaluation saved = evaluationRepository.save(eval);
+
+        try {
+            exportAndSaveDocx(saved.getId(), bghAdmin);
+        } catch (Exception e) {
+            log.warn("Không thể tự động xuất lưu file sau khi BGH đánh giá: {}", e.getMessage());
+        }
+
+        return saved;
+    }
+
+    /**
      * Lấy danh sách phiếu giáo viên nộp cho Tổ trưởng / BGH duyệt
      * - BGH: Có thể xem toàn quyền ở 3 điểm trường hoặc lọc theo campusId, deptId.
      * - Tổ trưởng: Cố định chỉ xem được đúng tổ môn và đúng điểm trường / phân hiệu của mình.
@@ -401,6 +498,8 @@ public class Nq52EvaluationService {
         form.setSelfClassification(eval.getSelfClassification());
         form.setReviewerNotes(eval.getReviewerNotes());
         form.setReviewerClassification(eval.getReviewerClassification());
+        form.setBghNotes(eval.getBghNotes());
+        form.setBghClassification(eval.getBghClassification());
 
         Map<String, Object> data = parseJson(eval.getCriteriaDataJson());
         form.setSelectedB1((String) data.get("selectedB1"));
@@ -410,6 +509,10 @@ public class Nq52EvaluationService {
         form.setReviewerSelectedB1((String) data.get("reviewerSelectedB1"));
         form.setReviewerSelectedB2((String) data.get("reviewerSelectedB2"));
         form.setReviewerSelectedB3((String) data.get("reviewerSelectedB3"));
+
+        form.setBghSelectedB1((String) data.get("bghSelectedB1"));
+        form.setBghSelectedB2((String) data.get("bghSelectedB2"));
+        form.setBghSelectedB3((String) data.get("bghSelectedB3"));
 
         if (data.containsKey("selfScores")) {
             Map<String, Object> rawScores = (Map<String, Object>) data.get("selfScores");
@@ -427,6 +530,15 @@ public class Nq52EvaluationService {
                 if (v instanceof Number n) scores.put(k, n.doubleValue());
             });
             form.setReviewerScores(scores);
+        }
+
+        if (data.containsKey("bghScores")) {
+            Map<String, Object> rawScores = (Map<String, Object>) data.get("bghScores");
+            Map<String, Double> scores = new HashMap<>();
+            rawScores.forEach((k, v) -> {
+                if (v instanceof Number n) scores.put(k, n.doubleValue());
+            });
+            form.setBghScores(scores);
         }
 
         if (data.containsKey("explanations")) {
@@ -453,6 +565,11 @@ public class Nq52EvaluationService {
         if (isAdmin(user)) return true;
         // Tổ trưởng chỉ xét duyệt phiếu của giáo viên cùng tổ môn và cùng điểm trường / phân hiệu
         return isDeptLeaderOf(user, eval);
+    }
+
+    public boolean canBghReview(User user, Nq52Evaluation eval) {
+        if (user == null || eval == null) return false;
+        return isAdmin(user);
     }
 
     private static final String PERM_NQ52_REVIEW = "NQ52_REVIEW";
@@ -553,6 +670,9 @@ public class Nq52EvaluationService {
      * - nq52/nq52_bangiamhieu: Phiếu do Ban Giám Hiệu đánh giá
      */
     public String resolveStorageSubfolder(Nq52Evaluation eval, User currentUser) {
+        if (eval.getStatus() == Nq52Status.COUNCIL_REVIEWED || eval.getBghTotalScore() != null) {
+            return DIR_BAN_GIAM_HIEU;
+        }
         if (eval.getStatus() == Nq52Status.REVIEWED) {
             boolean isBgh = isAdmin(currentUser) || (eval.getReviewer() != null && isAdmin(eval.getReviewer()));
             return isBgh ? DIR_BAN_GIAM_HIEU : DIR_TO_TRUONG;

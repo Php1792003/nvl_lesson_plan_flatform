@@ -57,7 +57,7 @@ public class Nq52EvaluationController {
         long totalCount = allMy.size();
         long draftCount = allMy.stream().filter(e -> e.getStatus() == Nq52Status.DRAFT).count();
         long submittedCount = allMy.stream().filter(e -> e.getStatus() == Nq52Status.SUBMITTED).count();
-        long reviewedCount = allMy.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED).count();
+        long reviewedCount = allMy.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED || e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
 
         int currentYear = LocalDate.now().getYear();
         List<Integer> years = List.of(currentYear + 1, currentYear, currentYear - 1, currentYear - 2);
@@ -104,8 +104,17 @@ public class Nq52EvaluationController {
         Nq52Evaluation eval = evaluationService.getEvaluationForView(id, user);
 
         boolean isOwner = eval.getUser().getId().equals(user.getId());
+        boolean isAdmin = evaluationService.isAdmin(user);
+        boolean isDeptLeader = evaluationService.isDeptLeaderOf(user, eval);
+
+        // Cấp 1: Giáo viên tự chấm (Chủ sở hữu khi phiếu đang ở trạng thái DRAFT)
         boolean canEdit = isOwner && eval.getStatus() == Nq52Status.DRAFT;
-        boolean canReview = evaluationService.canReview(user, eval) && eval.getStatus() != Nq52Status.DRAFT;
+
+        // Cấp 2: Tổ trưởng đánh giá (Tổ trưởng phụ trách khi phiếu đã nộp SUBMITTED hoặc REVIEWED)
+        boolean canReview = !isAdmin && evaluationService.canReview(user, eval) && eval.getStatus() != Nq52Status.DRAFT;
+
+        // Cấp 3: Ban Giám Hiệu đánh giá chính thức của Hội đồng thi đua, khen thưởng (CHỈ Ban Giám Hiệu)
+        boolean canBghReview = isAdmin && eval.getStatus() != Nq52Status.DRAFT;
 
         Nq52EvaluationForm form = evaluationService.populateForm(eval);
 
@@ -115,6 +124,9 @@ public class Nq52EvaluationController {
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("canEdit", canEdit);
         model.addAttribute("canReview", canReview);
+        model.addAttribute("canBghReview", canBghReview);
+        model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("isDeptLeader", isDeptLeader);
         model.addAttribute("isReviewer", evaluationService.isReviewer(user));
 
         return "nq52/evaluation-form";
@@ -218,6 +230,31 @@ public class Nq52EvaluationController {
     }
 
     /**
+     * Ban Giám Hiệu chấm điểm và hoàn tất đánh giá của Hội đồng thi đua, khen thưởng (Cấp 3)
+     */
+    @PostMapping("/evaluations/{id}/council-review")
+    public String councilReviewEvaluation(@PathVariable("id") Long id,
+                                          @ModelAttribute("form") Nq52EvaluationForm form,
+                                          @AuthenticationPrincipal CurrentUser currentUser,
+                                          RedirectAttributes redirectAttributes) {
+        User bghAdmin = getUser(currentUser);
+
+        try {
+            Nq52Evaluation reviewed = evaluationService.councilReviewEvaluation(id, form, bghAdmin);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Ban Giám Hiệu đã hoàn tất đánh giá của Hội đồng thi đua, khen thưởng cho giáo viên " + reviewed.getTeacherNameSnapshot() + " (Điểm chính thức: " + reviewed.getBghTotalScore() + " - " + reviewed.getBghClassification() + ")!");
+        } catch (IllegalStateException | AccessDeniedException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/nq52/evaluations/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi Hội đồng đánh giá phiếu: " + e.getMessage());
+            return "redirect:/nq52/evaluations/" + id;
+        }
+
+        return "redirect:/nq52/reviews";
+    }
+
+    /**
      * Danh sách phiếu cần duyệt dành cho Tổ trưởng chuyên môn & Ban Giám Hiệu
      * - BGH: Có toàn quyền xem và chuyển đổi giữa 3 Điểm trường / Phân hiệu (hoặc xem toàn trường).
      * - Tổ trưởng: Cố định phạm vi xét duyệt tại đúng Điểm trường / Phân hiệu và Tổ môn được phân công.
@@ -251,6 +288,8 @@ public class Nq52EvaluationController {
             filterStatus = Nq52Status.SUBMITTED;
         } else if ("REVIEWED".equals(selectedStatus)) {
             filterStatus = Nq52Status.REVIEWED;
+        } else if ("COUNCIL_REVIEWED".equals(selectedStatus)) {
+            filterStatus = Nq52Status.COUNCIL_REVIEWED;
         }
 
         List<Nq52Evaluation> evaluations = evaluationService.getDepartmentEvaluations(user, campusId, deptId, filterStatus, month, year);
@@ -264,7 +303,8 @@ public class Nq52EvaluationController {
 
         List<Nq52Evaluation> allDept = evaluationService.getDepartmentEvaluations(user, campusId, deptId, null, null, null);
         long pendingReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.SUBMITTED).count();
-        long completedReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED).count();
+        long completedReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED || e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
+        long councilReviewedCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
         long draftReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.DRAFT).count();
         long totalSubmittedCount = pendingReviewCount + completedReviewCount;
 
@@ -299,6 +339,7 @@ public class Nq52EvaluationController {
         model.addAttribute("totalCount", totalSubmittedCount);
         model.addAttribute("pendingCount", pendingReviewCount);
         model.addAttribute("completedCount", completedReviewCount);
+        model.addAttribute("councilReviewedCount", councilReviewedCount);
         model.addAttribute("draftCount", draftReviewCount);
 
         return "nq52/review-list";

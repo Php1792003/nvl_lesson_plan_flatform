@@ -143,11 +143,11 @@ public class Nq52DocxExportService {
         String position = "Chức vụ, chức danh: " + (eval.getPositionTitle() != null ? eval.getPositionTitle() : "Giáo viên");
         String unit = "Đơn vị công tác: " + eval.getWorkUnit() + " — Tổ chuyên môn: " + eval.getDepartmentNameSnapshot();
 
-        BigDecimal finalScoreA = eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreA() != null ? eval.getReviewerScoreA() : eval.getSelfScoreA();
-        BigDecimal finalScoreB = eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreB() != null ? eval.getReviewerScoreB() : eval.getSelfScoreB();
-        BigDecimal finalTotal = eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerTotalScore() != null ? eval.getReviewerTotalScore() : eval.getSelfTotalScore();
-        BigDecimal finalCPlus = eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreCPlus() != null ? eval.getReviewerScoreCPlus() : eval.getSelfScoreCPlus();
-        BigDecimal finalCMinus = eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreCMinus() != null ? eval.getReviewerScoreCMinus() : eval.getSelfScoreCMinus();
+        BigDecimal finalScoreA = eval.getBghScoreA() != null ? eval.getBghScoreA() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreA() != null ? eval.getReviewerScoreA() : eval.getSelfScoreA());
+        BigDecimal finalScoreB = eval.getBghScoreB() != null ? eval.getBghScoreB() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreB() != null ? eval.getReviewerScoreB() : eval.getSelfScoreB());
+        BigDecimal finalTotal = eval.getBghTotalScore() != null ? eval.getBghTotalScore() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerTotalScore() != null ? eval.getReviewerTotalScore() : eval.getSelfTotalScore());
+        BigDecimal finalCPlus = eval.getBghScoreCPlus() != null ? eval.getBghScoreCPlus() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreCPlus() != null ? eval.getReviewerScoreCPlus() : eval.getSelfScoreCPlus());
+        BigDecimal finalCMinus = eval.getBghScoreCMinus() != null ? eval.getBghScoreCMinus() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreCMinus() != null ? eval.getReviewerScoreCMinus() : eval.getSelfScoreCMinus());
 
         String scoreAStr = "Điểm tiêu chí chung: " + formatScore(finalScoreA) + " điểm";
         String scoreBStr = "Điểm tiêu chí kết quả thực hiện nhiệm vụ: " + formatScore(finalScoreB) + " điểm";
@@ -220,8 +220,10 @@ public class Nq52DocxExportService {
 
         Map<String, Double> selfScores = form.getSelfScores();
         Map<String, Double> revScores = form.getReviewerScores();
+        Map<String, Double> bghScores = form.getBghScores();
         Map<String, String> explanations = form.getExplanations();
         boolean hasReviewer = eval.getStatus() == Nq52Status.REVIEWED || form.hasReviewerData();
+        boolean hasBgh = eval.getStatus() == Nq52Status.COUNCIL_REVIEWED || form.hasBghData() || eval.getBghTotalScore() != null;
 
         for (RowMapping rm : ROW_MAPPINGS) {
             if (rm.tableIdx() >= tables.size()) continue;
@@ -233,6 +235,7 @@ public class Nq52DocxExportService {
 
             XWPFTableCell cellSelf = cells.get(3);
             XWPFTableCell cellRev = cells.size() > 4 ? cells.get(4) : null;
+            XWPFTableCell cellBgh = cells.size() > 5 ? cells.get(5) : null;
             XWPFTableCell cellNote = cells.size() > 6 ? cells.get(6) : null;
 
             switch (rm.type()) {
@@ -243,6 +246,7 @@ public class Nq52DocxExportService {
                     // Dòng C, C.I, C.II: Không hiển thị số điểm
                     setCellText(cellSelf, "", false, ParagraphAlignment.CENTER);
                     if (cellRev != null) setCellText(cellRev, "", false, ParagraphAlignment.CENTER);
+                    if (cellBgh != null) setCellText(cellBgh, "", false, ParagraphAlignment.CENTER);
                     break;
 
                 case SUBTOTAL:
@@ -262,6 +266,18 @@ public class Nq52DocxExportService {
                             }
                         } else {
                             setCellText(cellRev, "-", false, ParagraphAlignment.CENTER);
+                        }
+                    }
+                    if (cellBgh != null) {
+                        if (hasBgh) {
+                            Double bghSubtotal = getBghSubtotalValue(rm.key(), form, eval);
+                            if (bghSubtotal != null && (bghSubtotal > 0 || hasBghScoredSection(rm.key(), form))) {
+                                setCellText(cellBgh, formatScore(bghSubtotal), true, ParagraphAlignment.CENTER);
+                            } else {
+                                setCellText(cellBgh, "", false, ParagraphAlignment.CENTER);
+                            }
+                        } else {
+                            setCellText(cellBgh, "-", false, ParagraphAlignment.CENTER);
                         }
                     }
                     break;
@@ -314,6 +330,32 @@ public class Nq52DocxExportService {
                             setCellText(cellRev, formatScore(rVal), false, ParagraphAlignment.CENTER);
                         } else {
                             setCellText(cellRev, hasReviewer ? "" : "-", false, ParagraphAlignment.CENTER);
+                        }
+                    }
+
+                    // Điểm Hội đồng thi đua, khen thưởng (Ban Giám Hiệu)
+                    if (cellBgh != null) {
+                        Double bVal = null;
+                        boolean isSelectedBghB = false;
+                        if (hasBgh) {
+                            if (k.startsWith("B_1_")) {
+                                isSelectedBghB = isOptionMatch(k, "B_1_", form.getBghSelectedB1());
+                                if (isSelectedBghB) bVal = getBScore(k);
+                            } else if (k.startsWith("B_2_")) {
+                                isSelectedBghB = isOptionMatch(k, "B_2_", form.getBghSelectedB2());
+                                if (isSelectedBghB) bVal = getBScore(k);
+                            } else if (k.startsWith("B_3_")) {
+                                isSelectedBghB = isOptionMatch(k, "B_3_", form.getBghSelectedB3());
+                                if (isSelectedBghB) bVal = getBScore(k);
+                            } else if (bghScores != null && bghScores.containsKey(k)) {
+                                bVal = bghScores.get(k);
+                            }
+                        }
+
+                        if (bVal != null && (bVal > 0 || (bghScores != null && bghScores.containsKey(k)) || isSelectedBghB)) {
+                            setCellText(cellBgh, formatScore(bVal), false, ParagraphAlignment.CENTER);
+                        } else {
+                            setCellText(cellBgh, hasBgh ? "" : "-", false, ParagraphAlignment.CENTER);
                         }
                     }
 
@@ -404,7 +446,11 @@ public class Nq52DocxExportService {
             }
         }
 
-        String selfClass = eval.getSelfClassification();
+        String selfClass = eval.getBghClassification() != null && !eval.getBghClassification().isBlank()
+                ? eval.getBghClassification()
+                : (eval.getReviewerClassification() != null && !eval.getReviewerClassification().isBlank()
+                    ? eval.getReviewerClassification()
+                    : eval.getSelfClassification());
         if (selfClass == null || selfClass.isBlank()) return;
         selfClass = selfClass.trim().toLowerCase();
 
@@ -502,6 +548,53 @@ public class Nq52DocxExportService {
             case "B_3" -> form.getReviewerScoreB3();
             case "A_PLUS_B" -> form.getReviewerScoreAb();
             default -> null;
+        };
+    }
+
+    private Double getBghSubtotalValue(String key, Nq52EvaluationForm form, Nq52Evaluation eval) {
+        if (!form.hasBghData() && eval.getStatus() != Nq52Status.COUNCIL_REVIEWED && eval.getBghTotalScore() == null) {
+            return null;
+        }
+        return switch (key) {
+            case "A" -> form.getBghScoreA();
+            case "A_I" -> form.getBghScoreAi();
+            case "A_I_1" -> form.getBghScoreAi1();
+            case "A_I_2" -> form.getBghScoreAi2();
+            case "A_II" -> form.getBghScoreAii();
+            case "A_II_1" -> form.getBghScoreAii1();
+            case "A_II_2" -> form.getBghScoreAii2();
+            case "A_II_3" -> form.getBghScoreAii3();
+            case "A_II_4" -> form.getBghScoreAii4();
+            case "A_III" -> form.getBghScoreAiii();
+            case "B" -> form.getBghScoreB();
+            case "B_1" -> form.getBghScoreB1();
+            case "B_2" -> form.getBghScoreB2();
+            case "B_3" -> form.getBghScoreB3();
+            case "A_PLUS_B" -> form.getBghScoreAb();
+            default -> null;
+        };
+    }
+
+    private boolean hasBghScoredSection(String key, Nq52EvaluationForm form) {
+        if (form == null || form.getBghScores() == null) return false;
+        Map<String, Double> b = form.getBghScores();
+        return switch (key) {
+            case "A" -> hasBghScoredSection("A_I", form) || hasBghScoredSection("A_II", form) || hasBghScoredSection("A_III", form);
+            case "A_I" -> hasBghScoredSection("A_I_1", form) || hasBghScoredSection("A_I_2", form);
+            case "A_I_1" -> b.containsKey("A_I_1_a") || b.containsKey("A_I_1_b") || b.containsKey("A_I_1_c") || b.containsKey("A_I_1_d") || b.containsKey("A_I_1_dd") || b.containsKey("A_I_1_e") || b.containsKey("A_I_1_ee") || b.containsKey("A_I_1_g");
+            case "A_I_2" -> b.containsKey("A_I_2_a") || b.containsKey("A_I_2_b") || b.containsKey("A_I_2_c") || b.containsKey("A_I_2_d");
+            case "A_II" -> hasBghScoredSection("A_II_1", form) || hasBghScoredSection("A_II_2", form) || hasBghScoredSection("A_II_3", form) || hasBghScoredSection("A_II_4", form);
+            case "A_II_1" -> b.containsKey("A_II_1_a") || b.containsKey("A_II_1_b") || b.containsKey("A_II_1_c");
+            case "A_II_2" -> b.containsKey("A_II_2_a") || b.containsKey("A_II_2_b");
+            case "A_II_3" -> b.containsKey("A_II_3_a") || b.containsKey("A_II_3_b");
+            case "A_II_4" -> b.containsKey("A_II_4_a") || b.containsKey("A_II_4_b");
+            case "A_III" -> b.containsKey("A_III_1") || b.containsKey("A_III_2") || b.containsKey("A_III_3") || b.containsKey("A_III_4");
+            case "B" -> form.getBghSelectedB1() != null || form.getBghSelectedB2() != null || form.getBghSelectedB3() != null;
+            case "B_1" -> form.getBghSelectedB1() != null;
+            case "B_2" -> form.getBghSelectedB2() != null;
+            case "B_3" -> form.getBghSelectedB3() != null;
+            case "A_PLUS_B" -> hasBghScoredSection("A", form) || hasBghScoredSection("B", form);
+            default -> false;
         };
     }
 

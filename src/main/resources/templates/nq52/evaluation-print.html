@@ -187,8 +187,9 @@
                 <th style="width: 50px;">TT</th>
                 <th>TIÊU CHÍ ĐÁNH GIÁ</th>
                 <th style="width: 80px;">Thang điểm tối đa</th>
-                <th style="width: 100px;">Cá nhân tự chấm</th>
-                <th style="width: 100px;">Tổ trưởng đánh giá</th>
+                <th style="width: 95px;">Cá nhân tự chấm</th>
+                <th style="width: 95px;">Tổ trưởng đánh giá</th>
+                <th style="width: 110px;">Hội đồng TĐ-KT đánh giá</th>
             </tr>
         </thead>
         <tbody>
@@ -321,6 +322,9 @@
                 <td class="text-center"></td>
                 <td class="text-center"></td>
                 <td class="text-center"></td>
+            <td class="text-center"></td>
+            <td class="text-center"></td>
+            <td class="text-center"></td>
             </tr>
             <tr style="font-weight: bold;">
                 <td class="text-center">I</td>
@@ -349,6 +353,7 @@
                 <td></td>
                 <td class="text-center" th:text="${eval.selfClassification != null ? eval.selfClassification : ''}">Xuất sắc</td>
                 <td class="text-center" style="color: #15803d;" th:text="${eval.reviewerClassification != null ? eval.reviewerClassification : 'Chưa xếp loại'}">Xuất sắc</td>
+                <td class="text-center" style="color: #b45309;" th:text="${eval.bghClassification != null ? eval.bghClassification : 'Chưa xếp loại'}">Xuất sắc</td>
             </tr>
         </tbody>
     </table>
@@ -364,6 +369,14 @@
         <strong>Nhận xét, đánh giá của Tổ trưởng chuyên môn:</strong>
         <p style="margin: 6px 0 0 0; font-style: italic; min-height: 40px;" th:text="${eval.reviewerNotes != null and eval.reviewerNotes != '' ? eval.reviewerNotes : '(Tổ trưởng chưa ghi ý kiến nhận xét)'}">
             Đồng chí hoàn thành xuất sắc các nhiệm vụ được giao trong tháng.
+        </p>
+    </div>
+
+    <!-- Council / BGH Comments -->
+    <div style="margin-top: 15px; border: 1px solid #000; padding: 10px 14px; font-size: 12pt;">
+        <strong>Ý kiến nhận xét, đánh giá của Hội đồng thi đua, khen thưởng (Ban Giám Hiệu):</strong>
+        <p style="margin: 6px 0 0 0; font-style: italic; min-height: 40px;" th:text="${eval.bghNotes != null and eval.bghNotes != '' ? eval.bghNotes : '(Hội đồng thi đua, khen thưởng chưa ghi ý kiến)'}">
+            Đồng chí hoàn thành tốt nhiệm vụ được giao trong tháng.
         </p>
     </div>
 
@@ -386,7 +399,7 @@
                 <div class="sign-title">HIỆU TRƯỞNG</div>
                 <div style="font-style: italic; font-size: 11pt;">(Ký, đóng dấu)</div>
                 <div class="sign-space"></div>
-                <strong>................................................</strong>
+                <strong th:text="${eval.bghReviewerNameSnapshot != null ? eval.bghReviewerNameSnapshot : (eval.bghReviewer != null ? eval.bghReviewer.fullName : '................................................')}">................................................</strong>
             </td>
         </tr>
     </table>
