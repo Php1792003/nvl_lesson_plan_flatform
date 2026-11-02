@@ -161,6 +161,7 @@ public class UserService {
             user.incrementTokenVersion(); // Đổi vai trò -> vô hiệu hoá token ngay
         }
 
+        user.setUpdatedAt(Instant.now());
         user = userRepository.save(user);
         auditService.log("USER_UPDATE", "USER", user.getId(), "Cập nhật tài khoản: " + user.getEmail());
         return user;
@@ -302,6 +303,7 @@ public class UserService {
         user.setGivenName(givenName.trim());
         user.setDepartment(department);
         user.setCampus(campus);
+        user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 
         auditService.log("USER_UPDATE_PROFILE", "USER", user.getId(), "Cập nhật hồ sơ cá nhân");

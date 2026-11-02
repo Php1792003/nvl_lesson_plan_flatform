@@ -1,5 +1,6 @@
-server:
+﻿server:
   port: 8080
+  forward-headers-strategy: framework
   servlet:
     context-path: /portal
     session:
@@ -88,7 +89,7 @@ app:
     root: ${APP_STORAGE_ROOT:./uploads}
     temp-dir: ${APP_STORAGE_TEMP:./uploads/temp}
   upload:
-    max-mb: ${APP_UPLOAD_MAX_MB:20}
+    max-mb: ${APP_UPLOAD_MAX_MB:10}
     allowed-extensions: pdf,doc,docx
     allowed-content-types: application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document
     max-concurrent: ${APP_UPLOAD_MAX_CONCURRENT:3}
@@ -118,11 +119,11 @@ app:
       capacity: 10
       refill-minutes: 15
     register:
-      capacity: 5
-      refill-minutes: 60
+      capacity: 20
+      refill-minutes: 15
     otp:
-      capacity: 5
-      refill-minutes: 60
+      capacity: 15
+      refill-minutes: 15
     upload:
       capacity: 3
       refill-seconds: 10

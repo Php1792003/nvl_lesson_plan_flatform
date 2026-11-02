@@ -1,4 +1,4 @@
-/**
+﻿/**
  * THCS Nguyễn Văn Linh — Lesson Plan Platform (Dashboard Pro Shared JavaScript)
  * Provides smooth transitions, shared utilities, and page initializers.
  */
@@ -418,18 +418,49 @@
         var input = NVL.$('file');
         var wrap = NVL.$('dropWrap');
         var drop = NVL.$('drop');
-        var err = NVL.$('fileErr');
-
         function fmtSize(b) {
             if (b < 1024) return b + ' B';
             if (b < 1024 * 1024) return (b / 1024).toFixed(0) + ' KB';
             return (b / 1024 / 1024).toFixed(2).replace('.', ',') + ' MB';
         }
-        function showError(msg) {
-            if (err) { err.textContent = msg; err.classList.add('show'); }
+
+        function getErrorEl() {
+            var el = NVL.$('file-error') || NVL.$('fileErr');
+            if (!el) {
+                el = document.createElement('p');
+                el.id = 'file-error';
+                el.className = 'field-error';
+                el.setAttribute('role', 'alert');
+                var group = (input && input.closest('.form-group')) || (wrap && wrap.parentNode);
+                if (group) group.appendChild(el);
+            }
+            return el;
         }
+
+        function showError(msg) {
+            var el = getErrorEl();
+            if (el) {
+                el.textContent = msg;
+                el.removeAttribute('hidden');
+                el.style.display = 'block';
+                el.classList.add('show');
+            }
+            if (wrap) wrap.classList.add('has-error');
+            var group = input ? input.closest('.form-group') : null;
+            if (group) group.classList.add('has-error');
+        }
+
         function clearError() {
-            if (err) { err.classList.remove('show'); err.textContent = ''; }
+            var el = NVL.$('file-error') || NVL.$('fileErr');
+            if (el) {
+                el.textContent = '';
+                el.setAttribute('hidden', '');
+                el.style.display = 'none';
+                el.classList.remove('show');
+            }
+            if (wrap) wrap.classList.remove('has-error');
+            var group = input ? input.closest('.form-group') : null;
+            if (group) group.classList.remove('has-error');
         }
 
         function clearFile() {
@@ -454,7 +485,7 @@
             if (f.size > MAX) {
                 input.value = '';
                 if (wrap) wrap.classList.remove('has-file');
-                showError('Tệp "' + f.name + '" nặng ' + fmtSize(f.size) + ', vượt giới hạn 10 MB. Hãy nén hình ảnh trong tệp rồi thử lại.');
+                showError('Tệp "' + f.name + '" có dung lượng ' + fmtSize(f.size) + ', vượt quá giới hạn 10 MB cho phép. Vui lòng nén hình ảnh trong tệp hoặc chọn tệp nhỏ hơn.');
                 updateProgress();
                 return;
             }
