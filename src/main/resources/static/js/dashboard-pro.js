@@ -712,11 +712,45 @@
 
         var form = NVL.$('filterForm');
         var fSearch = NVL.$('fSearch'), fDept = NVL.$('fDept'), fYear = NVL.$('fYear'), fSem = NVL.$('fSem'), fFav = NVL.$('fFav');
+        var adShown = NVL.$('adShown');
+        var adNoMatch = NVL.$('adNoMatch');
 
         function submitForm() {
             root.classList.add('is-loading');
             var pb = NVL.$('navProgress'); if (pb) pb.classList.add('run');
             form.submit();
+        }
+
+        // ================= Gõ đến đâu lọc dần đến đó (Real-time live search) =================
+        if (fSearch && rows.length) {
+            rows.forEach(function (tr) {
+                tr.__text = NVL.norm(tr.textContent);
+            });
+
+            function applyLiveSearch() {
+                var q = NVL.norm(fSearch.value.trim());
+                var shown = 0;
+                rows.forEach(function (tr) {
+                    var ok = !q || (tr.__text && tr.__text.indexOf(q) !== -1);
+                    tr.style.display = ok ? '' : 'none';
+                    tr.classList.remove('row-in');
+                    if (ok) shown++;
+                });
+                if (adShown) adShown.textContent = shown;
+                if (adNoMatch) {
+                    adNoMatch.style.display = (shown === 0 && rows.length > 0) ? 'block' : 'none';
+                }
+            }
+
+            fSearch.addEventListener('input', applyLiveSearch);
+
+            // Xử lý phím Escape để xoá nhanh tìm kiếm
+            fSearch.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    fSearch.value = '';
+                    applyLiveSearch();
+                }
+            });
         }
 
         /* Chip bộ lọc đang áp dụng */
@@ -798,11 +832,45 @@
 
         var form = NVL.$('filterForm');
         var fSearch = NVL.$('fSearch'), fDept = NVL.$('fDept'), fCampus = NVL.$('fCampus');
+        var usShown = NVL.$('usShown');
+        var usNoMatch = NVL.$('usNoMatch');
 
         function submitForm() {
             root.classList.add('is-loading');
             var pb = NVL.$('navProgress'); if (pb) pb.classList.add('run');
             form.submit();
+        }
+
+        // ================= Gõ đến đâu lọc dần đến đó (Real-time live search) =================
+        if (fSearch && rows.length) {
+            rows.forEach(function (tr) {
+                tr.__text = NVL.norm(tr.textContent);
+            });
+
+            function applyLiveSearch() {
+                var q = NVL.norm(fSearch.value.trim());
+                var shown = 0;
+                rows.forEach(function (tr) {
+                    var ok = !q || (tr.__text && tr.__text.indexOf(q) !== -1);
+                    tr.style.display = ok ? '' : 'none';
+                    tr.classList.remove('row-in');
+                    if (ok) shown++;
+                });
+                if (usShown) usShown.textContent = shown;
+                if (usNoMatch) {
+                    usNoMatch.style.display = (shown === 0 && rows.length > 0) ? 'block' : 'none';
+                }
+            }
+
+            fSearch.addEventListener('input', applyLiveSearch);
+
+            // Xử lý phím Escape để xoá nhanh tìm kiếm
+            fSearch.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    fSearch.value = '';
+                    applyLiveSearch();
+                }
+            });
         }
 
         var host = NVL.$('chipHost');
