@@ -332,6 +332,18 @@
                 margin-bottom: 20px;
             }
 
+            .kpis.kpis-admin,
+            .kpis-5 {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+
+            @media (min-width: 1100px) {
+                .kpis.kpis-admin,
+                .kpis-5 {
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
+                }
+            }
+
             .kpi {
                 display: flex;
                 align-items: flex-start;
@@ -2784,6 +2796,12 @@
                 padding: 10px 14px 0;
                 border-bottom: 1px solid var(--line);
                 overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+
+            .us-tabs::-webkit-scrollbar {
+                display: none;
             }
 
             .us-tab {
@@ -4143,7 +4161,8 @@ button.alert-close:active {
 
 .alert-close svg {
     display: block !important;
-}
+}
+
 
 /* ==========================================================================
    REAL-TIME ACTIVE USERS MONITORING

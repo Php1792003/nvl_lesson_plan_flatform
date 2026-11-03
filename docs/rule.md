@@ -134,7 +134,7 @@ canView(user, plan) =
 
 File Word/PowerPoint khá nặng và mỗi lần thay file tạo một version mới, nên bắt buộc áp dụng:
 
-- **Giới hạn file:** tối đa **10 MB**/file (`APP_UPLOAD_MAX_MB`).
+- **Giới hạn file:** tối đa **25 MB**/file (`APP_UPLOAD_MAX_MB`).
 - **Chống trùng:** nếu `sha256` của file mới **trùng version hiện tại** của cùng giáo án thì từ chối ("File giống bản hiện tại"), không tạo version mới.
 - **Dọn file của version cũ (purge):**
   - Giữ **file** của **3 version mới nhất** (`APP_KEEP_VERSIONS`) **và mọi version đã có đánh giá** của BGH.
@@ -229,7 +229,7 @@ Index bắt buộc: `users(email)`, `users(status)`, `lesson_plans(owner_id, cre
 - Có CAPTCHA hoặc rate limit chặt cho form đăng ký.
 
 ### 6.3 Upload và tải file
-- Cho phép: `pdf, doc, docx`. Giới hạn **10 MB**/file (xem mục 4.7).
+- Cho phép: `pdf, doc, docx`. Giới hạn **25 MB**/file (xem mục 4.7).
 - Kiểm tra **cả đuôi, MIME khai báo và magic bytes** (Tika). Sai một trong ba → từ chối.
 - Tên file lưu trên đĩa là **UUID ngẫu nhiên**; `original_filename` chỉ để hiển thị (làm sạch ký tự đặc biệt, chống path traversal).
 - Thư mục lưu **nằm ngoài web root** (`app.storage.root`), không map thành static resource.
@@ -355,7 +355,7 @@ DB_URL, DB_USERNAME, DB_PASSWORD
 JWT_SECRET                      # >= 256 bit
 APP_BASE_URL                    # https://...
 APP_STORAGE_ROOT                # thư mục ngoài web root
-APP_UPLOAD_MAX_MB=10            # giới hạn mỗi file
+APP_UPLOAD_MAX_MB=25            # giới hạn mỗi file
 APP_KEEP_VERSIONS=3             # số version mới nhất được giữ file
 SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, MAIL_FROM
 INITIAL_ADMIN_EMAIL, INITIAL_ADMIN_PASSWORD   # chỉ dùng seed lần đầu

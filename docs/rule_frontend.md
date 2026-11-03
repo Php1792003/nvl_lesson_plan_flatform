@@ -314,7 +314,7 @@ form.error=Không thể xử lý yêu cầu. Vui lòng thử lại.
 | Tài khoản chưa duyệt | `Tài khoản đang chờ Ban giám hiệu duyệt.` |
 | Tài khoản bị khóa | `Tài khoản đã bị khóa. Vui lòng liên hệ Ban giám hiệu.` |
 | Tệp sai định dạng | `Chỉ chấp nhận tệp PDF, Word hoặc PowerPoint.` |
-| Tệp quá lớn | `Tệp vượt quá 10 MB. Hãy nén lại rồi thử lại.` |
+| Tệp quá lớn | `Tệp vượt quá 25 MB. Hãy nén lại rồi thử lại.` |
 | Vượt giới hạn thao tác | `Bạn thao tác quá nhanh. Vui lòng thử lại sau {n} phút.` |
 | Xoá cần xác nhận email | `Email xác nhận không khớp.` |
 
@@ -587,7 +587,7 @@ Ghi chú: JS dùng `data-pattern` (RegExp với cờ `u` để hỗ trợ `\p{L}
 | Mã OTP | Chỉ số, đúng độ dài cấu hình, không `autocomplete` gợi ý lại |
 | Lý do khóa tài khoản | Bắt buộc, 5 đến 500 ký tự |
 | Email xác nhận khi xóa | Bắt buộc, phải trùng email của tài khoản cần xóa |
-| Tệp tải lên | Bắt buộc, đuôi pdf/doc/docx, tối đa 10 MB (client kiểm tra trước, server kiểm tra lại cả đuôi và content-type) |
+| Tệp tải lên | Bắt buộc, đuôi pdf/doc/docx, tối đa 25 MB (client kiểm tra trước, server kiểm tra lại cả đuôi và content-type) |
 | Nhận xét, đánh giá | Bắt buộc, tối đa độ dài cột trong DB, hiển thị bộ đếm ký tự |
 
 ## 6. Cấm (anti-pattern)

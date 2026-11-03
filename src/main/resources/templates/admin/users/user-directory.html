@@ -65,7 +65,7 @@
                         <div class="us-field">
                             <label class="us-label" for="fDept">Môn học</label>
                             <select id="fDept" name="departmentId" class="us-control">
-                                <option value="">Tất cả bộ môn</option>
+                                <option value="">Tất cả môn học</option>
                                 <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
                                     th:selected="${dept.id == departmentId}"></option>
                             </select>
