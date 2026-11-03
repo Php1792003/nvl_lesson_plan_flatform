@@ -2,6 +2,7 @@ package com.school.lessonplan.nq52;
 
 import com.school.lessonplan.nq52.dto.Nq52EvaluationForm;
 import com.school.lessonplan.nq52.signature.Nq52DigitalSignature;
+import com.school.lessonplan.nq52.signature.Nq52SignatureImageHelper;
 import com.school.lessonplan.nq52.signature.Nq52SignatureStatus;
 import com.school.lessonplan.nq52.signature.Nq52SigningRole;
 import org.apache.poi.xwpf.usermodel.*;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -677,84 +679,112 @@ public class Nq52DocxExportService {
 
     private void insertTeacherSignatureBlock(XWPFDocument doc, int afterParaIdx, String teacherName, Nq52DigitalSignature sig) {
         if (sig != null) {
+            byte[] img = Nq52SignatureImageHelper.getSignaturePngBytes(sig, teacherName, "Giáo viên", false, false);
             if (afterParaIdx + 2 < doc.getParagraphs().size()) {
-                XWPFParagraph p2 = doc.getParagraphs().get(afterParaIdx + 2);
-                replaceParagraphRun(p2, "✍️ [ĐÃ KÝ SỐ ĐIỆN TỬ - XÁC THỰC REALTIME]", true, false, 9, "1d4ed8", ParagraphAlignment.CENTER, 3850);
+                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 2));
             }
             if (afterParaIdx + 3 < doc.getParagraphs().size()) {
-                XWPFParagraph p3 = doc.getParagraphs().get(afterParaIdx + 3);
-                String info = "Ký bởi: " + sig.getSignerNameSnapshot() + " | " + formatCaProviderName(sig.getCaProvider());
-                replaceParagraphRun(p3, info, false, true, 8, "1e3a8a", ParagraphAlignment.CENTER, 3850);
+                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 3));
             }
-            if (afterParaIdx + 4 < doc.getParagraphs().size()) {
-                XWPFParagraph p4 = doc.getParagraphs().get(afterParaIdx + 4);
-                String timeInfo = "Thời gian: " + SIG_DOCX_FMT.format(sig.getSignedAt()) + " (✓ Hợp lệ - SHA-256 toàn vẹn)";
-                replaceParagraphRun(p4, timeInfo, false, true, 8, "15803d", ParagraphAlignment.CENTER, 3850);
+            // Đặt ảnh chữ ký vào đoạn văn bản ngay phía trên Họ và tên để căn giữa chuẩn xác
+            if (img != null && afterParaIdx + 4 < doc.getParagraphs().size()) {
+                XWPFParagraph pImg = doc.getParagraphs().get(afterParaIdx + 4);
+                insertPictureToParagraph(pImg, img, 140, 48, 3850, 0);
             }
         }
         if (afterParaIdx + 5 < doc.getParagraphs().size()) {
             XWPFParagraph p = doc.getParagraphs().get(afterParaIdx + 5);
             String name = teacherName != null ? teacherName : (sig != null ? sig.getSignerNameSnapshot() : "");
-            replaceParagraphRun(p, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 3850);
+            replaceParagraphRun(p, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 3850, 0);
         }
     }
 
     private void insertReviewerSignatureBlock(XWPFDocument doc, int afterParaIdx, String reviewerName, Nq52DigitalSignature sig) {
         if (sig != null) {
+            byte[] img = Nq52SignatureImageHelper.getSignaturePngBytes(sig, reviewerName, "Tổ trưởng chuyên môn", false, true);
             if (afterParaIdx + 2 < doc.getParagraphs().size()) {
-                XWPFParagraph p2 = doc.getParagraphs().get(afterParaIdx + 2);
-                replaceParagraphRun(p2, "✍️ [ĐÃ KÝ SỐ THẨM ĐỊNH TỔ - XÁC THỰC REALTIME]", true, false, 9, "15803d", ParagraphAlignment.CENTER, 5137);
+                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 2));
             }
             if (afterParaIdx + 3 < doc.getParagraphs().size()) {
-                XWPFParagraph p3 = doc.getParagraphs().get(afterParaIdx + 3);
-                String info = "Ký bởi: " + sig.getSignerNameSnapshot() + " (Tổ trưởng)";
-                replaceParagraphRun(p3, info, false, true, 8, "14532d", ParagraphAlignment.CENTER, 5137);
+                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 3));
             }
             if (afterParaIdx + 4 < doc.getParagraphs().size()) {
-                XWPFParagraph p4 = doc.getParagraphs().get(afterParaIdx + 4);
-                String timeInfo = "Thời gian: " + SIG_DOCX_FMT.format(sig.getSignedAt()) + " | " + formatCaProviderName(sig.getCaProvider());
-                replaceParagraphRun(p4, timeInfo, false, true, 8, "15803d", ParagraphAlignment.CENTER, 5137);
+                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 4));
             }
-            if (afterParaIdx + 5 < doc.getParagraphs().size()) {
-                XWPFParagraph p5 = doc.getParagraphs().get(afterParaIdx + 5);
-                replaceParagraphRun(p5, "✓ Xác thực Realtime: Hợp lệ & Dữ liệu toàn vẹn", false, true, 8, "15803d", ParagraphAlignment.CENTER, 5137);
+            // Đặt ảnh chữ ký vào đoạn văn bản ngay phía trên Họ và tên người đánh giá
+            if (img != null && afterParaIdx + 5 < doc.getParagraphs().size()) {
+                XWPFParagraph pImg = doc.getParagraphs().get(afterParaIdx + 5);
+                insertPictureToParagraph(pImg, img, 140, 48, 5137, 469);
             }
         }
         if (afterParaIdx + 6 < doc.getParagraphs().size()) {
             XWPFParagraph p = doc.getParagraphs().get(afterParaIdx + 6);
             String name = reviewerName != null && !reviewerName.isBlank() ? reviewerName : (sig != null ? sig.getSignerNameSnapshot() : "");
             if (!name.isBlank()) {
-                replaceParagraphRun(p, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 5137);
+                replaceParagraphRun(p, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 5137, 469);
             }
         }
     }
 
     private void insertPrincipalSignatureBlock(XWPFDocument doc, int afterParaIdx, Nq52DigitalSignature sig) {
+        // Căn giữa tiêu đề Thủ trưởng đơn vị đồng bộ
+        if (afterParaIdx < doc.getParagraphs().size()) {
+            XWPFParagraph pTitle = doc.getParagraphs().get(afterParaIdx);
+            pTitle.setAlignment(ParagraphAlignment.CENTER);
+            pTitle.setIndentationLeft(4845);
+            pTitle.setIndentationRight(0);
+        }
+
+        XWPFParagraph pNote = doc.createParagraph();
+        replaceParagraphRun(pNote, "(Ký, đóng dấu cơ quan)", false, true, 11, "64748b", ParagraphAlignment.CENTER, 4845, 0);
+
         if (sig != null) {
-            XWPFParagraph pNote = doc.createParagraph();
-            replaceParagraphRun(pNote, "(Ký, đóng dấu cơ quan)", false, true, 11, "64748b", ParagraphAlignment.CENTER, 4500);
-
-            XWPFParagraph pStamp1 = doc.createParagraph();
-            replaceParagraphRun(pStamp1, "🏛️ [ĐÃ KÝ DUYỆT CHÍNH THỨC - USB TOKEN BGH]", true, false, 9, "991b1b", ParagraphAlignment.CENTER, 4500);
-
-            XWPFParagraph pStamp2 = doc.createParagraph();
-            replaceParagraphRun(pStamp2, "TRƯỜNG THCS NGUYỄN VĂN LINH", true, false, 11, "7f1d1d", ParagraphAlignment.CENTER, 4500);
-
-            XWPFParagraph pStamp3 = doc.createParagraph();
-            replaceParagraphRun(pStamp3, "Thiết bị: USB Token PKCS#11 (Ban Cơ yếu Chính phủ) | " + SIG_DOCX_FMT.format(sig.getSignedAt()), false, true, 8, "991b1b", ParagraphAlignment.CENTER, 4500);
-
-            XWPFParagraph pStamp4 = doc.createParagraph();
-            replaceParagraphRun(pStamp4, "✓ Phê duyệt chính thức & Ban hành hợp lệ", true, false, 8, "15803d", ParagraphAlignment.CENTER, 4500);
-
+            byte[] img = Nq52SignatureImageHelper.getSignaturePngBytes(sig, "Ban Giám Hiệu", "BGH", true, false);
+            if (img != null) {
+                XWPFParagraph pImg = doc.createParagraph();
+                insertPictureToParagraph(pImg, img, 140, 48, 4845, 0);
+            }
             XWPFParagraph pName = doc.createParagraph();
-            replaceParagraphRun(pName, "Ban Giám Hiệu", true, false, 12, "000000", ParagraphAlignment.CENTER, 4500);
+            replaceParagraphRun(pName, "Ban Giám Hiệu", true, false, 12, "000000", ParagraphAlignment.CENTER, 4845, 0);
         } else {
-            XWPFParagraph pNote = doc.createParagraph();
-            replaceParagraphRun(pNote, "(Ký, đóng dấu cơ quan)", false, true, 11, "64748b", ParagraphAlignment.CENTER, 4500);
+            XWPFParagraph pName = doc.createParagraph();
+            replaceParagraphRun(pName, "Ban Giám Hiệu", true, false, 12, "000000", ParagraphAlignment.CENTER, 4845, 0);
         }
     }
 
-    private void replaceParagraphRun(XWPFParagraph p, String text, boolean bold, boolean italic, int fontSize, String hexColor, ParagraphAlignment alignment, int indentLeft) {
+    private void clearParagraphRuns(XWPFParagraph p) {
+        if (p == null) return;
+        while (!p.getRuns().isEmpty()) {
+            p.removeRun(0);
+        }
+    }
+
+    private void insertPictureToParagraph(XWPFParagraph p, byte[] imgBytes, int maxWPt, int maxHPt, int indentLeft, int indentRight) {
+        if (p == null || imgBytes == null || imgBytes.length == 0) return;
+        clearParagraphRuns(p);
+        p.setAlignment(ParagraphAlignment.CENTER);
+        p.setIndentationLeft(indentLeft);
+        p.setIndentationRight(indentRight);
+        p.setIndentationFirstLine(0);
+        p.setIndentationHanging(0);
+        XWPFRun run = p.createRun();
+        try {
+            java.awt.Dimension dim = Nq52SignatureImageHelper.getProportionalDimension(imgBytes, maxWPt, maxHPt);
+            int widthEmu = (int) (dim.width * 12700);
+            int heightEmu = (int) (dim.height * 12700);
+            run.addPicture(
+                    new ByteArrayInputStream(imgBytes),
+                    XWPFDocument.PICTURE_TYPE_PNG,
+                    "signature.png",
+                    widthEmu,
+                    heightEmu
+            );
+        } catch (Exception e) {
+            log.warn("Không thể chèn hình ảnh chữ ký vào Word: {}", e.getMessage());
+        }
+    }
+
+    private void replaceParagraphRun(XWPFParagraph p, String text, boolean bold, boolean italic, int fontSize, String hexColor, ParagraphAlignment alignment, int indentLeft, int indentRight) {
         while (!p.getRuns().isEmpty()) {
             p.removeRun(0);
         }
@@ -762,7 +792,7 @@ public class Nq52DocxExportService {
             p.setAlignment(alignment);
         }
         p.setIndentationLeft(indentLeft);
-        p.setIndentationRight(0);
+        p.setIndentationRight(indentRight);
         p.setIndentationFirstLine(0);
         p.setIndentationHanging(0);
 

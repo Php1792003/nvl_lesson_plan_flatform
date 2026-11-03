@@ -92,7 +92,22 @@ public class Nq52SignatureService {
         response.setDocumentType(documentType);
         response.setDocumentId(documentId);
         response.setSignerName(user.getFullName());
-        response.setSignerIdentifier(user.getEmail() != null ? user.getEmail() : ("user-" + user.getId()));
+        String signerIdentifier = null;
+        if (profileRepository != null) {
+            try {
+                var pOpt = profileRepository.findByUserId(user.getId());
+                if (pOpt.isPresent()) {
+                    var p = pOpt.get();
+                    if (p.getCaUsername() != null && !p.getCaUsername().isBlank()) {
+                        signerIdentifier = p.getCaUsername();
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        if (signerIdentifier == null || signerIdentifier.isBlank()) {
+            signerIdentifier = user.getEmail() != null ? user.getEmail() : ("user-" + user.getId());
+        }
+        response.setSignerIdentifier(signerIdentifier);
 
         boolean isAdmin = isAdmin(user);
 
@@ -144,7 +159,22 @@ public class Nq52SignatureService {
      */
     @Transactional
     public Nq52DigitalSignature directSignWithCertificate(CertificateDirectSignRequest request, User user, HttpServletRequest httpRequest) {
-        if (request.getUsername() == null || request.getUsername().isBlank()) {
+        String signUsername = request.getUsername();
+        if (profileRepository != null) {
+            try {
+                var pOpt = profileRepository.findByUserId(user.getId());
+                if (pOpt.isPresent()) {
+                    var p = pOpt.get();
+                    if (p.getCaUsername() != null && !p.getCaUsername().isBlank()) {
+                        if (signUsername == null || signUsername.isBlank() || (signUsername.contains("@") && p.getCaUsername().matches("\\d{9,12}"))) {
+                            signUsername = p.getCaUsername();
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (signUsername == null || signUsername.isBlank()) {
             throw new IllegalArgumentException("Vui lòng nhập Tên đăng nhập / Số CCCD của tài khoản chứng thư số.");
         }
         if (request.getPassword() == null || request.getPassword().isBlank()) {
@@ -183,11 +213,11 @@ public class Nq52SignatureService {
         CaSignResult caResult;
         String workUnit = "Trường THCS Nguyễn Văn Linh";
         if ("VIETTEL_CLOUD_CA".equalsIgnoreCase(provider)) {
-            caResult = viettelClient.authenticateAndSign(request.getUsername().trim(), request.getPassword().trim(), hashSha256, user.getFullName(), workUnit);
+            caResult = viettelClient.authenticateAndSign(signUsername.trim(), request.getPassword().trim(), hashSha256, user.getFullName(), workUnit);
         } else if ("VN_EID".equalsIgnoreCase(provider)) {
-            caResult = vneidClient.authenticateAndSign(request.getUsername().trim(), request.getPassword().trim(), hashSha256, user.getFullName(), workUnit);
+            caResult = vneidClient.authenticateAndSign(signUsername.trim(), request.getPassword().trim(), hashSha256, user.getFullName(), workUnit);
         } else {
-            caResult = vnptClient.authenticateAndSign(request.getUsername().trim(), request.getPassword().trim(), hashSha256, user.getFullName(), workUnit);
+            caResult = vnptClient.authenticateAndSign(signUsername.trim(), request.getPassword().trim(), hashSha256, user.getFullName(), workUnit);
         }
 
         if (!caResult.isSuccess()) {
@@ -299,7 +329,18 @@ public class Nq52SignatureService {
         }
 
         // Gọi API của Provider tương ứng (VNPT SmartCA, Viettel Cloud-CA, VNeID)
-        String userIdentifier = user.getEmail() != null ? user.getEmail() : ("user-" + user.getId());
+        String userIdentifier = null;
+        if (profileRepository != null) {
+            try {
+                var pOpt = profileRepository.findByUserId(user.getId());
+                if (pOpt.isPresent() && pOpt.get().getCaUsername() != null && !pOpt.get().getCaUsername().isBlank()) {
+                    userIdentifier = pOpt.get().getCaUsername();
+                }
+            } catch (Exception ignored) {}
+        }
+        if (userIdentifier == null || userIdentifier.isBlank()) {
+            userIdentifier = user.getEmail() != null ? user.getEmail() : ("user-" + user.getId());
+        }
         com.school.lessonplan.nq52.signature.provider.VnptSmartCaClient.ProviderSignResult signResult;
         if ("VIETTEL_CLOUD_CA".equalsIgnoreCase(provider)) {
             signResult = viettelClient.initiateSign(txId, hashSha256, userIdentifier, user.getFullName());

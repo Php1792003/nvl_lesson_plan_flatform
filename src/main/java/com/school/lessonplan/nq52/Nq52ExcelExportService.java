@@ -524,141 +524,35 @@ public class Nq52ExcelExportService {
                 }
             }
 
-            // Tạo các Style cho con dấu chữ ký số điện tử trong Excel
-            Font fontStampBghHead = workbook.createFont();
-            fontStampBghHead.setFontName("Times New Roman");
-            fontStampBghHead.setFontHeightInPoints((short) 9);
-            fontStampBghHead.setBold(true);
-            fontStampBghHead.setColor(IndexedColors.DARK_RED.getIndex());
+            // Khu vực dán chữ ký: chừa 4 dòng trống để dán hình ảnh chữ ký / con dấu số
+            int sigImgRowStart = rowIdx;
+            for (int i = 0; i < 4; i++) {
+                Row rBlank = sheet.createRow(rowIdx++);
+                rBlank.setHeightInPoints(18f);
+            }
+            int sigImgRowEnd = rowIdx;
 
-            Font fontStampBghBody = workbook.createFont();
-            fontStampBghBody.setFontName("Times New Roman");
-            fontStampBghBody.setFontHeightInPoints((short) 8);
-            fontStampBghBody.setColor(IndexedColors.RED.getIndex());
-
-            CellStyle styleStampBghHead = workbook.createCellStyle();
-            styleStampBghHead.setFont(fontStampBghHead);
-            styleStampBghHead.setAlignment(HorizontalAlignment.CENTER);
-            styleStampBghHead.setVerticalAlignment(VerticalAlignment.CENTER);
-            styleStampBghHead.setFillForegroundColor(IndexedColors.ROSE.getIndex());
-            styleStampBghHead.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            setBorders(styleStampBghHead);
-
-            CellStyle styleStampBghBody = workbook.createCellStyle();
-            styleStampBghBody.setFont(fontStampBghBody);
-            styleStampBghBody.setAlignment(HorizontalAlignment.CENTER);
-            styleStampBghBody.setVerticalAlignment(VerticalAlignment.CENTER);
-            styleStampBghBody.setFillForegroundColor(IndexedColors.ROSE.getIndex());
-            styleStampBghBody.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            setBorders(styleStampBghBody);
-
-            Font fontStampDeptHead = workbook.createFont();
-            fontStampDeptHead.setFontName("Times New Roman");
-            fontStampDeptHead.setFontHeightInPoints((short) 9);
-            fontStampDeptHead.setBold(true);
-            fontStampDeptHead.setColor(IndexedColors.DARK_GREEN.getIndex());
-
-            Font fontStampDeptBody = workbook.createFont();
-            fontStampDeptBody.setFontName("Times New Roman");
-            fontStampDeptBody.setFontHeightInPoints((short) 8);
-            fontStampDeptBody.setColor(IndexedColors.GREEN.getIndex());
-
-            CellStyle styleStampDeptHead = workbook.createCellStyle();
-            styleStampDeptHead.setFont(fontStampDeptHead);
-            styleStampDeptHead.setAlignment(HorizontalAlignment.CENTER);
-            styleStampDeptHead.setVerticalAlignment(VerticalAlignment.CENTER);
-            styleStampDeptHead.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-            styleStampDeptHead.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            setBorders(styleStampDeptHead);
-
-            CellStyle styleStampDeptBody = workbook.createCellStyle();
-            styleStampDeptBody.setFont(fontStampDeptBody);
-            styleStampDeptBody.setAlignment(HorizontalAlignment.CENTER);
-            styleStampDeptBody.setVerticalAlignment(VerticalAlignment.CENTER);
-            styleStampDeptBody.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-            styleStampDeptBody.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            setBorders(styleStampDeptBody);
-
-            Font fontStampTeacherHead = workbook.createFont();
-            fontStampTeacherHead.setFontName("Times New Roman");
-            fontStampTeacherHead.setFontHeightInPoints((short) 9);
-            fontStampTeacherHead.setBold(true);
-            fontStampTeacherHead.setColor(IndexedColors.DARK_BLUE.getIndex());
-
-            Font fontStampTeacherBody = workbook.createFont();
-            fontStampTeacherBody.setFontName("Times New Roman");
-            fontStampTeacherBody.setFontHeightInPoints((short) 8);
-            fontStampTeacherBody.setColor(IndexedColors.BLUE.getIndex());
-
-            CellStyle styleStampTeacherHead = workbook.createCellStyle();
-            styleStampTeacherHead.setFont(fontStampTeacherHead);
-            styleStampTeacherHead.setAlignment(HorizontalAlignment.CENTER);
-            styleStampTeacherHead.setVerticalAlignment(VerticalAlignment.CENTER);
-            styleStampTeacherHead.setFillForegroundColor(IndexedColors.LIGHT_TURQUOISE.getIndex());
-            styleStampTeacherHead.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            setBorders(styleStampTeacherHead);
-
-            CellStyle styleStampTeacherBody = workbook.createCellStyle();
-            styleStampTeacherBody.setFont(fontStampTeacherBody);
-            styleStampTeacherBody.setAlignment(HorizontalAlignment.CENTER);
-            styleStampTeacherBody.setVerticalAlignment(VerticalAlignment.CENTER);
-            styleStampTeacherBody.setFillForegroundColor(IndexedColors.LIGHT_TURQUOISE.getIndex());
-            styleStampTeacherBody.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            setBorders(styleStampTeacherBody);
-
-            // Dán con dấu chữ ký số điện tử trực tiếp vào đúng cột người ký
-            if (sigTeacher != null || sigDeptLeader != null || sigPrincipal != null) {
-                // Hàng 1: Tiêu đề con dấu
-                Row rStamp1 = sheet.createRow(rowIdx++);
-                if (sigPrincipal != null) {
-                    setStampCell(sheet, rStamp1, 1, 4, "🏛️ ĐÃ KÝ SỐ DUYỆT BGH", styleStampBghHead);
+            // Dán hình ảnh con dấu / chữ ký số (PNG) căn giữa chuẩn xác vào cột người ký, nằm ngay trên dòng Họ và Tên
+            if (sigPrincipal != null) {
+                byte[] img = com.school.lessonplan.nq52.signature.Nq52SignatureImageHelper.getSignaturePngBytes(
+                        sigPrincipal, "Ban Giám Hiệu", "BGH", true, false);
+                if (img != null) {
+                    insertSignatureImageCentered(workbook, sheet, img, 1, 4, sigImgRowStart, 4);
                 }
-                if (sigDeptLeader != null) {
-                    setStampCell(sheet, rStamp1, 6, 10, "✍️ ĐÃ KÝ SỐ THẨM ĐỊNH TỔ", styleStampDeptHead);
+            }
+            if (sigDeptLeader != null) {
+                byte[] img = com.school.lessonplan.nq52.signature.Nq52SignatureImageHelper.getSignaturePngBytes(
+                        sigDeptLeader, sigDeptLeader.getSignerNameSnapshot(), "Tổ trưởng chuyên môn", false, true);
+                if (img != null) {
+                    insertSignatureImageCentered(workbook, sheet, img, 6, 10, sigImgRowStart, 4);
                 }
-                if (sigTeacher != null) {
-                    setStampCell(sheet, rStamp1, 13, 17, "✍️ ĐÃ KÝ SỐ ĐIỆN TỬ", styleStampTeacherHead);
+            }
+            if (sigTeacher != null) {
+                byte[] img = com.school.lessonplan.nq52.signature.Nq52SignatureImageHelper.getSignaturePngBytes(
+                        sigTeacher, sigTeacher.getSignerNameSnapshot(), "Giáo viên", false, false);
+                if (img != null) {
+                    insertSignatureImageCentered(workbook, sheet, img, 13, 17, sigImgRowStart, 4);
                 }
-
-                // Hàng 2: Họ tên người ký / Đại diện
-                Row rStamp2 = sheet.createRow(rowIdx++);
-                if (sigPrincipal != null) {
-                    setStampCell(sheet, rStamp2, 1, 4, "TRƯỜNG THCS NGUYỄN VĂN LINH", styleStampBghHead);
-                }
-                if (sigDeptLeader != null) {
-                    setStampCell(sheet, rStamp2, 6, 10, "Ký bởi: " + sigDeptLeader.getSignerNameSnapshot(), styleStampDeptHead);
-                }
-                if (sigTeacher != null) {
-                    setStampCell(sheet, rStamp2, 13, 17, "Ký bởi: " + sigTeacher.getSignerNameSnapshot(), styleStampTeacherHead);
-                }
-
-                // Hàng 3: Thời gian ký TSA & Dịch vụ CA
-                Row rStamp3 = sheet.createRow(rowIdx++);
-                if (sigPrincipal != null) {
-                    setStampCell(sheet, rStamp3, 1, 4, "Thời gian: " + SIG_DATE_FMT.format(sigPrincipal.getSignedAt()) + " | USB Token", styleStampBghBody);
-                }
-                if (sigDeptLeader != null) {
-                    setStampCell(sheet, rStamp3, 6, 10, "Thời gian: " + SIG_DATE_FMT.format(sigDeptLeader.getSignedAt()) + " | " + formatCaProvider(sigDeptLeader.getCaProvider()), styleStampDeptBody);
-                }
-                if (sigTeacher != null) {
-                    setStampCell(sheet, rStamp3, 13, 17, "Thời gian: " + SIG_DATE_FMT.format(sigTeacher.getSignedAt()) + " | " + formatCaProvider(sigTeacher.getCaProvider()), styleStampTeacherBody);
-                }
-
-                // Hàng 4: Xác thực Realtime & Toàn vẹn dữ liệu
-                Row rStamp4 = sheet.createRow(rowIdx++);
-                if (sigPrincipal != null) {
-                    setStampCell(sheet, rStamp4, 1, 4, "✓ Phê duyệt chính thức & Ban hành hợp lệ", styleStampBghBody);
-                }
-                if (sigDeptLeader != null) {
-                    setStampCell(sheet, rStamp4, 6, 10, "✓ Xác thực Realtime: Hợp lệ & Toàn vẹn (SHA-256)", styleStampDeptBody);
-                }
-                if (sigTeacher != null) {
-                    setStampCell(sheet, rStamp4, 13, 17, "✓ Xác thực Realtime: Hợp lệ & Toàn vẹn (SHA-256)", styleStampTeacherBody);
-                }
-
-                rowIdx += 1; // Khoảng cách nhỏ trước họ tên
-            } else {
-                rowIdx += 3; // Để trống nếu chưa bên nào ký
             }
 
             // Hàng in Họ và tên cuối cùng
@@ -710,16 +604,70 @@ public class Nq52ExcelExportService {
         }
     }
 
-    private void setStampCell(Sheet sheet, Row row, int startCol, int endCol, String text, CellStyle style) {
-        for (int c = startCol; c <= endCol; c++) {
-            Cell cell = row.createCell(c);
-            cell.setCellStyle(style);
+    private void insertSignatureImageCentered(Workbook workbook, Sheet sheet, byte[] imageBytes, int startCol, int endCol, int startRow, int numRows) {
+        if (imageBytes == null || imageBytes.length == 0) return;
+        try {
+            int pictureIdx = workbook.addPicture(imageBytes, Workbook.PICTURE_TYPE_PNG);
+            Drawing<?> drawing = sheet.getDrawingPatriarch();
+            if (drawing == null) {
+                drawing = sheet.createDrawingPatriarch();
+            }
+
+            // Kích thước mong muốn theo tỷ lệ cân đối (tối đa 140x48 pt)
+            java.awt.Dimension dim = com.school.lessonplan.nq52.signature.Nq52SignatureImageHelper.getProportionalDimension(imageBytes, 140, 48);
+            long imgWidthEmu = (long) dim.width * 12700L;
+
+            // Tính tổng độ rộng vùng merge (startCol -> endCol) theo đơn vị EMU
+            long totalRangeEmu = 0;
+            long[] colWidthsEmu = new long[endCol - startCol + 1];
+            for (int i = 0; i <= endCol - startCol; i++) {
+                int c = startCol + i;
+                float px = sheet.getColumnWidthInPixels(c);
+                long colEmu = (long) (px * 9525.0);
+                colWidthsEmu[i] = colEmu;
+                totalRangeEmu += colEmu;
+            }
+
+            // Tính khoảng cách lề trái để căn giữa hoàn toàn theo chiều ngang vùng ký
+            long leftOffsetEmu = (totalRangeEmu - imgWidthEmu) / 2;
+            if (leftOffsetEmu < 0) leftOffsetEmu = 0;
+
+            int targetCol = startCol;
+            long offsetInCol = leftOffsetEmu;
+            for (int i = 0; i <= endCol - startCol; i++) {
+                if (offsetInCol < colWidthsEmu[i] || i == endCol - startCol) {
+                    targetCol = startCol + i;
+                    break;
+                }
+                offsetInCol -= colWidthsEmu[i];
+            }
+
+            // Tính căn giữa theo chiều dọc trong khu vực các dòng ký
+            float totalRowHeightPt = numRows * 18f;
+            long totalRowHeightEmu = (long) (totalRowHeightPt * 12700L);
+            long imgHeightEmu = (long) dim.height * 12700L;
+            long topOffsetEmu = Math.max(0, (totalRowHeightEmu - imgHeightEmu) / 2);
+
+            ClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
+            anchor.setCol1(targetCol);
+            anchor.setDx1((int) offsetInCol);
+            anchor.setRow1(startRow);
+            anchor.setDy1((int) topOffsetEmu);
+            anchor.setAnchorType(ClientAnchor.AnchorType.MOVE_DONT_RESIZE);
+
+            Picture pict = drawing.createPicture(anchor, pictureIdx);
+
+            // Co giãn theo đúng tỷ lệ để đạt kích thước dim.width và dim.height
+            java.awt.Dimension origDim = pict.getImageDimension();
+            if (origDim != null && origDim.getWidth() > 0 && origDim.getHeight() > 0) {
+                double scale = Math.min((double) dim.width / origDim.getWidth(), (double) dim.height / origDim.getHeight());
+                pict.resize(scale, scale);
+            } else {
+                pict.resize(0.5, 0.5);
+            }
+        } catch (Exception e) {
+            log.warn("Lỗi khi chèn hình ảnh chữ ký căn giữa vào Excel: {}", e.getMessage());
         }
-        Cell first = row.getCell(startCol);
-        if (first != null && text != null) {
-            first.setCellValue(text);
-        }
-        sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), startCol, endCol));
     }
 
     private String formatCaProvider(String provider) {

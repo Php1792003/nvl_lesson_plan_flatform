@@ -1,5 +1,6 @@
 package com.school.lessonplan.nq52.signature;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.school.lessonplan.user.User;
 import jakarta.persistence.*;
 
@@ -13,6 +14,7 @@ public class Nq52UserSignatureProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;

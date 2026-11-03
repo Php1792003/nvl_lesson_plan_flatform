@@ -52,11 +52,24 @@ public class Nq52SignatureProfileController {
         try {
             User user = resolveUser(currentUser);
             Nq52UserSignatureProfile updated = profileService.updateProfile(user, form);
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Đã lưu thông tin nhân sự và cấu hình tài khoản chữ ký số thành công!",
-                    "profile", updated
-            ));
+            Map<String, Object> result = new java.util.LinkedHashMap<>();
+            result.put("success", true);
+            result.put("message", "Đã lưu thông tin nhân sự và cấu hình tài khoản chữ ký số thành công!");
+            result.put("registrationStatus", updated.getRegistrationStatus());
+            result.put("caProvider", updated.getCaProvider());
+            result.put("caUsername", updated.getCaUsername());
+            result.put("moetId", updated.getMoetId() != null ? updated.getMoetId() : "");
+            result.put("fullName", updated.getFullName() != null ? updated.getFullName() : "");
+            result.put("dob", updated.getDob() != null ? updated.getDob() : "");
+            result.put("nationalId", updated.getNationalId() != null ? updated.getNationalId() : "");
+            result.put("gender", updated.getGender() != null ? updated.getGender() : "Nam");
+            result.put("personalId", updated.getPersonalId() != null ? updated.getPersonalId() : "");
+            result.put("certSerial", updated.getCertSerial());
+            result.put("certSubject", updated.getCertSubject());
+            result.put("validFrom", updated.getValidFrom());
+            result.put("validTo", updated.getValidTo());
+            result.put("ownerInfo", updated.getOwnerInfo());
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("Lỗi khi lưu cấu hình chữ ký số:", e);
             return ResponseEntity.badRequest().body(Map.of(

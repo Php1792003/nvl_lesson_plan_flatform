@@ -157,38 +157,39 @@ public class Nq52ExcelExportServiceTest {
             Sheet sheet = wb.getSheet("Mau_01TKNV");
             assertNotNull(sheet);
 
-            // Find rows where stamps are placed (around summary row + 5)
-            // Look for signature stamps text in sheet
+            // Kiểm tra con dấu/chữ ký dạng hình ảnh được chèn (3 ảnh)
+            assertTrue(wb.getAllPictures().size() >= 3, "Excel export must contain 3 digital signature picture stamps");
+
             boolean foundBgh = false;
             boolean foundDept = false;
             boolean foundTeacher = false;
 
-            for (int r = sheet.getFirstRowNum(); r <= sheet.getLastRowNum(); r++) {
+            for (int r = 16; r <= sheet.getLastRowNum(); r++) {
                 var row = sheet.getRow(r);
                 if (row == null) continue;
                 for (int c = 0; c <= 17; c++) {
                     var cell = row.getCell(c);
                     if (cell != null && cell.getCellType() == org.apache.poi.ss.usermodel.CellType.STRING) {
                         String val = cell.getStringCellValue();
-                        if (val.contains("🏛️ ĐÃ KÝ SỐ DUYỆT BGH")) {
+                        if (val.contains("Ban Giám Hiệu")) {
                             foundBgh = true;
-                            assertTrue(c >= 1 && c <= 4, "BGH stamp header must be in cols 1-4, found at col " + c);
+                            assertTrue(c >= 1 && c <= 4, "BGH name must be in cols 1-4, found at col " + c);
                         }
-                        if (val.contains("✍️ ĐÃ KÝ SỐ THẨM ĐỊNH TỔ")) {
+                        if (val.contains("Lê Hoàng Long")) {
                             foundDept = true;
-                            assertTrue(c >= 6 && c <= 10, "Dept leader stamp header must be in cols 6-10, found at col " + c);
+                            assertTrue(c >= 6 && c <= 10, "Dept leader name must be in cols 6-10, found at col " + c);
                         }
-                        if (val.contains("✍️ ĐÃ KÝ SỐ ĐIỆN TỬ")) {
+                        if (val.contains("Nguyễn Văn An")) {
                             foundTeacher = true;
-                            assertTrue(c >= 13 && c <= 17, "Teacher stamp header must be in cols 13-17, found at col " + c);
+                            assertTrue(c >= 13 && c <= 17, "Teacher name must be in cols 13-17, found at col " + c);
                         }
                     }
                 }
             }
 
-            assertTrue(foundBgh, "BGH stamp should be present in Excel export");
-            assertTrue(foundDept, "Dept leader stamp should be present in Excel export");
-            assertTrue(foundTeacher, "Teacher stamp should be present in Excel export");
+            assertTrue(foundBgh, "BGH name should be present in Excel export");
+            assertTrue(foundDept, "Dept leader name should be present in Excel export");
+            assertTrue(foundTeacher, "Teacher name should be present in Excel export");
         }
     }
 }

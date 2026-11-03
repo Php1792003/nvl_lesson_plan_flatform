@@ -78,12 +78,10 @@ public class Nq52DocxExportServiceTest {
             }
             String fullText = sb.toString();
 
-            assertTrue(fullText.contains("ĐÃ KÝ SỐ ĐIỆN TỬ"), "Docx must contain teacher digital signature stamp");
+            assertTrue(doc.getAllPictures().size() >= 3, "Docx must contain 3 digital signature picture stamps");
             assertTrue(fullText.contains("Nguyễn Văn An"), "Docx must contain teacher signer name");
-            assertTrue(fullText.contains("ĐÃ KÝ SỐ THẨM ĐỊNH TỔ"), "Docx must contain dept leader digital signature stamp");
             assertTrue(fullText.contains("Trần Thị Bình"), "Docx must contain dept leader signer name");
-            assertTrue(fullText.contains("ĐÃ KÝ DUYỆT CHÍNH THỨC"), "Docx must contain BGH digital signature stamp");
-            assertTrue(fullText.contains("TRƯỜNG THCS NGUYỄN VĂN LINH"), "Docx must contain BGH signer name");
+            assertTrue(fullText.contains("Ban Giám Hiệu"), "Docx must contain BGH title");
         }
     }
 }

@@ -31,6 +31,7 @@
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
                     <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%;">
                         <span style="color: #64748b;">Tài liệu:</span> <strong id="rsDocTitle" style="color: #0f172a;">Phiếu đánh giá chất lượng</strong>
+                        <span id="rsHashShort" style="display: none;"></span>
                     </div>
                     <div>
                         <span style="color: #64748b;">Người ký:</span> <strong id="rsSignerName" style="color: #1e40af;">Nguyễn Văn An</strong>
@@ -528,14 +529,17 @@
             fetch('/portal/api/nq52/signatures/prepare?docType=' + encodeURIComponent(currentSignDocType) + '&docId=' + currentSignDocId)
                 .then(r => r.json())
                 .then(data => {
-                    document.getElementById('rsDocTitle').textContent = data.documentTitle || 'Tài liệu Nghị quyết 52';
-                    document.getElementById('rsSignerName').textContent = data.signerName || 'Giáo viên';
-                    if (data.dataHashSha256) {
-                        document.getElementById('rsHashShort').textContent = data.dataHashSha256.substring(0, 10) + '...';
+                    const docTitleEl = document.getElementById('rsDocTitle');
+                    if (docTitleEl) docTitleEl.textContent = data.documentTitle || 'Tài liệu Nghị quyết 52';
+                    const signerNameEl = document.getElementById('rsSignerName');
+                    if (signerNameEl) signerNameEl.textContent = data.signerName || 'Giáo viên';
+                    const hashShortEl = document.getElementById('rsHashShort');
+                    if (hashShortEl && data.dataHashSha256) {
+                        hashShortEl.textContent = data.dataHashSha256.substring(0, 10) + '...';
                     }
                     if (data.signerIdentifier) {
                         const userInput = document.getElementById('rsDirectUsername');
-                        if (userInput && !userInput.value) {
+                        if (userInput) {
                             userInput.value = data.signerIdentifier;
                         }
                     }
@@ -543,7 +547,8 @@
                     const provider = getSelectedRsProvider();
                     updateProviderUiText(provider);
 
-                    document.getElementById('remoteSigningModal').style.display = 'flex';
+                    const modal = document.getElementById('remoteSigningModal');
+                    if (modal) modal.style.display = 'flex';
                 })
                 .catch(err => {
                     alert('Lỗi kết nối khi chuẩn bị ký số: ' + err);
@@ -626,9 +631,9 @@
             const btn = document.getElementById('btnSubmitDirectSign');
             const spinner = document.getElementById('rsDirectSpinner');
             const btnText = document.getElementById('rsDirectBtnText');
-            btn.disabled = true;
-            spinner.style.display = 'inline';
-            btnText.textContent = 'Đang xác thực API & Ký số...';
+            if (btn) btn.disabled = true;
+            if (spinner) spinner.style.display = 'inline';
+            if (btnText) btnText.textContent = 'Đang xác thực API & Ký số...';
 
             fetch('/portal/api/nq52/signatures/direct-sign', {
                 method: 'POST',
@@ -654,9 +659,9 @@
                 }
             })
             .then(res => {
-                btn.disabled = false;
-                spinner.style.display = 'none';
-                btnText.textContent = 'Đăng nhập & Ký số ngay';
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                if (btnText) btnText.textContent = 'Đăng nhập & Ký số ngay';
 
                 if (res.success) {
                     handleDirectSignSuccess(res);
@@ -665,9 +670,9 @@
                 }
             })
             .catch(err => {
-                btn.disabled = false;
-                spinner.style.display = 'none';
-                btnText.textContent = 'Đăng nhập & Ký số ngay';
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                if (btnText) btnText.textContent = 'Đăng nhập & Ký số ngay';
                 showRsError('Lỗi kết nối tới Cổng ký số: ' + err);
             });
         }
@@ -876,14 +881,19 @@
         }
 
         function handleSignSuccess(msg) {
-            document.getElementById('rsWaitingBox').style.display = 'none';
-            document.getElementById('rsOtpSection').style.display = 'none';
-            document.getElementById('rsFooterButtons').style.display = 'none';
-            document.getElementById('rsErrorAlert').style.display = 'none';
+            const waitingBox = document.getElementById('rsWaitingBox');
+            if (waitingBox) waitingBox.style.display = 'none';
+            const otpSection = document.getElementById('rsOtpSection');
+            if (otpSection) otpSection.style.display = 'none';
+            const footerButtons = document.getElementById('rsFooterButtons');
+            if (footerButtons) footerButtons.style.display = 'none';
+            const errorAlert = document.getElementById('rsErrorAlert');
+            if (errorAlert) errorAlert.style.display = 'none';
 
             const successBox = document.getElementById('rsSuccessBox');
-            document.getElementById('rsSuccessMsg').textContent = msg;
-            successBox.style.display = 'block';
+            const msgEl = document.getElementById('rsSuccessMsg');
+            if (msgEl) msgEl.textContent = msg;
+            if (successBox) successBox.style.display = 'block';
 
             setTimeout(() => {
                 window.location.reload();
