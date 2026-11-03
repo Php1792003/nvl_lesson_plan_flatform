@@ -189,13 +189,14 @@
                         <div class="up-sec">
                             <div class="up-sec-head">
                                 <h3>Tệp đính kèm (Phiên bản 1) <span class="req">*</span></h3>
-                                <p>PDF, Word (.doc, .docx), tối đa 10 MB.</p>
+                                <p>PDF, Word (.doc, .docx), tối đa 25 MB.</p>
                             </div>
 
                             <div class="form-group" th:classappend="${#fields.hasErrors('file')} ? 'has-error'">
                                 <div class="up-dropwrap" id="dropWrap">
                                     <input type="file" id="file" name="file" class="up-file-input" required
                                         accept=".pdf,.doc,.docx"
+                                        data-max-size-mb="25"
                                         data-msg-required="Vui lòng chọn file giáo án."
                                         th:attr="aria-invalid=${#fields.hasErrors('file')},aria-describedby='file-error'">
 
@@ -210,7 +211,7 @@
                                             </svg>
                                         </div>
                                         <strong><u>Nhấp để chọn tệp</u> hoặc kéo thả vào đây</strong>
-                                        <span>PDF, Word · Tối đa 10 MB</span>
+                                        <span>PDF, Word · Tối đa 25 MB</span>
                                     </label>
 
                                     <div class="up-chosen" id="chosen">
@@ -218,7 +219,7 @@
                                         <div class="up-info">
                                             <div class="up-name" id="chosenName">—</div>
                                             <div class="up-size" id="chosenSize">—</div>
-                                            <div class="up-meter" title="Dung lượng so với giới hạn 10 MB"><b
+                                            <div class="up-meter" title="Dung lượng so với giới hạn 25 MB"><b
                                                     id="chosenMeter"></b></div>
                                         </div>
                                         <button type="button" class="up-remove" id="removeFile">Đổi tệp</button>
@@ -255,7 +256,7 @@
                                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="20 6 9 17 4 12" />
                                     </svg>
-                                    <span>Dung lượng tối đa <strong>10 MB</strong> mỗi tệp.</span>
+                                    <span>Dung lượng tối đa <strong>25 MB</strong> mỗi tệp.</span>
                                 </li>
                                 <li>
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"

@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
     public String handleMaxUploadSize(MaxUploadSizeExceededException ex, Model model) {
-        model.addAttribute("message", "Tệp tải lên vượt quá dung lượng giới hạn cho phép (tối đa 10 MB). Vui lòng nén hình ảnh hoặc chọn tệp nhỏ hơn.");
+        model.addAttribute("message", "Tệp tải lên vượt quá dung lượng giới hạn cho phép (tối đa 25 MB). Vui lòng nén hình ảnh hoặc chọn tệp nhỏ hơn.");
         return "error/413";
     }
 

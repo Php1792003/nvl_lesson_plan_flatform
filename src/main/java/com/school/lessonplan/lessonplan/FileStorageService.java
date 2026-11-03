@@ -57,7 +57,7 @@ public class FileStorageService {
             throw new FieldValidationException("file", "Empty", "Vui lòng chọn file tải lên.");
         }
 
-        // 1. Kiểm tra dung lượng (20 MB mặc định)
+        // 1. Kiểm tra dung lượng (25 MB mặc định)
         long maxBytes = (long) appProperties.getUpload().getMaxMb() * 1024 * 1024;
         if (file.getSize() > maxBytes) {
             throw new FieldValidationException("file", "Size", "Tệp vượt quá " + appProperties.getUpload().getMaxMb() + " MB. Hãy nén lại rồi thử lại.");

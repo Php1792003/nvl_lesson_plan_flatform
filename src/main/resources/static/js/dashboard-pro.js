@@ -523,7 +523,7 @@
             requestAnimationFrame(function () { root.classList.add('is-ready'); });
         });
 
-        var MAX = 10 * 1024 * 1024;
+        var MAX = 25 * 1024 * 1024;
         var ALLOWED = ['pdf', 'doc', 'docx'];
         var input = NVL.$('file');
         var wrap = NVL.$('dropWrap');
@@ -595,7 +595,7 @@
             if (f.size > MAX) {
                 input.value = '';
                 if (wrap) wrap.classList.remove('has-file');
-                showError('Tệp "' + f.name + '" có dung lượng ' + fmtSize(f.size) + ', vượt quá giới hạn 10 MB cho phép. Vui lòng nén hình ảnh trong tệp hoặc chọn tệp nhỏ hơn.');
+                showError('Tệp "' + f.name + '" có dung lượng ' + fmtSize(f.size) + ', vượt quá giới hạn 25 MB cho phép. Vui lòng nén hình ảnh trong tệp hoặc chọn tệp nhỏ hơn.');
                 updateProgress();
                 return;
             }
@@ -608,7 +608,7 @@
             var nameEl = NVL.$('chosenName');
             if (nameEl) { nameEl.textContent = f.name; nameEl.title = f.name; }
             var sizeEl = NVL.$('chosenSize');
-            if (sizeEl) sizeEl.textContent = fmtSize(f.size) + ' / 10 MB';
+            if (sizeEl) sizeEl.textContent = fmtSize(f.size) + ' / 25 MB';
 
             var meter = NVL.$('chosenMeter');
             if (meter) {

@@ -39,7 +39,7 @@
             }
             if (field.files && field.files[0]) {
                 var f = field.files[0];
-                var maxMb = Number(d.maxSizeMb) || 10;
+                var maxMb = Number(d.maxSizeMb) || 25;
                 var maxBytes = maxMb * 1024 * 1024;
                 if (f.size > maxBytes) {
                     var actualMb = (f.size / (1024 * 1024)).toFixed(1).replace('.', ',');

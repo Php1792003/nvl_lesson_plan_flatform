@@ -75,8 +75,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: ${APP_UPLOAD_MAX_MB:10}MB
-      max-request-size: ${APP_UPLOAD_MAX_MB:10}MB
+      max-file-size: ${APP_UPLOAD_MAX_MB:25}MB
+      max-request-size: ${APP_UPLOAD_MAX_MB:25}MB
 
   messages:
     basename: messages
@@ -89,7 +89,7 @@ app:
     root: ${APP_STORAGE_ROOT:./uploads}
     temp-dir: ${APP_STORAGE_TEMP:./uploads/temp}
   upload:
-    max-mb: ${APP_UPLOAD_MAX_MB:10}
+    max-mb: ${APP_UPLOAD_MAX_MB:25}
     allowed-extensions: pdf,doc,docx
     allowed-content-types: application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document
     max-concurrent: ${APP_UPLOAD_MAX_CONCURRENT:3}
