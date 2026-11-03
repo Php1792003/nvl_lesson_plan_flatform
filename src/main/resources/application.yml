@@ -137,9 +137,9 @@ app:
     mode: ${SIGNATURE_MODE:REAL}
     vnpt-smartca:
       enabled: true
-      base-url: ${VNPT_SMARTCA_URL:https://rmgateway.vnptit.vn/sca/sp769}
-      client-id: ${VNPT_CLIENT_ID:school_nvl_vnpt}
-      client-secret: ${VNPT_CLIENT_SECRET:smartca_sec_2026}
+      base-url: ${VNPT_SMARTCA_URL:https://gwsca.vnpt.vn/sca/sp769}
+      client-id: ${VNPT_CLIENT_ID:4184-637127995547330633.apps.signserviceapi.com}
+      client-secret: ${VNPT_CLIENT_SECRET:NGNhMzdmOGE-OGM2Mi00MTg0}
       timeout-seconds: 15
     viettel-cloud-ca:
       enabled: true

@@ -42,12 +42,12 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                         .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy()))
 
-                // CSRF: bật cho mọi POST/PUT/PATCH/DELETE, token trong cookie cho Thymeleaf đọc
+                // CSRF: bật cho mọi POST/PUT/PATCH/DELETE, token trong cookie cho Thymeleaf đọc, bỏ qua các REST API /api/**
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(csrfHandler)
                         .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
-                        .ignoringRequestMatchers("/auth/refresh")
+                        .ignoringRequestMatchers("/auth/refresh", "/api/**")
                 )
 
                 // Headers bảo mật

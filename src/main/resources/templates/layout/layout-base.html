@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
     <title th:text="${pageTitle} + ' — Quản lý Giáo án NVL'">Hệ thống Quản lý Giáo án</title>
     <link rel="icon" type="image/x-icon" th:href="@{/img/nvl_logo.png}" style="width: 100px; height: 100px;">
     <link rel="stylesheet" th:href="@{/css/style.css(v='2.9')}">

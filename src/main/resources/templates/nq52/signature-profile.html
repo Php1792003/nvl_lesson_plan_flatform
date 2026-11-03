@@ -964,7 +964,17 @@
                     password: password
                 })
             })
-            .then(r => r.json())
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
             .then(res => {
                 btn.disabled = false;
                 spinner.style.display = 'none';
@@ -977,6 +987,15 @@
                     // Cập nhật tức thì (realtime) các trường trên giao diện
                     document.getElementById('displayRegText').textContent = res.registrationStatus || 'Đã duyệt tài khoản';
                     document.getElementById('caUsername').value = res.caUsername || username;
+                    if (res.moetId) document.getElementById('moetId').value = res.moetId;
+                    if (res.fullName) document.getElementById('fullName').value = res.fullName;
+                    if (res.dob) document.getElementById('dob').value = res.dob;
+                    if (res.nationalId) document.getElementById('nationalId').value = res.nationalId;
+                    if (res.gender) {
+                        const genderSelect = document.getElementById('gender');
+                        if (genderSelect) genderSelect.value = res.gender;
+                    }
+                    if (res.personalId) document.getElementById('personalId').value = res.personalId;
                     if (res.caProvider) {
                         const caSelect = document.getElementById('caProvider');
                         for (let opt of caSelect.options) {
@@ -1038,7 +1057,17 @@
                 headers: getHeaders(),
                 body: JSON.stringify(form)
             })
-            .then(r => r.json())
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
             .then(res => {
                 btn.disabled = false;
                 spinner.style.display = 'none';

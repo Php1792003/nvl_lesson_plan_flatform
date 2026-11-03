@@ -642,7 +642,17 @@
                     reviewerNotes: reviewerNotes
                 })
             })
-            .then(r => r.json())
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
             .then(res => {
                 btn.disabled = false;
                 spinner.style.display = 'none';
@@ -707,7 +717,17 @@
                     reviewerNotes: reviewerNotes
                 })
             })
-            .then(r => r.json())
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
             .then(res => {
                 if (res.success) {
                     activeTransactionId = res.transactionId;
@@ -822,7 +842,17 @@
                 method: 'POST',
                 headers: getHeaders()
             })
-            .then(r => r.json())
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
             .then(res => {
                 if (res.completed) {
                     if (rsPollInterval) clearInterval(rsPollInterval);
@@ -893,7 +923,17 @@
                     reviewerNotes: reviewerNotes
                 })
             })
-            .then(r => r.json())
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
             .then(res => {
                 btn.disabled = false;
                 spinner.style.display = 'none';
@@ -964,7 +1004,17 @@
                     bghNotes: bghNotes
                 })
             })
-            .then(r => r.json())
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
             .then(res => {
                 btn.disabled = false;
                 spinner.style.display = 'none';

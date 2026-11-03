@@ -4,70 +4,57 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.school.lessonplan.nq52.signature.config.SignatureProperties;
 import com.school.lessonplan.nq52.signature.provider.CaSignResult;
 import com.school.lessonplan.nq52.signature.provider.VnptSmartCaClient;
-import com.school.lessonplan.user.User;
-import com.school.lessonplan.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 public class VnptSmartCaClientTest {
 
     private SignatureProperties signatureProperties;
     private ObjectMapper objectMapper;
-    private UserRepository userRepository;
-    private PasswordEncoder passwordEncoder;
     private VnptSmartCaClient client;
 
     @BeforeEach
     public void setup() {
         signatureProperties = new SignatureProperties();
+        signatureProperties.getVnptSmartca().setBaseUrl("http://localhost:9999/mock-vnpt");
         objectMapper = new ObjectMapper();
-        userRepository = Mockito.mock(UserRepository.class);
-        passwordEncoder = new BCryptPasswordEncoder();
 
-        client = new VnptSmartCaClient(signatureProperties, objectMapper, userRepository, passwordEncoder);
+        client = new VnptSmartCaClient(signatureProperties, objectMapper);
     }
 
     @Test
-    public void testAuthenticateAndSign_WithValidPassword_Success() {
-        User teacher = new User();
-        teacher.setId(10L);
-        teacher.setEmail("giaovien@school.edu.vn");
-        teacher.setPasswordHash(passwordEncoder.encode("Password123!"));
-
-        when(userRepository.findByEmail("giaovien@school.edu.vn")).thenReturn(Optional.of(teacher));
-
+    public void testAuthenticateAndSign_EmptyUsername_ReturnsError() {
         CaSignResult result = client.authenticateAndSign(
-                "giaovien@school.edu.vn",
+                "",
                 "Password123!",
                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "Nguyễn Văn An",
                 "Trường THCS Nguyễn Văn Linh"
         );
 
-        assertTrue(result.isSuccess());
-        assertNotNull(result.getCertSerial());
-        assertTrue(result.getCertSerial().startsWith("54:VNPT:"));
-        assertTrue(result.getCertSubject().contains("Nguyễn Văn An"));
-        assertNotNull(result.getSignatureValue());
+        assertFalse(result.isSuccess());
+        assertTrue(result.getErrorMessage().contains("Tên đăng nhập"));
     }
 
     @Test
-    public void testAuthenticateAndSign_WithWrongPassword_Fails() {
-        User teacher = new User();
-        teacher.setId(10L);
-        teacher.setEmail("giaovien@school.edu.vn");
-        teacher.setPasswordHash(passwordEncoder.encode("Password123!"));
+    public void testAuthenticateAndSign_EmptyPassword_ReturnsError() {
+        CaSignResult result = client.authenticateAndSign(
+                "giaovien@school.edu.vn",
+                "",
+                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "Nguyễn Văn An",
+                "Trường THCS Nguyễn Văn Linh"
+        );
 
-        when(userRepository.findByEmail("giaovien@school.edu.vn")).thenReturn(Optional.of(teacher));
+        assertFalse(result.isSuccess());
+        assertTrue(result.getErrorMessage().contains("Mật khẩu"));
+    }
 
+    @Test
+    public void testAuthenticateAndSign_UnreachableEndpoint_ReturnsConnectionErrorWithoutMock() {
+        // When server is unreachable (or wrong credentials), it must return error and NOT fallback to mock success!
         CaSignResult result = client.authenticateAndSign(
                 "giaovien@school.edu.vn",
                 "WrongPassword999",
@@ -77,7 +64,7 @@ public class VnptSmartCaClientTest {
         );
 
         assertFalse(result.isSuccess());
-        assertTrue(result.getErrorMessage().contains("Mật khẩu"));
+        assertNotNull(result.getErrorMessage());
+        assertNull(result.getSignatureValue());
     }
 }
-

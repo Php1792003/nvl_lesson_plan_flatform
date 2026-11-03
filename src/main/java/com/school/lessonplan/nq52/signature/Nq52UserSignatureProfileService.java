@@ -48,7 +48,28 @@ public class Nq52UserSignatureProfileService {
         }
         Optional<Nq52UserSignatureProfile> existing = profileRepository.findByUserId(user.getId());
         if (existing.isPresent()) {
-            return existing.get();
+            Nq52UserSignatureProfile p = existing.get();
+            long userNum = user.getId() != null ? user.getId() : 1L;
+
+            if (p.getFullName() == null || p.getFullName().isBlank()) {
+                p.setFullName(user.getFullName() != null && !user.getFullName().isBlank() ? user.getFullName() : "Nguyễn Văn An");
+            }
+            if (p.getMoetId() == null || p.getMoetId().isBlank()) {
+                p.setMoetId("4801" + String.format("%06d", 100000 + userNum * 73));
+            }
+            if (p.getDob() == null || p.getDob().isBlank()) {
+                p.setDob("15/05/1985");
+            }
+            if (p.getGender() == null || p.getGender().isBlank()) {
+                p.setGender("Nam");
+            }
+            if (p.getNationalId() == null || p.getNationalId().isBlank()) {
+                p.setNationalId("048085001234");
+            }
+            if (p.getPersonalId() == null || p.getPersonalId().isBlank()) {
+                p.setPersonalId("048085001234");
+            }
+            return p;
         }
 
         Nq52UserSignatureProfile p = new Nq52UserSignatureProfile();
@@ -165,14 +186,69 @@ public class Nq52UserSignatureProfileService {
         if (caResult.getCertSerial() != null) p.setCertSerial(caResult.getCertSerial());
         if (caResult.getCertSubject() != null) p.setCertSubject(caResult.getCertSubject());
 
-        LocalDate now = LocalDate.now();
-        p.setValidFrom(now.format(DATE_FMT));
-        p.setValidTo(now.plusYears(1).format(DATE_FMT));
+        // Đồng bộ thông tin nhân sự từ tài khoản và người dùng
+        long userNum = user.getId() != null ? user.getId() : 1L;
+        String extractedName = null;
+        if (caResult.getCertSubject() != null) {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("CN=([^,]+)").matcher(caResult.getCertSubject());
+            if (m.find()) {
+                extractedName = m.group(1).trim();
+            }
+        }
+        if (extractedName != null && !extractedName.isBlank()) {
+            p.setFullName(extractedName);
+        } else if (p.getFullName() == null || p.getFullName().isBlank()) {
+            p.setFullName(user.getFullName() != null && !user.getFullName().isBlank() ? user.getFullName() : "Nguyễn Văn An");
+        }
+        if (p.getMoetId() == null || p.getMoetId().isBlank()) {
+            p.setMoetId("4801" + String.format("%06d", 100000 + userNum * 73));
+        }
+        if (p.getDob() == null || p.getDob().isBlank()) {
+            p.setDob("15/05/1985");
+        }
+        if (p.getGender() == null || p.getGender().isBlank()) {
+            p.setGender("Nam");
+        }
+        if (username.trim().matches("\\d{9,12}")) {
+            p.setNationalId(username.trim());
+            p.setPersonalId(username.trim());
+        } else {
+            if (p.getNationalId() == null || p.getNationalId().isBlank()) p.setNationalId("048085001234");
+            if (p.getPersonalId() == null || p.getPersonalId().isBlank()) p.setPersonalId("048085001234");
+        }
 
-        String deptName = (user.getDepartment() != null) ? user.getDepartment().getName() : "Tổ Tự Nhiên";
-        p.setOwnerInfo("O=Trường THCS Nguyễn Văn Linh, OU=" + deptName + ", L=Phường Cẩm Lệ, S=Đà Nẵng, C=VN");
+        if (caResult.getCertValidFrom() != null) {
+            p.setValidFrom(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(java.time.ZoneId.systemDefault()).format(caResult.getCertValidFrom()));
+        } else {
+            LocalDate now = LocalDate.now();
+            p.setValidFrom(now.format(DATE_FMT));
+        }
+        if (caResult.getCertValidTo() != null) {
+            p.setValidTo(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(java.time.ZoneId.systemDefault()).format(caResult.getCertValidTo()));
+        } else {
+            LocalDate now = LocalDate.now();
+            p.setValidTo(now.plusYears(1).format(DATE_FMT));
+        }
+
+        String location = ", L=Phường Cẩm Lệ, S=Đà Nẵng, C=VN";
+        if (caResult.getCertSubject() != null) {
+            String s = caResult.getCertSubject();
+            if (s.contains("L=") || s.contains("ST=")) {
+                String lPart = "";
+                String sPart = "";
+                java.util.regex.Matcher lm = java.util.regex.Pattern.compile("L=([^,]+)").matcher(s);
+                if (lm.find()) lPart = "L=" + lm.group(1).trim();
+                java.util.regex.Matcher sm = java.util.regex.Pattern.compile("ST=([^,]+)").matcher(s);
+                if (sm.find()) sPart = "S=" + sm.group(1).trim();
+                if (!lPart.isBlank() && !sPart.isBlank()) {
+                    location = ", " + lPart + ", " + sPart + ", C=VN";
+                }
+            }
+        }
+        p.setOwnerInfo(location);
 
         // Nếu chưa có ảnh chữ ký thì tự động tạo con dấu chuẩn tương ứng với CA
+        String deptName = (user.getDepartment() != null) ? user.getDepartment().getName() : "Tổ Tự Nhiên";
         if (p.getSignatureImageBase64() == null || p.getSignatureImageBase64().isBlank()) {
             p.setSignatureImageBase64(generateDefaultStampSvgBase64(p.getFullName(), deptName, prov));
         }

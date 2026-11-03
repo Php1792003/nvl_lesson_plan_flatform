@@ -86,6 +86,12 @@ public class Nq52SignatureProfileController {
             result.put("registrationStatus", updated.getRegistrationStatus());
             result.put("caProvider", updated.getCaProvider());
             result.put("caUsername", updated.getCaUsername());
+            result.put("moetId", updated.getMoetId() != null ? updated.getMoetId() : "");
+            result.put("fullName", updated.getFullName() != null ? updated.getFullName() : "");
+            result.put("dob", updated.getDob() != null ? updated.getDob() : "");
+            result.put("nationalId", updated.getNationalId() != null ? updated.getNationalId() : "");
+            result.put("gender", updated.getGender() != null ? updated.getGender() : "Nam");
+            result.put("personalId", updated.getPersonalId() != null ? updated.getPersonalId() : "");
             result.put("certSerial", updated.getCertSerial());
             result.put("certSubject", updated.getCertSubject());
             result.put("validFrom", updated.getValidFrom());

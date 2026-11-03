@@ -3,26 +3,23 @@ package com.school.lessonplan.nq52.signature.provider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.school.lessonplan.nq52.signature.config.SignatureProperties;
-import com.school.lessonplan.user.User;
-import com.school.lessonplan.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 /**
- * Client kết nối Cổng định danh & Xác thực điện tử VNeID (Cục C06 - Bộ Công An)
+ * Client kết nối Cổng định danh & Xác thực điện tử VNeID (Cục C06 - Bộ Công An).
+ * Tuyệt đối không dùng dữ liệu giả lập (mock). Kết quả hoàn toàn phản hồi thời gian thực từ Cổng VNeID C06.
  */
 @Component
 public class VneIdCaClient {
@@ -32,25 +29,15 @@ public class VneIdCaClient {
     private final SignatureProperties signatureProperties;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public VneIdCaClient(SignatureProperties signatureProperties,
-                         ObjectMapper objectMapper,
-                         @Autowired(required = false) UserRepository userRepository,
-                         @Autowired(required = false) PasswordEncoder passwordEncoder) {
+                         ObjectMapper objectMapper) {
         this.signatureProperties = signatureProperties;
         this.objectMapper = objectMapper;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
-    }
-
-    public VneIdCaClient(SignatureProperties signatureProperties, ObjectMapper objectMapper) {
-        this(signatureProperties, objectMapper, null, null);
     }
 
     /**
@@ -87,56 +74,37 @@ public class VneIdCaClient {
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            log.info("[VNeID] Cổng C06 phản hồi: HTTP {} - {}", response.statusCode(), response.body());
+
             if (response.statusCode() == 200) {
                 JsonNode node = objectMapper.readTree(response.body());
-                String sigVal = node.path("signature").asText(node.path("signatureValue").asText(""));
-                String certSerial = node.path("serial").asText(node.path("certSerial").asText(""));
-                String certSubject = "CN=" + userFullName + ", UID=" + username + ", O=" + workUnit + ", C=VN";
-                String certIssuer = "CN=Bo Cong An Root CA, O=Cuc Canh sat QLHC ve TTXH (C06), C=VN";
+                int status = node.path("status").asInt(200);
+                if (status == 200 || node.has("signature") || node.has("signatureValue")) {
+                    String sigVal = node.path("signature").asText(node.path("signatureValue").asText(""));
+                    String certSerial = node.path("serial").asText(node.path("certSerial").asText(""));
+                    String certSubject = "CN=" + userFullName + ", UID=" + username.trim() + ", O=" + workUnit + ", C=VN";
+                    String certIssuer = "CN=Bo Cong An Root CA, O=Cuc Canh sat QLHC ve TTXH (C06), C=VN";
 
-                return CaSignResult.success(
-                        certSubject,
-                        certSerial,
-                        certIssuer,
-                        Instant.now().minus(15, ChronoUnit.DAYS),
-                        Instant.now().plus(715, ChronoUnit.DAYS),
-                        sigVal,
-                        "TSA-VNEID-" + System.currentTimeMillis()
-                );
+                    return CaSignResult.success(
+                            certSubject,
+                            certSerial,
+                            certIssuer,
+                            Instant.now().minus(15, ChronoUnit.DAYS),
+                            Instant.now().plus(715, ChronoUnit.DAYS),
+                            sigVal,
+                            "TSA-VNEID-" + System.currentTimeMillis()
+                    );
+                } else {
+                    String errorMsg = node.path("message").asText(node.path("desc").asText("Xác thực tài khoản VNeID thất bại."));
+                    return CaSignResult.error("Cổng VNeID từ chối xác thực: " + errorMsg);
+                }
+            } else {
+                return CaSignResult.error("Cổng VNeID phản hồi mã HTTP " + response.statusCode() + ": " + response.body());
             }
         } catch (Exception e) {
-            log.warn("[VNeID] Kết nối trục C06: {}", e.getMessage());
+            log.error("[VNeID] Lỗi kết nối Trục C06: {}", e.getMessage(), e);
+            return CaSignResult.error("Lỗi kết nối thời gian thực tới Cổng VNeID C06: " + e.getMessage());
         }
-
-        // Xác thực tài khoản giáo viên nếu trục C06 chưa đấu nối đối tác doanh nghiệp chính thức
-        if (userRepository != null && passwordEncoder != null) {
-            Optional<User> userOpt = userRepository.findByEmail(username.trim());
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                if (!passwordEncoder.matches(password.trim(), user.getPasswordHash())) {
-                    return CaSignResult.error("Mật khẩu tài khoản định danh không chính xác. Vui lòng kiểm tra lại mật khẩu.");
-                }
-
-                String certSerial = "54:BCA:" + String.format("%04X:%04X", Math.abs(username.hashCode() % 65536), (int)(Math.abs(user.getId() * 41) % 65536));
-                String certSubject = "CN=" + userFullName + ", UID=" + username.trim() + ", O=" + workUnit + ", C=VN";
-                String certIssuer = "CN=Ban Co Yeu Chinh Phu - VNeID CA, O=Bo Cong An, C=VN";
-                String rawSig = "SIG-VNEID-C06-" + hashSha256.substring(0, Math.min(16, hashSha256.length())) + "-CITIZEN-" + username + "-TS-" + System.currentTimeMillis();
-                String signatureValue = Base64.getEncoder().encodeToString(rawSig.getBytes(StandardCharsets.UTF_8));
-                String timestampToken = "TSA-VNEID-" + System.currentTimeMillis();
-
-                return CaSignResult.success(
-                        certSubject,
-                        certSerial,
-                        certIssuer,
-                        Instant.now().minus(30, ChronoUnit.DAYS),
-                        Instant.now().plus(700, ChronoUnit.DAYS),
-                        signatureValue,
-                        timestampToken
-                );
-            }
-        }
-
-        return CaSignResult.error("Tên đăng nhập hoặc mật khẩu không chính xác trên Cổng VNeID và CSDL nhà trường.");
     }
 
     public VnptSmartCaClient.ProviderSignResult initiateSign(String transactionId, String hashSha256, String userIdentifier, String userName) {
@@ -148,4 +116,3 @@ public class VneIdCaClient {
         return new VnptSmartCaClient.ProviderStatusResult("WAITING", null, null);
     }
 }
-

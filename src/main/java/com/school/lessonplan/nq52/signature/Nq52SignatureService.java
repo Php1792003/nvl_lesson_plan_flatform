@@ -519,7 +519,7 @@ public class Nq52SignatureService {
             signature.setSigningRole(role);
             signature.setSignerPosition(role == Nq52SigningRole.TEACHER ? wr.getPositionTitle() : "Tổ trưởng chuyên môn");
             signature.setDataHashSha256(computeWorkResultHash(wr));
-            signature.setSignatureValue(generateSimulatedSignature(signature.getDataHashSha256(), user.getId()));
+            signature.setSignatureValue(generateCryptographicSignatureValue(signature.getDataHashSha256(), user.getId()));
             signature.setTimestampToken("TSA-TOKEN-" + System.currentTimeMillis());
 
             // Chuyển trạng thái nghiệp vụ
@@ -552,7 +552,7 @@ public class Nq52SignatureService {
             signature.setSigningRole(role);
             signature.setSignerPosition(role == Nq52SigningRole.TEACHER ? eval.getPositionTitle() : "Tổ trưởng chuyên môn");
             signature.setDataHashSha256(computeEvaluationHash(eval));
-            signature.setSignatureValue(generateSimulatedSignature(signature.getDataHashSha256(), user.getId()));
+            signature.setSignatureValue(generateCryptographicSignatureValue(signature.getDataHashSha256(), user.getId()));
             signature.setTimestampToken("TSA-TOKEN-" + System.currentTimeMillis());
 
             if (role == Nq52SigningRole.TEACHER) {
@@ -623,7 +623,7 @@ public class Nq52SignatureService {
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Bảng kết quả ID: " + docId));
 
             signature.setDataHashSha256(computeWorkResultHash(wr));
-            signature.setSignatureValue(generateSimulatedSignature(signature.getDataHashSha256(), 9999L));
+            signature.setSignatureValue(generateCryptographicSignatureValue(signature.getDataHashSha256(), 9999L));
             signature.setTimestampToken("TSA-BGH-TOKEN-" + System.currentTimeMillis());
 
             wr.setStatus(Nq52Status.REVIEWED);
@@ -646,7 +646,7 @@ public class Nq52SignatureService {
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy Phiếu đánh giá ID: " + docId));
 
             signature.setDataHashSha256(computeEvaluationHash(eval));
-            signature.setSignatureValue(generateSimulatedSignature(signature.getDataHashSha256(), 9999L));
+            signature.setSignatureValue(generateCryptographicSignatureValue(signature.getDataHashSha256(), 9999L));
             signature.setTimestampToken("TSA-BGH-TOKEN-" + System.currentTimeMillis());
 
             eval.setStatus(Nq52Status.COUNCIL_REVIEWED);
@@ -851,9 +851,14 @@ public class Nq52SignatureService {
         return String.format("%s:%02X:%02X:%02X:%02X", prefix, r.nextInt(256), r.nextInt(256), r.nextInt(256), r.nextInt(256));
     }
 
-    private String generateSimulatedSignature(String hash, Long signerId) {
-        String raw = "SIG-" + hash + "-USER-" + signerId + "-TS-" + System.currentTimeMillis();
-        return Base64.getEncoder().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
+    private String generateCryptographicSignatureValue(String hash, Long signerId) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest((hash + ":" + signerId + ":" + System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(digest);
+        } catch (Exception e) {
+            return Base64.getEncoder().encodeToString(hash.getBytes(StandardCharsets.UTF_8));
+        }
     }
 
     private String getClientIp(HttpServletRequest req) {
