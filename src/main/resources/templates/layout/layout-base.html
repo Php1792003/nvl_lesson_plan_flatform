@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
     <title th:text="${pageTitle} + ' — Quản lý Giáo án NVL'">Hệ thống Quản lý Giáo án</title>
     <link rel="icon" type="image/x-icon" th:href="@{/img/nvl_logo.png}" style="width: 100px; height: 100px;">
     <link rel="stylesheet" th:href="@{/css/style.css(v='3.1')}">
@@ -76,6 +78,43 @@
                         <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                     </svg>
                     <span>Góp ý & Báo lỗi</span>
+                </a>
+
+                <div class="sidebar-section-title">Nghị quyết 52</div>
+                <a th:href="@{/nq52/evaluations}" class="sidebar-link"
+                    th:classappend="${pageTitle != null and pageTitle.contains('Nghị quyết 52') and !pageTitle.contains('Duyệt') and !pageTitle.contains('kết quả') and !pageTitle.contains('01TKNV') ? 'active' : ''}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                    <span>Đánh giá NQ 52</span>
+                </a>
+                <a th:href="@{/nq52/work-results}" class="sidebar-link"
+                    th:classappend="${pageTitle != null and (pageTitle.contains('kết quả') or pageTitle.contains('01TKNV')) ? 'active' : ''}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <span>Tự đánh giá kết quả</span>
+                </a>
+                <a th:href="@{/nq52/reviews}" class="sidebar-link"
+                    sec:authorize="hasRole('ADMIN') or hasRole('DEPT_LEADER') or hasAuthority('NQ52_REVIEW')"
+                    th:classappend="${pageTitle != null and pageTitle.contains('Duyệt') ? 'active' : ''}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <polyline points="17 11 19 13 23 9"></polyline>
+                    </svg>
+                    <span>Duyệt phiếu cấp Tổ</span>
+                </a>
+                <a th:href="@{/nq52/digital-signature}" class="sidebar-link"
+                    th:classappend="${pageTitle != null and pageTitle.contains('Chữ ký số') ? 'active' : ''}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>Tài khoản chữ ký số</span>
                 </a>
 
                 <!-- Ban Giám Hiệu Admin Section -->

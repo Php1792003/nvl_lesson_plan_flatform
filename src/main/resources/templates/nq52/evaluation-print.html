@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Phieu_Danh_Gia_NQ52_' + ${eval.teacherNameSnapshot} + '_T' + ${eval.evaluationMonth} + '_' + ${eval.evaluationYear}">Bản in phiếu đánh giá NQ 52</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm 15mm 15mm 15mm;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13pt;
+            line-height: 1.35;
+            color: #000;
+            background: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        .print-actions {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .btn-print {
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+        }
+        .btn-back {
+            background-color: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: Arial, sans-serif;
+        }
+        @media print {
+            .print-actions {
+                display: none !important;
+            }
+            body {
+                padding: 0;
+            }
+        }
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .header-table td {
+            vertical-align: top;
+            padding: 0;
+        }
+        .title-block {
+            text-align: center;
+            margin: 20px 0 25px 0;
+        }
+        .title-block h1 {
+            font-size: 15pt;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+        }
+        .title-block h2 {
+            font-size: 13pt;
+            font-style: italic;
+            font-weight: normal;
+            margin: 0 0 5px 0;
+        }
+        .info-section {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .info-row {
+            margin-bottom: 4px;
+        }
+        .eval-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .eval-table th, .eval-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            font-size: 12pt;
+        }
+        .eval-table th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f8fafc;
+        }
+        .group-header {
+            font-weight: bold;
+            background-color: #f1f5f9;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .sign-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            page-break-inside: avoid;
+        }
+        .sign-table td {
+            width: 33.33%;
+            vertical-align: top;
+            text-align: center;
+            font-size: 12pt;
+            padding: 0 5px;
+        }
+        .sign-title {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .sign-space {
+            height: 80px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-actions">
+        <button class="btn-print" onclick="window.print()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            In phiếu đánh giá (Print / PDF)
+        </button>
+        <a class="btn-back" th:href="@{'/nq52/evaluations/' + ${eval.id}}">
+            ← Quay lại chi tiết phiếu
+        </a>
+    </div>
+
+    <!-- Official Header -->
+    <table class="header-table">
+        <tr>
+            <td style="width: 45%; text-align: center;">
+                <div>UBND PHƯỜNG CẨM LỆ</div>
+                <div style="font-weight: bold;">TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+                <div style="border-top: 1px solid #000; width: 140px; margin: 3px auto 0 auto;"></div>
+            </td>
+            <td style="width: 55%; text-align: center;">
+                <div style="font-weight: bold;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                <div style="font-weight: bold; font-style: italic;">Độc lập - Tự do - Hạnh phúc</div>
+                <div style="border-top: 1px solid #000; width: 180px; margin: 3px auto 0 auto;"></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-block">
+        <h1>PHIẾU THEO DÕI, ĐÁNH GIÁ, XẾP LOẠI CHẤT LƯỢNG VIÊN CHỨC</h1>
+        <h2>(Ban hành kèm theo Nghị quyết số 52/NQ-HĐND ngày 09/12/2021 của HĐND)</h2>
+        <div style="font-weight: bold; font-size: 13pt; margin-top: 6px;" th:text="'Kỳ đánh giá: Tháng ' + ${eval.evaluationMonth} + ' năm ' + ${eval.evaluationYear}">
+            Kỳ đánh giá: Tháng 10 năm 2026
+        </div>
+    </div>
+
+    <!-- Teacher Info -->
+    <div class="info-section">
+        <div class="info-row">
+            1. Họ và tên: <strong th:text="${eval.teacherNameSnapshot}"></strong>
+        </div>
+        <div class="info-row">
+            2. Chức danh nghề nghiệp / Chức vụ: <span th:text="${eval.positionTitle != null ? eval.positionTitle : 'Giáo viên'}">Giáo viên</span>
+        </div>
+        <div class="info-row">
+            3. Đơn vị công tác: Trường THCS Nguyễn Văn Linh — Tổ bộ môn: <strong th:text="${eval.departmentNameSnapshot}">Toán học</strong>
+        </div>
+    </div>
+
+    <!-- Evaluation Criteria Table -->
+    <table class="eval-table">
+        <thead>
+            <tr>
+                <th style="width: 50px;">TT</th>
+                <th>TIÊU CHÍ ĐÁNH GIÁ</th>
+                <th style="width: 80px;">Thang điểm tối đa</th>
+                <th style="width: 95px;">Cá nhân tự chấm</th>
+                <th style="width: 95px;">Tổ trưởng đánh giá</th>
+                <th style="width: 110px;">Hội đồng TĐ-KT đánh giá</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- PHẦN A -->
+            <tr class="group-header">
+                <td class="text-center">A</td>
+                <td>TIÊU CHÍ CHUNG</td>
+                <td class="text-center">30</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${#numbers.formatDecimal(form.selfScoreA, 1, 2)}">30.00</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${form.reviewerScoreA != null ? #numbers.formatDecimal(form.reviewerScoreA, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr style="font-weight: bold;">
+                <td class="text-center">I</td>
+                <td>Phẩm chất chính trị, phẩm chất đạo đức, văn hóa thực thi công vụ và ý thức kỷ luật</td>
+                <td class="text-center">10</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${#numbers.formatDecimal(form.selfScoreAi, 1, 2)}">10.00</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${form.reviewerScoreAi != null ? #numbers.formatDecimal(form.reviewerScoreAi, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">1</td>
+                <td>Phẩm chất chính trị, phẩm chất đạo đức, văn hóa thực thi công vụ</td>
+                <td class="text-center">5</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreAi1, 1, 2)}">5.00</td>
+                <td class="text-center" th:text="${form.reviewerScoreAi1 != null ? #numbers.formatDecimal(form.reviewerScoreAi1, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">2</td>
+                <td>Ý thức kỷ luật, kỷ cương trong thực thi công vụ, chấp hành nội quy cơ quan</td>
+                <td class="text-center">5</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreAi2, 1, 2)}">5.00</td>
+                <td class="text-center" th:text="${form.reviewerScoreAi2 != null ? #numbers.formatDecimal(form.reviewerScoreAi2, 1, 2) : '-'}">-</td>
+            </tr>
+
+            <tr style="font-weight: bold;">
+                <td class="text-center">II</td>
+                <td>Trách nhiệm trong thực thi công vụ, tác phong, lề lối làm việc</td>
+                <td class="text-center">10</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${#numbers.formatDecimal(form.selfScoreAii, 1, 2)}">10.00</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${form.reviewerScoreAii != null ? #numbers.formatDecimal(form.reviewerScoreAii, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">1</td>
+                <td>Năng lực chuyên môn, nghiệp vụ theo yêu cầu của vị trí việc làm</td>
+                <td class="text-center">2.5</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreAii1, 1, 2)}">2.50</td>
+                <td class="text-center" th:text="${form.reviewerScoreAii1 != null ? #numbers.formatDecimal(form.reviewerScoreAii1, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">2</td>
+                <td>Khả năng đáp ứng yêu cầu thực thi nhiệm vụ được giao thường xuyên, đột xuất</td>
+                <td class="text-center">2.5</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreAii2, 1, 2)}">2.50</td>
+                <td class="text-center" th:text="${form.reviewerScoreAii2 != null ? #numbers.formatDecimal(form.reviewerScoreAii2, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">3</td>
+                <td>Tinh thần trách nhiệm trong thực thi công vụ</td>
+                <td class="text-center">2.5</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreAii3, 1, 2)}">2.50</td>
+                <td class="text-center" th:text="${form.reviewerScoreAii3 != null ? #numbers.formatDecimal(form.reviewerScoreAii3, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">4</td>
+                <td>Thái độ giao tiếp, ứng xử với khách, PHHS, học sinh và khả năng phối hợp</td>
+                <td class="text-center">2.5</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreAii4, 1, 2)}">2.50</td>
+                <td class="text-center" th:text="${form.reviewerScoreAii4 != null ? #numbers.formatDecimal(form.reviewerScoreAii4, 1, 2) : '-'}">-</td>
+            </tr>
+
+            <tr style="font-weight: bold;">
+                <td class="text-center">III</td>
+                <td>Năng lực đổi mới, sáng tạo, dám nghĩ, dám làm, dám chịu trách nhiệm vì lợi ích chung</td>
+                <td class="text-center">10</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${#numbers.formatDecimal(form.selfScoreAiii, 1, 2)}">10.00</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${form.reviewerScoreAiii != null ? #numbers.formatDecimal(form.reviewerScoreAiii, 1, 2) : '-'}">-</td>
+            </tr>
+
+            <!-- PHẦN B -->
+            <tr class="group-header">
+                <td class="text-center">B</td>
+                <td>KẾT QUẢ THỰC HIỆN NHIỆM VỤ ĐƯỢC GIAO</td>
+                <td class="text-center">70</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${#numbers.formatDecimal(form.selfScoreB, 1, 2)}">70.00</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${form.reviewerScoreB != null ? #numbers.formatDecimal(form.reviewerScoreB, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">1</td>
+                <td>
+                    <strong>Tỷ lệ số lượng công việc, sản phẩm hoàn thành</strong><br/>
+                    <span style="font-size: 11pt; color: #475569;" th:text="'Mức cá nhân chọn: ' + ${form.selectedB1 != null ? form.selectedB1 : '-'} + ' | Mức Tổ trưởng chọn: ' + ${form.reviewerSelectedB1 != null ? form.reviewerSelectedB1 : '-'}">Mức chọn</span>
+                </td>
+                <td class="text-center">20</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreB1, 1, 2)}">20.00</td>
+                <td class="text-center" th:text="${form.reviewerScoreB1 != null ? #numbers.formatDecimal(form.reviewerScoreB1, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">2</td>
+                <td>
+                    <strong>Tỷ lệ số lượng công việc đảm bảo tiến độ</strong><br/>
+                    <span style="font-size: 11pt; color: #475569;" th:text="'Mức cá nhân chọn: ' + ${form.selectedB2 != null ? form.selectedB2 : '-'} + ' | Mức Tổ trưởng chọn: ' + ${form.reviewerSelectedB2 != null ? form.reviewerSelectedB2 : '-'}">Mức chọn</span>
+                </td>
+                <td class="text-center">20</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreB2, 1, 2)}">20.00</td>
+                <td class="text-center" th:text="${form.reviewerScoreB2 != null ? #numbers.formatDecimal(form.reviewerScoreB2, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr>
+                <td class="text-center">3</td>
+                <td>
+                    <strong>Tỷ lệ số lượng công việc đảm bảo chất lượng, hiệu quả</strong><br/>
+                    <span style="font-size: 11pt; color: #475569;" th:text="'Mức cá nhân chọn: ' + ${form.selectedB3 != null ? form.selectedB3 : '-'} + ' | Mức Tổ trưởng chọn: ' + ${form.reviewerSelectedB3 != null ? form.reviewerSelectedB3 : '-'}">Mức chọn</span>
+                </td>
+                <td class="text-center">30</td>
+                <td class="text-center" th:text="${#numbers.formatDecimal(form.selfScoreB3, 1, 2)}">30.00</td>
+                <td class="text-center" th:text="${form.reviewerScoreB3 != null ? #numbers.formatDecimal(form.reviewerScoreB3, 1, 2) : '-'}">-</td>
+            </tr>
+
+            <!-- TỔNG A + B -->
+            <tr style="font-weight: bold; background-color: #f1f5f9;">
+                <td></td>
+                <td><strong>TỔNG SỐ ĐIỂM ĐẠT ĐƯỢC (A + B)</strong></td>
+                <td class="text-center">100</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${#numbers.formatDecimal(form.selfScoreAb, 1, 2)}">100.00</td>
+                <td class="text-center" style="font-weight: bold;" th:text="${form.reviewerScoreAb != null ? #numbers.formatDecimal(form.reviewerScoreAb, 1, 2) : '-'}">-</td>
+            </tr>
+
+            <!-- PHẦN C -->
+            <tr class="group-header">
+                <td class="text-center">C</td>
+                <td>ĐIỂM CỘNG, ĐIỂM TRỪ (nếu có)</td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+            <td class="text-center"></td>
+            <td class="text-center"></td>
+            <td class="text-center"></td>
+            </tr>
+            <tr style="font-weight: bold;">
+                <td class="text-center">I</td>
+                <td>Điểm cộng (Tối đa 6.0 điểm)</td>
+                <td class="text-center">6</td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+            </tr>
+            <tr style="font-weight: bold;">
+                <td class="text-center">II</td>
+                <td>Điểm trừ</td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+            </tr>
+
+            <!-- TỔNG CỘNG -->
+            <tr style="font-weight: bold; background-color: #f1f5f9; font-size: 13pt;">
+                <td colspan="2" style="text-align: right; text-transform: uppercase;">TỔNG CỘNG ĐIỂM (A + B + C.I - C.II):</td>
+                <td class="text-center">100</td>
+                <td class="text-center" style="font-size: 14pt; color: #0369a1;" th:text="${#numbers.formatDecimal(form.selfTotalScore, 1, 2)}">100.00</td>
+                <td class="text-center" style="font-size: 14pt; color: #15803d;" th:text="${form.reviewerTotalScore != null ? #numbers.formatDecimal(form.reviewerTotalScore, 1, 2) : '-'}">-</td>
+            </tr>
+            <tr style="font-weight: bold; background-color: #f8fafc;">
+                <td colspan="2" style="text-align: right; text-transform: uppercase;">XẾP LOẠI CHẤT LƯỢNG:</td>
+                <td></td>
+                <td class="text-center" th:text="${eval.selfClassification != null ? eval.selfClassification : ''}">Xuất sắc</td>
+                <td class="text-center" style="color: #15803d;" th:text="${eval.reviewerClassification != null ? eval.reviewerClassification : 'Chưa xếp loại'}">Xuất sắc</td>
+                <td class="text-center" style="color: #b45309;" th:text="${eval.bghClassification != null ? eval.bghClassification : 'Chưa xếp loại'}">Xuất sắc</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Strengths & Weaknesses -->
+    <div style="margin-top: 15px; border: 1px solid #000; padding: 10px 14px; font-size: 12pt; margin-bottom: 15px;">
+        <div><strong>1. Ưu điểm: </strong> <span th:text="${eval.strengths != null ? eval.strengths : 'Hoàn thành tốt nhiệm vụ giảng dạy và công tác được giao.'}">Ưu điểm</span></div>
+        <div style="margin-top: 6px;"><strong>2. Hạn chế, khuyết điểm: </strong> <span th:text="${eval.weaknesses != null ? eval.weaknesses : 'Không'}">Không</span></div>
+    </div>
+
+    <!-- Reviewer Comments -->
+    <div style="margin-top: 15px; border: 1px solid #000; padding: 10px 14px; font-size: 12pt;">
+        <strong>Nhận xét, đánh giá của Tổ trưởng chuyên môn:</strong>
+        <p style="margin: 6px 0 0 0; font-style: italic; min-height: 40px;" th:text="${eval.reviewerNotes != null and eval.reviewerNotes != '' ? eval.reviewerNotes : '(Tổ trưởng chưa ghi ý kiến nhận xét)'}">
+            Đồng chí hoàn thành xuất sắc các nhiệm vụ được giao trong tháng.
+        </p>
+    </div>
+
+    <!-- Competent Authority Conclusion (Ban Giám Hiệu) -->
+    <div style="margin-top: 15px; border: 1px solid #000; padding: 10px 14px; font-size: 12pt;">
+        <div style="font-weight: bold; text-transform: uppercase; margin-bottom: 8px;">KẾT LUẬN CỦA CƠ QUAN CÓ THẨM QUYỀN</div>
+        <div style="font-size: 12pt;">
+            <strong>Xếp loại: </strong>
+            <span style="font-weight: bold;" th:text="${eval.bghClassification != null and eval.bghClassification != '' ? eval.bghClassification : '.....................................................................................'}">Hoàn thành xuất sắc nhiệm vụ</span>
+        </div>
+    </div>
+
+    <!-- Signature Block with Digital Stamps -->
+    <table class="sign-table">
+        <tr>
+            <td style="vertical-align: top; width: 33%;">
+                <div class="sign-title">NGƯỜI TỰ ĐÁNH GIÁ</div>
+                <div style="font-style: italic; font-size: 11pt; margin-bottom: 8px;">(Ký, ghi rõ họ tên)</div>
+                <div th:if="${sigTeacher != null}" style="border: 2px solid #2563eb; background: #eff6ff; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 220px; text-align: left; font-size: 10pt;">
+                    <div style="font-weight: bold; color: #1d4ed8;">ĐÃ KÝ SỐ ĐIỆN TỬ</div>
+                    <img th:if="${sigTeacher.signatureImageBase64 != null and !sigTeacher.signatureImageBase64.isBlank()}" 
+                         th:src="${sigTeacher.signatureImageBase64}" alt="Chữ ký số" style="max-height: 50px; max-width: 160px; display: block; margin: 4px auto;">
+                    <div style="font-weight: bold; color: #1e3a8a;" th:text="${sigTeacher.signerName}"></div>
+                    <div>Dịch vụ: <span th:text="${sigTeacher.caProvider}"></span></div>
+                    <div>Ngày ký: <span th:text="${sigTeacher.signedAtFormatted}"></span></div>
+                    <div style="margin-top: 4px; font-weight: bold; color: #15803d; font-size: 8.5pt;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+                </div>
+                <div th:unless="${sigTeacher != null}">
+                    <div class="sign-space"></div>
+                    <strong th:text="${eval.teacherNameSnapshot}"></strong>
+                </div>
+            </td>
+            <td style="vertical-align: top; width: 33%;">
+                <div class="sign-title">TỔ TRƯỞNG CHUYÊN MÔN</div>
+                <div style="font-style: italic; font-size: 11pt; margin-bottom: 8px;">(Ký, ghi rõ họ tên)</div>
+                <div th:if="${sigDeptLeader != null}" style="border: 2px solid #16a34a; background: #f0fdf4; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 220px; text-align: left; font-size: 10pt;">
+                    <div style="font-weight: bold; color: #15803d;">ĐÃ KÝ SỐ THẨM ĐỊNH TỔ</div>
+                    <img th:if="${sigDeptLeader.signatureImageBase64 != null and !sigDeptLeader.signatureImageBase64.isBlank()}" 
+                         th:src="${sigDeptLeader.signatureImageBase64}" alt="Chữ ký thẩm định" style="max-height: 50px; max-width: 160px; display: block; margin: 4px auto;">
+                    <div style="font-weight: bold; color: #14532d;" th:text="${sigDeptLeader.signerName}">Trần Thị Bình</div>
+                    <div>Dịch vụ: <span th:text="${sigDeptLeader.caProvider}">VNPT SmartCA</span></div>
+                    <div>Ngày ký: <span th:text="${sigDeptLeader.signedAtFormatted}">02/11/2026 15:20</span></div>
+                    <div style="margin-top: 4px; font-weight: bold; color: #15803d; font-size: 8.5pt;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+                </div>
+                <div th:unless="${sigDeptLeader != null}">
+                    <div class="sign-space"></div>
+                    <strong th:text="${eval.reviewer != null ? eval.reviewer.fullName : '................................................'}">................................................</strong>
+                </div>
+            </td>
+            <td style="vertical-align: top; width: 33%;">
+                <div class="sign-title">HIỆU TRƯỞNG</div>
+                <div style="font-style: italic; font-size: 11pt; margin-bottom: 8px;">(Ký số USB Token, đóng dấu)</div>
+                <div th:if="${sigPrincipal != null}" style="border: 2px solid #b91c1c; background: #fff5f5; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 220px; text-align: left; font-size: 10pt;">
+                    <div style="font-weight: bold; color: #991b1b;">ĐÃ KÝ DUYỆT CHÍNH THỨC</div>
+                    <img th:if="${sigPrincipal.signatureImageBase64 != null and !sigPrincipal.signatureImageBase64.isBlank()}" 
+                         th:src="${sigPrincipal.signatureImageBase64}" alt="Con dấu số BGH" style="max-height: 50px; max-width: 160px; display: block; margin: 4px auto;">
+                    <div style="font-weight: bold; color: #7f1d1d;" th:text="${sigPrincipal.signerName}">TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+                    <div>Thiết bị: <span th:text="${sigPrincipal.signatureTypeDisplayName}">USB Token PKI</span></div>
+                    <div>Ngày ký: <span th:text="${sigPrincipal.signedAtFormatted}">02/11/2026 15:30</span></div>
+                    <div style="margin-top: 4px; font-weight: bold; color: #15803d; font-size: 8.5pt;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+                </div>
+                <div th:unless="${sigPrincipal != null}">
+                    <div class="sign-space"></div>
+                    <strong th:text="${eval.bghReviewerNameSnapshot != null ? eval.bghReviewerNameSnapshot : (eval.bghReviewer != null ? eval.bghReviewer.fullName : '................................................')}">................................................</strong>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

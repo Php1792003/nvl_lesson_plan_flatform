@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    th:replace="~{layout/layout-base :: layout(${pageTitle}, ~{::contentBlock})}">
+
+<body>
+    <div th:fragment="contentBlock">
+        <style>
+            .wr-container {
+                max-width: 1380px;
+                margin: 0 auto;
+                padding-bottom: 80px;
+            }
+
+            .wr-card {
+                background: #ffffff;
+                border: 1px solid var(--border, #e2e8f0);
+                border-radius: var(--radius-md, 12px);
+                padding: 24px;
+                box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+                margin-bottom: 24px;
+            }
+
+            .wr-header-info {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 14px;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 14px 18px;
+                margin-bottom: 20px;
+            }
+
+            .wr-meta-label {
+                font-size: 12px;
+                color: #64748b;
+                font-weight: 600;
+                text-transform: uppercase;
+                margin-bottom: 2px;
+            }
+
+            .wr-meta-value {
+                font-size: 14px;
+                color: #0f172a;
+                font-weight: 700;
+            }
+
+            .wr-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+
+            .wr-table th,
+            .wr-table td {
+                border: 1px solid #cbd5e1;
+                padding: 8px 6px;
+                vertical-align: middle;
+            }
+
+            .wr-table th {
+                background: #f1f5f9;
+                color: #1e293b;
+                font-weight: 700;
+                text-align: center;
+            }
+
+            .wr-sec-header {
+                background: #e0f2fe !important;
+                color: #0369a1 !important;
+                font-weight: 700;
+                text-align: left !important;
+                padding: 10px 12px !important;
+            }
+
+            .wr-input {
+                width: 100%;
+                border: 1px solid #cbd5e1;
+                border-radius: 4px;
+                padding: 6px 8px;
+                font-size: 12.5px;
+                box-sizing: border-box;
+            }
+
+            .wr-input:focus {
+                border-color: #3b82f6;
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            }
+
+            .wr-center {
+                text-align: center;
+            }
+
+            .wr-btn-del {
+                background: #fee2e2;
+                color: #b91c1c;
+                border: 1px solid #fca5a5;
+                border-radius: 4px;
+                padding: 4px 7px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.15s ease;
+            }
+
+            .wr-btn-del:hover {
+                background: #ef4444;
+                color: #ffffff;
+            }
+
+            .wr-btn-add {
+                background: #f0fdf4;
+                color: #15803d;
+                border: 1px solid #bbf7d0;
+                border-radius: 6px;
+                padding: 5px 12px;
+                font-size: 12.5px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.15s ease;
+            }
+
+            .wr-btn-add:hover {
+                background: #16a34a;
+                color: #ffffff;
+            }
+
+            .wr-btn-add-inline {
+                background: #ffffff;
+                color: #1e40af;
+                border: 1.5px dashed #93c5fd;
+                font-weight: 700;
+                font-size: 12.5px;
+                padding: 6px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                transition: all 0.15s ease;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            }
+
+            .wr-btn-add-inline:hover {
+                background: #eff6ff !important;
+                border-color: #2563eb !important;
+                color: #1d4ed8 !important;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15) !important;
+            }
+        </style>
+
+        <div class="wr-container" style="padding-bottom: 24px;">
+            <!-- Breadcrumb & Top Title -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <a th:href="@{/nq52/work-results}" class="text-muted"
+                        style="font-size: 13.5px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                        &larr; Quay lại danh sách
+                    </a>
+                    <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 4px 0 0 0;">
+                        BẢNG THỐNG KÊ, TỰ ĐÁNH GIÁ KẾT QUẢ THỰC HIỆN NHIỆM VỤ (MẪU 01TKNV)
+                    </h1>
+                    <div style="font-size: 13.5px; color: #64748b; font-weight: 600;">
+                        Kỳ đánh giá: Tháng <span th:text="${wr.evaluationMonth}">10</span>/<span
+                            th:text="${wr.evaluationYear}">2026</span>
+                        &bull; Trạng thái:
+                        <span th:if="${wr.status.name() == 'DRAFT'}" class="badge badge-secondary">Bản nháp</span>
+                        <span th:if="${wr.status.name() == 'SUBMITTED'}" class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">Đã nộp (Chờ Tổ trưởng thẩm định)</span>
+                        <span th:if="${wr.status.name() == 'REVIEWED'}" class="badge" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">Tổ trưởng đã thẩm định (Chờ BGH duyệt)</span>
+                        <span th:if="${wr.status.name() == 'COUNCIL_REVIEWED'}" class="badge badge-success">BGH đã duyệt chính thức</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button th:if="${canEdit}" type="button" class="btn btn-outline" onclick="submitAction('SAVE')"
+                        style="font-weight: 600; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="far fa-save"></i>
+                        <span>Lưu bản nháp</span>
+                    </button>
+                    <a th:href="@{'/nq52/work-results/' + ${wr.id} + '/print'}" target="_blank" class="btn btn-outline"
+                        style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                        <span>In Mẫu 01TKNV</span>
+                    </a>
+                    <button th:if="${canEdit}" type="button" class="btn btn-outline" onclick="submitAction('EXPORT')"
+                        style="font-weight: 600; color: #15803d; border-color: #86efac; background: #f0fdf4; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;"
+                        title="Lưu dữ liệu và xuất file Excel Mẫu 01TKNV tải về">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        <span>Xuất file Excel</span>
+                    </button>
+                    <a th:unless="${canEdit}" th:href="@{'/nq52/work-results/' + ${wr.id} + '/export'}" class="btn btn-outline"
+                        style="font-weight: 600; color: #15803d; border-color: #86efac; background: #f0fdf4; display: inline-flex; align-items: center; gap: 6px;"
+                        title="Xuất file Excel Mẫu 01TKNV và tải về">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        <span>Xuất file Excel</span>
+                    </a>
+                    <a th:if="${wr.exportedFileName != null}"
+                        th:href="@{'/nq52/work-results/' + ${wr.id} + '/download'}" class="btn btn-outline"
+                        style="font-weight: 600; color: #1e40af; border-color: #93c5fd; background: #eff6ff; display: inline-flex; align-items: center; gap: 6px;"
+                        title="Tải file Excel đã lưu trong CSDL">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Tải file đã lưu</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Flash message -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                <span th:text="${successMessage}">Thao tác thành công!</span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
+            </div>
+
+            <!-- Banner cảnh báo Ban Giám Hiệu khi hồ sơ chưa qua thẩm định cấp Tổ -->
+            <div th:if="${isWaitingDeptReview}" class="alert" style="background: #fffbeb; border: 1.5px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; color: #92400e;">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" style="flex-shrink: 0; margin-top: 2px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">
+                            Chờ Tổ trưởng chuyên môn thẩm định trước
+                        </div>
+                        <div style="font-size: 13px; line-height: 1.5; color: #78350f;">
+                            Bảng tự đánh giá kết quả của giáo viên đang ở trạng thái <strong>Chờ Tổ trưởng thẩm định</strong>. Ban Giám Hiệu là cấp duyệt cuối cùng và chỉ tiến hành xét duyệt, ký số sau khi Tổ trưởng chuyên môn đã hoàn tất thẩm định và ký số xác nhận.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Form -->
+            <form id="wrForm" th:action="@{'/nq52/work-results/' + ${wr.id} + '/save'}" method="post">
+                <input type="hidden" name="action" id="actionField" value="SAVE">
+                <input type="hidden" name="tasksJson" id="tasksJson">
+
+                <div class="wr-card">
+                    <!-- Teacher & Unit Header Info -->
+                    <div class="wr-header-info">
+                        <div>
+                            <div class="wr-meta-label">Họ và tên viên chức</div>
+                            <div class="wr-meta-value" th:text="${wr.teacherNameSnapshot}"></div>
+                        </div>
+                        <div>
+                            <div class="wr-meta-label">Chức vụ, chức danh</div>
+                            <input type="text" name="positionTitle" class="form-control" th:value="${wr.positionTitle}"
+                                th:readonly="${!canEdit}" style="height: 34px; font-size: 13.5px; font-weight: 600;">
+                        </div>
+                        <div>
+                            <div class="wr-meta-label">Tổ chuyên môn</div>
+                            <div class="wr-meta-value" th:text="${wr.departmentNameSnapshot}">Toán học</div>
+                        </div>
+                        <div>
+                            <div class="wr-meta-label">Điểm trường / Phân hiệu</div>
+                            <div class="wr-meta-value" style="color: #1e40af;"
+                                th:text="${wr.campusNameSnapshot != null ? wr.campusNameSnapshot : 'Điểm trường chính'}">
+                                Điểm trường chính</div>
+                        </div>
+                        <div>
+                            <div class="wr-meta-label">Địa danh, ngày đánh giá</div>
+                            <input type="text" name="evaluationDateStr" class="form-control"
+                                th:value="${wr.evaluationDateStr}" th:readonly="${!canEdit}"
+                                style="height: 34px; font-size: 13px;">
+                        </div>
+                    </div>
+
+                    <!-- Table Mẫu 01TKNV -->
+                    <div class="table-responsive"
+                        style="margin-bottom: 24px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                        <table class="wr-table" id="taskTable">
+                            <thead>
+                                <tr>
+                                    <th rowspan="3" style="width: 35px;">TT</th>
+                                    <th rowspan="3" style="min-width: 250px;">Nội dung công việc/sản phẩm được giao
+                                        trong kỳ đánh giá</th>
+                                    <th colspan="3">Tính chất công việc</th>
+                                    <th colspan="2">Mức độ tham gia</th>
+                                    <th colspan="2">Sản phẩm, công việc đã thực hiện</th>
+                                    <th colspan="4">Thời gian thực hiện</th>
+                                    <th colspan="3">Chất lượng sản phẩm hoàn thành</th>
+                                    <th rowspan="3" style="min-width: 130px;">Kiến nghị, đề xuất</th>
+                                    <th rowspan="3" style="min-width: 130px;">Giải trình</th>
+                                    <th rowspan="3" th:if="${canEdit}" style="width: 40px;">Xóa</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="3">Đánh dấu tương ứng</th>
+                                    <th colspan="2">Đánh dấu tương ứng</th>
+                                    <th colspan="2">Kết quả thực hiện</th>
+                                    <th rowspan="2" style="min-width: 100px;">TG yêu cầu</th>
+                                    <th colspan="3">TG hoàn thành</th>
+                                    <th colspan="3">Mức độ đạt được</th>
+                                </tr>
+                                <tr>
+                                    <th style="width: 65px;">Bình thường</th>
+                                    <th style="width: 65px;">Phức tạp</th>
+                                    <th style="width: 75px;">Rất phức tạp</th>
+                                    <th style="width: 65px;">Chủ trì</th>
+                                    <th style="width: 65px;">Phối hợp</th>
+                                    <th style="width: 80px;">Đã HT</th>
+                                    <th style="width: 80px;">Chưa HT</th>
+                                    <th style="width: 65px;">Sớm hạn</th>
+                                    <th style="width: 65px;">Đúng hạn</th>
+                                    <th style="width: 65px;">Trễ hạn</th>
+                                    <th style="width: 80px;">Chưa đạt</th>
+                                    <th style="width: 80px;">Đảm bảo</th>
+                                    <th style="width: 80px;">Vượt mức</th>
+                                </tr>
+                            </thead>
+                            <tbody id="taskTableBody">
+                                <!-- Categories & Rows injected/rendered -->
+                                <!-- Javascript dynamic render will populate tasks if empty or bound from model -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Action Add Buttons for 4 Categories (th:if canEdit) -->
+                    <div th:if="${canEdit}" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;">
+                        <button type="button" class="wr-btn-add" onclick="addTask('I')">
+                            + Thêm vào Phần I (Kế hoạch đề ra)
+                        </button>
+                        <button type="button" class="wr-btn-add" onclick="addTask('II')">
+                            + Thêm vào Phần II (Chuyên môn thường xuyên)
+                        </button>
+                        <button type="button" class="wr-btn-add" onclick="addTask('III')">
+                            + Thêm vào Phần III (Đột xuất, phát sinh)
+                        </button>
+                        <button type="button" class="wr-btn-add" onclick="addTask('IV')">
+                            + Thêm vào Phần IV (Khác: Hội họp, bồi dưỡng)
+                        </button>
+                    </div>
+
+                    <!-- BẢNG TỔNG HỢP SỐ LƯỢNG, TIẾN ĐỘ, CHẤT LƯỢNG -->
+                    <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 20px 0 12px 0;">
+                        TỔNG SỐ SẢN PHẨM / CÔNG VIỆC:
+                    </h4>
+                    <div class="table-responsive"
+                        style="border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px;">
+                        <table class="wr-table">
+                            <thead>
+                                <tr>
+                                    <th colspan="4" style="background: #eff6ff; color: #1e40af;">Tổng số lượng sản phẩm,
+                                        công việc</th>
+                                    <th colspan="4" style="background: #f0fdf4; color: #15803d;">Tiến độ sản phẩm, công
+                                        việc</th>
+                                    <th colspan="4" style="background: #fefce8; color: #854d0e;">Chất lượng sản phẩm,
+                                        công việc</th>
+                                    <th rowspan="3" style="min-width: 160px;">Ghi chú<br>(13)</th>
+                                </tr>
+                                <tr>
+                                    <th>Được giao</th>
+                                    <th>Hoàn thành</th>
+                                    <th>Chưa HT</th>
+                                    <th>Tỷ lệ HT (%)</th>
+                                    <th>Sớm hạn</th>
+                                    <th>Đúng hạn</th>
+                                    <th>Trễ hạn</th>
+                                    <th>Tỷ lệ đúng/sớm hạn (%)</th>
+                                    <th>Đảm bảo</th>
+                                    <th>Vượt mức</th>
+                                    <th>Chưa đảm bảo</th>
+                                    <th>Tỷ lệ đảm bảo trở lên (%)</th>
+                                </tr>
+                                <tr style="font-size: 11.5px; color: #64748b;">
+                                    <th>(1)</th>
+                                    <th>(2)</th>
+                                    <th>(3)</th>
+                                    <th>(4) = (2)/(1) x 100</th>
+                                    <th>(5)</th>
+                                    <th>(6)</th>
+                                    <th>(7)</th>
+                                    <th>(8) = (5+6)/(1) x 100</th>
+                                    <th>(9)</th>
+                                    <th>(10)</th>
+                                    <th>(11)</th>
+                                    <th>(12) = (9+10)/(1) x 100</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="font-size: 14px; font-weight: 700; text-align: center;">
+                                    <td id="dispTotalAssigned" style="color: #2563eb;">0</td>
+                                    <td id="dispTotalCompleted" style="color: #15803d;">0</td>
+                                    <td id="dispTotalUncompleted" style="color: #dc2626;">0</td>
+                                    <td id="dispCompletionRate" style="color: #1e40af;">0.0%</td>
+
+                                    <td id="dispProgressEarly" style="color: #059669;">0</td>
+                                    <td id="dispProgressOnTime" style="color: #15803d;">0</td>
+                                    <td id="dispProgressLate" style="color: #dc2626;">0</td>
+                                    <td id="dispOnTimeRate" style="color: #166534;">0.0%</td>
+
+                                    <td id="dispQualityStandard" style="color: #15803d;">0</td>
+                                    <td id="dispQualityExceeded" style="color: #7c3aed;">0</td>
+                                    <td id="dispQualitySubstandard" style="color: #dc2626;">0</td>
+                                    <td id="dispQualityRate" style="color: #854d0e;">0.0%</td>
+
+                                    <td style="padding: 4px;">
+                                        <textarea name="summaryNotes" class="wr-input" rows="2"
+                                            placeholder="Ghi chú tổng hợp..." th:readonly="${!canEdit}"
+                                            th:text="${form.summaryNotes}"></textarea>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Banner Trạng thái Xác thực Ký số Thời gian thực -->
+                    <div th:if="${sigTeacher != null or sigDeptLeader != null or sigPrincipal != null}"
+                        style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 20px; margin-top: 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div
+                                style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #dcfce7; color: #059669;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div
+                                    style="font-weight: 800; font-size: 14px; color: #065f46; display: flex; align-items: center; gap: 6px;">
+                                    <span>XÁC THỰC KÝ SỐ THỜI GIAN THỰC (REALTIME VERIFIED)</span>
+                                    <span
+                                        style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                                </div>
+                                <div style="font-size: 12px; color: #047857;">
+                                    Toàn bộ dữ liệu khớp 100% mã băm SHA-256 nguyên bản. Chứng thư số đang hoạt động
+                                    bình thường qua giao thức OCSP/CRL.
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <a th:href="@{/nq52/digital-signature}" class="btn btn-sm btn-outline"
+                                style="font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="3" />
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                                </svg>
+                                <span>Cấu hình chữ ký số</span>
+                            </a>
+                            <button type="button" class="btn btn-sm" onclick="verifyRealtimeSignature()"
+                                style="background: #059669; color: #ffffff; border: none; font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(5,150,105,0.25);">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                                <span>Xem Báo cáo Xác thực Realtime</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Signatures View with Digital Signature Stamps -->
+                    <div
+                        style="display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; margin-top: 20px; padding: 24px 0; border-top: 1px dashed #e2e8f0; gap: 20px;">
+                        <!-- 1. PHÓ HIỆU TRƯỞNG / BGH -->
+                        <div
+                            style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px;">
+                            <div style="font-weight: 700; font-size: 13.5px; color: #0f172a;">PHÓ HIỆU TRƯỞNG PHỤ TRÁCH
+                            </div>
+                            <div style="font-size: 12px; color: #64748b; font-style: italic; margin-bottom: 12px;">(Ký,
+                                đóng dấu cơ quan)</div>
+
+                            <!-- Con dấu USB Token nếu BGH đã ký -->
+                            <div th:if="${sigPrincipal != null}"
+                                style="border: 2px solid #dc2626; background: #fff5f5; border-radius: 8px; padding: 12px; text-align: left; cursor: pointer;"
+                                th:onclick="'verifyRealtimeSignature(' + ${sigPrincipal.id} + ')'"
+                                title="Bấm để xem Báo cáo Xác thực Realtime">
+                                <div
+                                    style="font-size: 11px; font-weight: 800; color: #991b1b; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span>ĐÃ KÝ DUYỆT CHÍNH THỨC</span>
+                                </div>
+                                <img th:if="${sigPrincipal.signatureImageBase64 != null and !sigPrincipal.signatureImageBase64.isBlank()}"
+                                    th:src="${sigPrincipal.signatureImageBase64}" alt="Con dấu BGH"
+                                    style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                                <div style="font-weight: 700; font-size: 12.5px; color: #7f1d1d;"
+                                    th:text="${sigPrincipal.signerName}">TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+                                <div style="font-size: 11px; color: #991b1b;">Thiết bị: <span
+                                        th:text="${sigPrincipal.signatureTypeDisplayName}">USB Token</span> | <span
+                                        th:text="${sigPrincipal.caProvider}">Ban Cơ yếu CP</span></div>
+                                <div style="font-size: 11px; color: #64748b;">Thời gian: <span
+                                        th:text="${sigPrincipal.signedAtFormatted}">02/11/2026 15:30</span></div>
+                                <div
+                                    style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #fecaca; display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 10.5px; color: #15803d; font-weight: 700;">Hợp lệ &amp; Toàn
+                                        vẹn</span>
+                                    <span style="font-size: 10.5px; color: #b91c1c; font-weight: 700;">Xem xác
+                                        thực</span>
+                                </div>
+                            </div>
+
+                            <!-- Nếu chưa ký và là Admin (BGH) khi hồ sơ đã được Tổ trưởng thẩm định -->
+                            <div th:if="${sigPrincipal == null and canBghReview}"
+                                style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                                <button type="button" class="btn"
+                                    style="background: #b91c1c; color: #ffffff; border: 1px solid #991b1b; font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(185,28,28,0.3); display: inline-flex; align-items: center; gap: 6px;"
+                                    th:onclick="'openUsbTokenModal(\'WORK_RESULT\', ' + ${wr.id} + ')'">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                    </svg>
+                                    <span>Ký số USB Token BGH</span>
+                                </button>
+                                <button type="button" class="btn btn-outline btn-sm"
+                                    style="font-size: 11.5px; font-weight: 600; color: #b91c1c; border-color: #fca5a5; background: #fff5f5; display: inline-flex; align-items: center; gap: 4px;"
+                                    th:onclick="'directSignWorkResult(' + ${wr.id} + ', \'PRINCIPAL\')'">
+                                    <span>Ký SmartCA BGH</span>
+                                </button>
+                            </div>
+                            <div th:if="${sigPrincipal == null and isWaitingDeptReview}"
+                                style="margin-top: 24px; font-size: 12px; color: #b45309; font-weight: 600;">
+                                <span class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">(Chờ Tổ trưởng thẩm định trước)</span>
+                            </div>
+                            <div th:if="${sigPrincipal == null and !canBghReview and !isWaitingDeptReview}"
+                                style="margin-top: 30px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                                (Ký khi hoàn tất cấp trường)
+                            </div>
+                        </div>
+
+                        <!-- 2. TỔ TRƯỞNG CHUYÊN MÔN -->
+                        <div
+                            style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px;">
+                            <div style="font-weight: 700; font-size: 13.5px; color: #0f172a;">TỔ TRƯỞNG CHUYÊN MÔN</div>
+                            <div style="font-size: 12px; color: #64748b; font-style: italic; margin-bottom: 12px;">(Ký,
+                                ghi rõ họ tên)</div>
+
+                            <!-- Con dấu Remote Signing của Tổ trưởng -->
+                            <div th:if="${sigDeptLeader != null}"
+                                style="border: 2px solid #16a34a; background: #f0fdf4; border-radius: 8px; padding: 12px; text-align: left; cursor: pointer;"
+                                th:onclick="'verifyRealtimeSignature(' + ${sigDeptLeader.id} + ')'"
+                                title="Bấm để xem Báo cáo Xác thực Realtime">
+                                <div
+                                    style="font-size: 11px; font-weight: 800; color: #15803d; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span>ĐÃ KÝ SỐ THẨM ĐỊNH TỔ</span>
+                                </div>
+                                <img th:if="${sigDeptLeader.signatureImageBase64 != null and !sigDeptLeader.signatureImageBase64.isBlank()}"
+                                    th:src="${sigDeptLeader.signatureImageBase64}" alt="Chữ ký Tổ trưởng"
+                                    style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                                <div style="font-weight: 700; font-size: 12.5px; color: #14532d;"
+                                    th:text="${sigDeptLeader.signerName}">Lê Hoàng Long</div>
+                                <div style="font-size: 11px; color: #15803d;">Dịch vụ: <span
+                                        th:text="${sigDeptLeader.caProvider}">VNPT SmartCA</span></div>
+                                <div style="font-size: 11px; color: #64748b;">Thời gian: <span
+                                        th:text="${sigDeptLeader.signedAtFormatted}">02/11/2026 15:20</span></div>
+                                <div
+                                    style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #bbf7d0; display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 10.5px; color: #15803d; font-weight: 700;">Hợp lệ &amp; Toàn
+                                        vẹn</span>
+                                    <span style="font-size: 10.5px; color: #15803d; font-weight: 700;">Xem xác
+                                         thực</span>
+                                </div>
+                            </div>
+
+                            <!-- Nếu chưa ký và là Tổ trưởng -->
+                            <div th:if="${sigDeptLeader == null and canDeptReview}" style="margin-top: 14px;">
+                                <button type="button" class="btn btn-success"
+                                    style="font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;"
+                                    th:onclick="'directSignWorkResult(' + ${wr.id} + ', \'DEPT_LEADER\')'">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                    </svg>
+                                    <span>Ký số cấp Tổ (SmartCA)</span>
+                                </button>
+                            </div>
+                            <div th:if="${sigDeptLeader == null and !canDeptReview}"
+                                style="margin-top: 30px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                                (Chờ Tổ trưởng ký thẩm định)
+                            </div>
+                        </div>
+
+                        <!-- 3. CÁ NHÂN TỰ ĐÁNH GIÁ (GIÁO VIÊN) -->
+                        <div
+                            style="background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px;">
+                            <div style="font-weight: 700; font-size: 13.5px; color: #0f172a;">CÁ NHÂN TỰ ĐÁNH GIÁ</div>
+                            <div style="font-size: 12px; color: #64748b; font-style: italic; margin-bottom: 12px;">(Ký,
+                                ghi rõ họ tên)</div>
+
+                            <!-- Con dấu Remote Signing của Giáo viên -->
+                            <div th:if="${sigTeacher != null}"
+                                style="border: 2px solid #2563eb; background: #eff6ff; border-radius: 8px; padding: 12px; text-align: left; cursor: pointer;"
+                                th:onclick="'verifyRealtimeSignature(' + ${sigTeacher.id} + ')'"
+                                title="Bấm để xem Báo cáo Xác thực Realtime">
+                                <div
+                                    style="font-size: 11px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span>ĐÃ KÝ SỐ ĐIỆN TỬ</span>
+                                </div>
+                                <img th:if="${sigTeacher.signatureImageBase64 != null and !sigTeacher.signatureImageBase64.isBlank()}"
+                                    th:src="${sigTeacher.signatureImageBase64}" alt="Chữ ký Giáo viên"
+                                    style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                                <div style="font-weight: 700; font-size: 12.5px; color: #1e3a8a;"
+                                    th:text="${sigTeacher.signerName}"></div>
+                                <div style="font-size: 11px; color: #1d4ed8;">Dịch vụ: <span
+                                        th:text="${sigTeacher.caProvider}">VNPT SmartCA</span></div>
+                                <div style="font-size: 11px; color: #64748b;">Thời gian: <span
+                                        th:text="${sigTeacher.signedAtFormatted}">01/11/2026 10:15</span></div>
+                                <div
+                                    style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #bfdbfe; display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 10.5px; color: #15803d; font-weight: 700;">Hợp lệ &amp; Toàn
+                                        vẹn</span>
+                                    <span style="font-size: 10.5px; color: #2563eb; font-weight: 700;">Xem xác
+                                        thực</span>
+                                </div>
+                            </div>
+
+                            <!-- Nếu chưa ký và là Giáo viên (bản nháp) -->
+                            <div th:if="${sigTeacher == null and canEdit}" style="margin-top: 14px;">
+                                <button type="button" class="btn btn-primary"
+                                    style="font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;"
+                                    th:onclick="'directSignWorkResult(' + ${wr.id} + ', \'TEACHER\')'">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                    </svg>
+                                    <span>Ký số SmartCA &amp; Nộp</span>
+                                </button>
+                            </div>
+                            <div th:if="${sigTeacher == null and !canEdit}" style="margin-top: 30px;">
+                                <span class="badge"
+                                    style="background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; font-size: 11.5px; padding: 4px 8px; border-radius: 6px;">Đã
+                                    nộp bản tự đánh giá</span>
+                                <div style="margin-top: 8px; font-weight: 700; color: #0f172a;"
+                                    th:text="${wr.teacherNameSnapshot}"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 1: Tổ trưởng thẩm định & ký số (khi hồ sơ ở trạng thái SUBMITTED) -->
+                    <div th:if="${canDeptReview and wr.status.name() == 'SUBMITTED'}" class="card"
+                        style="margin-top: 24px; border: 2px solid #16a34a; border-radius: var(--radius-md, 12px); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        <div
+                            style="background: #15803d; color: #ffffff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+                            <div
+                                style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M12 20h9" />
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                </svg>
+                                <span>THẨM ĐỊNH &amp; KÝ XÁC NHẬN CỦA TỔ TRƯỞNG CHUYÊN MÔN</span>
+                            </div>
+                            <span class="badge"
+                                style="background: rgba(255,255,255,0.2); color: #ffffff; font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                                Cấp 2: Tổ chuyên môn
+                            </span>
+                        </div>
+                        <div style="padding: 20px; background: #ffffff;">
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="font-size: 13.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+                                    Ý kiến nhận xét, đánh giá của Tổ trưởng chuyên môn:
+                                </label>
+                                <textarea id="reviewerNotesField" class="form-control" rows="3"
+                                    style="font-size: 13.5px; border-radius: 8px;"
+                                    placeholder="Nhập ý kiến đánh giá về mức độ hoàn thành nhiệm vụ, tiến độ và chất lượng công việc của giáo viên..."
+                                    th:text="${wr.reviewerNotes}"></textarea>
+                            </div>
+                            <div
+                                style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-outline"
+                                    style="color: #dc2626; border-color: #fca5a5; background: #fef2f2; font-weight: 600; padding: 8px 18px;"
+                                    onclick="submitReviewAction('REJECT')">
+                                    <i class="fas fa-undo"></i> Yêu cầu chỉnh sửa lại
+                                </button>
+
+                                <button type="button" class="btn btn-success"
+                                    style="font-weight: 600; padding: 8px 22px; box-shadow: 0 1px 3px rgba(22,163,74,0.25); display: inline-flex; align-items: center; gap: 6px;"
+                                    th:onclick="'directSignWorkResult(' + ${wr.id} + ', \'DEPT_LEADER\')'">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                    </svg>
+                                    <span>Ký số thẩm định cấp Tổ (SmartCA)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Ban Giám Hiệu xét duyệt chính thức & ký số (khi hồ sơ ở trạng thái REVIEWED) -->
+                    <div th:if="${canBghReview and wr.status.name() == 'REVIEWED'}" class="card"
+                        style="margin-top: 24px; border: 2px solid #b91c1c; border-radius: var(--radius-md, 12px); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        <div
+                            style="background: #991b1b; color: #ffffff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+                            <div
+                                style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                <span>XÉT DUYỆT &amp; KÝ DUYỆT CHÍNH THỨC CỦA BAN GIÁM HIỆU</span>
+                            </div>
+                            <span class="badge"
+                                style="background: rgba(255,255,255,0.25); color: #ffffff; font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                                Cấp 3: Phê duyệt cuối cùng
+                            </span>
+                        </div>
+                        <div style="padding: 20px; background: #ffffff;">
+                            <!-- Ý kiến thẩm định trước đó của Tổ trưởng -->
+                            <div style="margin-bottom: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px;">
+                                <div style="font-weight: 700; font-size: 13px; color: #15803d; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>Tổ trưởng chuyên môn (<strong th:text="${wr.reviewerNameSnapshot}">Lê Hoàng Long</strong>) đã thẩm định:</span>
+                                    <span th:if="${wr.reviewedAt != null}" style="font-weight: 400; font-size: 12px; color: #64748b;" th:text="'(lúc ' + ${#temporals.format(wr.reviewedAt, 'dd/MM/yyyy HH:mm')} + ')'"></span>
+                                </div>
+                                <div style="font-size: 13px; color: #1e293b; font-style: italic;" th:text="${wr.reviewerNotes != null ? wr.reviewerNotes : 'Đã xác nhận hoàn thành tốt nhiệm vụ được giao.'}"></div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="font-size: 13.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+                                    Ý kiến nhận xét, kết luận của Ban Giám Hiệu:
+                                </label>
+                                <textarea id="bghNotesField" class="form-control" rows="3"
+                                    style="font-size: 13.5px; border-radius: 8px;"
+                                    placeholder="Ban Giám Hiệu ghi nhận xét, kết luận đánh giá chính thức..."
+                                    th:text="${wr.bghNotes}"></textarea>
+                            </div>
+                            <div
+                                style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-outline"
+                                    style="color: #dc2626; border-color: #fca5a5; background: #fef2f2; font-weight: 600; padding: 8px 18px;"
+                                    onclick="submitBghReviewAction('REJECT')">
+                                    <i class="fas fa-undo"></i> Yêu cầu chỉnh sửa lại
+                                </button>
+
+                                <!-- Ký SmartCA BGH -->
+                                <button type="button" class="btn btn-outline"
+                                    style="font-weight: 600; padding: 8px 18px; color: #b91c1c; border-color: #fca5a5; background: #fff5f5; display: inline-flex; align-items: center; gap: 6px;"
+                                    th:onclick="'directSignWorkResult(' + ${wr.id} + ', \'PRINCIPAL\')'">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                    </svg>
+                                    <span>Ký số BGH (SmartCA)</span>
+                                </button>
+
+                                <!-- Ký USB Token BGH -->
+                                <button type="button" class="btn"
+                                    style="background: #b91c1c; color: #ffffff; border: 1px solid #991b1b; font-weight: 700; padding: 8px 22px; box-shadow: 0 1px 3px rgba(185,28,28,0.25); display: inline-flex; align-items: center; gap: 6px;"
+                                    th:onclick="'openUsbTokenModal(\'WORK_RESULT\', ' + ${wr.id} + ')'">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                    </svg>
+                                    <span>Ký số USB Token BGH</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Thông báo khi Tổ trưởng đã duyệt, chờ Ban Giám Hiệu phê duyệt chính thức -->
+                    <div th:if="${wr.status.name() == 'REVIEWED' and !canBghReview}" class="alert"
+                        style="margin-top: 24px; border-radius: var(--radius-md, 12px); border-left: 5px solid #2563eb; background: #eff6ff; padding: 16px 20px; color: #1e40af;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb"
+                                stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <div>
+                                <div style="font-weight: 700; font-size: 14.5px; color: #1e40af;">
+                                    TỔ TRƯỞNG CHUYÊN MÔN ĐÃ THẨM ĐỊNH &amp; KÝ SỐ XÁC NHẬN
+                                </div>
+                                <div style="font-size: 13px; color: #334155; margin-top: 2px;">
+                                    Ký duyệt bởi: <strong
+                                        th:text="${wr.reviewerNameSnapshot != null ? wr.reviewerNameSnapshot : 'Tổ trưởng chuyên môn'}">Lê
+                                        Hoàng Long</strong>
+                                    <span th:if="${wr.reviewedAt != null}"
+                                        th:text="' vào lúc ' + ${#temporals.format(wr.reviewedAt, 'dd/MM/yyyy HH:mm')}">vào
+                                        lúc 30/10/2026 15:30</span>
+                                    &bull; <span style="font-weight: 600; color: #d97706;">Đang chờ Ban Giám Hiệu phê duyệt chính thức</span>
+                                </div>
+                                <div th:if="${wr.reviewerNotes != null and !#strings.isEmpty(wr.reviewerNotes)}"
+                                    style="font-size: 13px; color: #1e293b; margin-top: 6px; background: #ffffff; padding: 8px 12px; border-radius: 6px; border: 1px solid #bfdbfe;">
+                                    <em>Ý kiến nhận xét Tổ trưởng:</em> <span th:text="${wr.reviewerNotes}"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Thông báo khi Ban Giám Hiệu đã duyệt chính thức hoàn tất (COUNCIL_REVIEWED) -->
+                    <div th:if="${wr.status.name() == 'COUNCIL_REVIEWED'}" class="alert alert-success"
+                        style="margin-top: 24px; border-radius: var(--radius-md, 12px); border-left: 5px solid #16a34a; padding: 18px 22px;">
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d"
+                                stroke-width="2.5" style="flex-shrink: 0; margin-top: 2px;">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <div style="width: 100%;">
+                                <div style="font-weight: 700; font-size: 15px; color: #15803d;">
+                                    BẢNG TỰ ĐÁNH GIÁ KẾT QUẢ ĐÃ ĐƯỢC BAN GIÁM HIỆU DUYỆT &amp; KÝ SỐ CHÍNH THỨC
+                                </div>
+                                <div style="font-size: 13px; color: #334155; margin-top: 4px;">
+                                    Phê duyệt bởi: <strong
+                                        th:text="${wr.bghReviewerNameSnapshot != null ? wr.bghReviewerNameSnapshot : 'Ban Giám Hiệu'}">Ban Giám Hiệu</strong>
+                                    <span th:if="${wr.bghReviewedAt != null}"
+                                        th:text="' vào lúc ' + ${#temporals.format(wr.bghReviewedAt, 'dd/MM/yyyy HH:mm')}">vào
+                                        lúc 30/10/2026 16:00</span>
+                                </div>
+                                <div th:if="${wr.bghNotes != null and !#strings.isEmpty(wr.bghNotes)}"
+                                    style="font-size: 13px; color: #1e293b; margin-top: 8px; background: #ffffff; padding: 10px 14px; border-radius: 6px; border: 1px solid #bbf7d0;">
+                                    <strong style="color: #991b1b;">Kết luận của Ban Giám Hiệu:</strong> <span th:text="${wr.bghNotes}"></span>
+                                </div>
+                                <div th:if="${wr.reviewerNotes != null and !#strings.isEmpty(wr.reviewerNotes)}"
+                                    style="font-size: 12.5px; color: #475569; margin-top: 6px; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                    <em>Nhận xét của Tổ trưởng (<span th:text="${wr.reviewerNameSnapshot}"></span>):</em> <span th:text="${wr.reviewerNotes}"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Hidden Initial JSON Tasks from Model -->
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const initialTasks = /*[[${form.tasks}]]*/[];
+            const isEditable = /*[[${canEdit}]]*/ false;
+            /*]]>*/
+        </script>
+
+        <script>
+            let tasks = [];
+
+            const CATEGORIES = [
+                {
+                    key: 'I',
+                    title: 'I. Các nhiệm vụ theo chương trình, kế hoạch đã đề ra (từ kế hoạch công tác tháng/năm của đơn vị)',
+                    btnText: '+ Thêm vào Phần I (Kế hoạch đề ra)'
+                },
+                {
+                    key: 'II',
+                    title: 'II. Các nhiệm vụ chuyên môn, thường xuyên theo vị trí việc làm',
+                    btnText: '+ Thêm vào Phần II (Chuyên môn thường xuyên)'
+                },
+                {
+                    key: 'III',
+                    title: 'III. Các nhiệm vụ đột xuất, phát sinh được giao theo sự phân công của lãnh đạo đơn vị',
+                    btnText: '+ Thêm vào Phần III (Đột xuất, phát sinh)'
+                },
+                {
+                    key: 'IV',
+                    title: 'IV. Các nhiệm vụ khác: Hội họp, tập huấn, đào tạo, bồi dưỡng, phong trào thi đua…',
+                    btnText: '+ Thêm vào Phần IV (Khác: Hội họp, bồi dưỡng)'
+                }
+            ];
+
+            function initTasks() {
+                if (initialTasks && Array.isArray(initialTasks) && initialTasks.length > 0) {
+                    tasks = JSON.parse(JSON.stringify(initialTasks));
+                } else {
+                    tasks = [];
+                }
+
+                // Nếu đang ở chế độ chỉnh sửa (Bản nháp), bảo đảm mỗi phần I, II, III, IV đều có sẵn ít nhất 1 dòng để giáo viên nhập ngay
+                if (isEditable) {
+                    CATEGORIES.forEach(cat => {
+                        if (!tasks.some(t => t.category === cat.key)) {
+                            tasks.push({
+                                id: 'task_' + cat.key.toLowerCase() + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                                category: cat.key,
+                                orderNum: 1,
+                                content: '',
+                                nature: 'NORMAL',
+                                role: 'LEAD',
+                                status: 'COMPLETED',
+                                timeRequired: '',
+                                timeProgress: 'ON_TIME',
+                                quality: 'STANDARD',
+                                suggestions: '',
+                                explanation: ''
+                            });
+                        }
+                    });
+                }
+
+                renderTable();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initTasks);
+            } else {
+                initTasks();
+            }
+
+            function renderTable() {
+                const tbody = document.getElementById('taskTableBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                let globalIdx = 0;
+                const colSpan = isEditable ? 19 : 18;
+
+                CATEGORIES.forEach(cat => {
+                    // Section Header Row
+                    const secTr = document.createElement('tr');
+                    secTr.innerHTML = `
+                        <td colspan="${colSpan}" class="wr-sec-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <span>${cat.title}</span>
+                                ${isEditable ? `<button type="button" class="btn btn-sm" onclick="addTask('${cat.key}')" style="background: #ffffff; color: #0369a1; border: 1px solid #7dd3fc; font-weight: 700; font-size: 11.5px; padding: 2px 10px; border-radius: 4px; cursor: pointer;">+ Thêm dòng</button>` : ''}
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(secTr);
+
+                    // Filter tasks in this category
+                    const catTasks = tasks.filter(t => t.category === cat.key);
+
+                    if (catTasks.length === 0) {
+                        const emptyTr = document.createElement('tr');
+                        emptyTr.innerHTML = `<td colspan="${colSpan}" style="text-align: center; color: #94a3b8; font-style: italic; padding: 10px;">(Chưa có công việc nào trong phần này)</td>`;
+                        tbody.appendChild(emptyTr);
+                    } else {
+                        catTasks.forEach((task, subIdx) => {
+                            const tr = document.createElement('tr');
+                            const prefix = `tasks[${globalIdx}]`;
+                            const taskId = task.id || ('t_' + globalIdx);
+
+                            tr.innerHTML = `
+                            <td class="wr-center" style="font-weight: 600;">
+                                ${subIdx + 1}
+                                <input type="hidden" name="${prefix}.id" value="${taskId}">
+                                <input type="hidden" name="${prefix}.category" value="${cat.key}">
+                                <input type="hidden" name="${prefix}.orderNum" value="${subIdx + 1}">
+                            </td>
+                            <td>
+                                <textarea name="${prefix}.content" data-task-id="${taskId}" class="wr-input" rows="2" placeholder="Nhập nội dung công việc/sản phẩm..." ${isEditable ? '' : 'readonly'} oninput="updateTaskById('${taskId}', 'content', this.value)" onchange="updateTaskById('${taskId}', 'content', this.value)">${task.content || ''}</textarea>
+                            </td>
+                            <!-- Tính chất công việc -->
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.nature" value="NORMAL" ${task.nature === 'NORMAL' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'nature', 'NORMAL')">
+                            </td>
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.nature" value="COMPLEX" ${task.nature === 'COMPLEX' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'nature', 'COMPLEX')">
+                            </td>
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.nature" value="VERY_COMPLEX" ${task.nature === 'VERY_COMPLEX' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'nature', 'VERY_COMPLEX')">
+                            </td>
+                            <!-- Mức độ tham gia -->
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.role" value="LEAD" ${task.role === 'LEAD' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'role', 'LEAD')">
+                            </td>
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.role" value="COORDINATE" ${task.role === 'COORDINATE' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'role', 'COORDINATE')">
+                            </td>
+                            <!-- Trạng thái sản phẩm -->
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.status" value="COMPLETED" ${task.status === 'COMPLETED' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'status', 'COMPLETED')">
+                            </td>
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.status" value="UNCOMPLETED" ${task.status === 'UNCOMPLETED' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'status', 'UNCOMPLETED')">
+                            </td>
+                            <!-- Thời gian yêu cầu -->
+                            <td>
+                                <input type="text" name="${prefix}.timeRequired" class="wr-input" placeholder="VD: Hàng tuần, trước 15/11..." value="${task.timeRequired || ''}" ${isEditable ? '' : 'readonly'} oninput="updateTaskById('${taskId}', 'timeRequired', this.value)">
+                            </td>
+                            <!-- Tiến độ hoàn thành -->
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.timeProgress" value="EARLY" ${task.timeProgress === 'EARLY' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'timeProgress', 'EARLY')">
+                            </td>
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.timeProgress" value="ON_TIME" ${task.timeProgress === 'ON_TIME' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'timeProgress', 'ON_TIME')">
+                            </td>
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.timeProgress" value="LATE" ${task.timeProgress === 'LATE' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'timeProgress', 'LATE')">
+                            </td>
+                            <!-- Chất lượng -->
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.quality" value="SUBSTANDARD" ${task.quality === 'SUBSTANDARD' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'quality', 'SUBSTANDARD')">
+                            </td>
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.quality" value="STANDARD" ${task.quality === 'STANDARD' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'quality', 'STANDARD')">
+                            </td>
+                            <td class="wr-center">
+                                <input type="radio" name="${prefix}.quality" value="EXCEEDED" ${task.quality === 'EXCEEDED' ? 'checked' : ''} ${isEditable ? '' : 'disabled'} onchange="updateTaskById('${taskId}', 'quality', 'EXCEEDED')">
+                            </td>
+                            <!-- Kiến nghị -->
+                            <td>
+                                <input type="text" name="${prefix}.suggestions" class="wr-input" placeholder="Kiến nghị..." value="${task.suggestions || ''}" ${isEditable ? '' : 'readonly'} oninput="updateTaskById('${taskId}', 'suggestions', this.value)">
+                            </td>
+                            <!-- Giải trình -->
+                            <td>
+                                <input type="text" name="${prefix}.explanation" class="wr-input" placeholder="Giải trình..." value="${task.explanation || ''}" ${isEditable ? '' : 'readonly'} oninput="updateTaskById('${taskId}', 'explanation', this.value)">
+                            </td>
+                            ${isEditable ? `
+                            <td class="wr-center">
+                                <button type="button" class="wr-btn-del" onclick="deleteTask('${taskId}')" title="Xóa dòng">&times;</button>
+                            </td>` : ''}
+                        `;
+                            tbody.appendChild(tr);
+                            globalIdx++;
+                        });
+                    }
+
+                    // Hàng chèn thêm công việc ngay dưới mỗi mục (Phần I, II, III, IV)
+                    if (isEditable) {
+                        const addTr = document.createElement('tr');
+                        addTr.className = 'wr-cat-add-tr';
+                        addTr.innerHTML = `
+                            <td colspan="${colSpan}" style="padding: 7px 12px; background: #f8fafc; border-top: 1px dashed #cbd5e1; border-bottom: 2px solid #cbd5e1; text-align: left;">
+                                <button type="button" class="wr-btn-add-inline" onclick="addTask('${cat.key}')" title="Thêm công việc vào ${cat.btnText}">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    <span>${cat.btnText}</span>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(addTr);
+                    }
+                });
+
+                calculateSummary();
+            }
+
+            function updateTaskById(id, field, value) {
+                const item = tasks.find(t => String(t.id) === String(id));
+                if (item) {
+                    item[field] = value;
+                }
+                calculateSummary();
+            }
+
+            function addTask(category) {
+                const newId = 'task_' + category.toLowerCase() + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                const currentCatTasks = tasks.filter(t => t.category === category);
+                tasks.push({
+                    id: newId,
+                    category: category,
+                    orderNum: currentCatTasks.length + 1,
+                    content: '',
+                    nature: 'NORMAL',
+                    role: 'LEAD',
+                    status: 'COMPLETED',
+                    timeRequired: '',
+                    timeProgress: 'ON_TIME',
+                    quality: 'STANDARD',
+                    suggestions: '',
+                    explanation: ''
+                });
+                renderTable();
+
+                setTimeout(() => {
+                    const el = document.querySelector(`textarea[data-task-id="${newId}"]`);
+                    if (el) el.focus();
+                }, 50);
+            }
+
+            function deleteTask(id) {
+                if (confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
+                    tasks = tasks.filter(t => String(t.id) !== String(id));
+                    renderTable();
+                }
+            }
+
+            function calculateSummary() {
+                const validTasks = tasks.filter(t => t.content && t.content.trim().length > 0);
+                const total = validTasks.length;
+                let completed = 0, uncompleted = 0;
+                let early = 0, onTime = 0, late = 0;
+                let standard = 0, exceeded = 0, substandard = 0;
+
+                validTasks.forEach(t => {
+                    if (t.status === 'COMPLETED') completed++;
+                    else uncompleted++;
+
+                    if (t.timeProgress === 'EARLY') early++;
+                    else if (t.timeProgress === 'ON_TIME') onTime++;
+                    else if (t.timeProgress === 'LATE') late++;
+
+                    if (t.quality === 'EXCEEDED') exceeded++;
+                    else if (t.quality === 'STANDARD') standard++;
+                    else if (t.quality === 'SUBSTANDARD') substandard++;
+                });
+
+                const compRate = total > 0 ? ((completed / total) * 100).toFixed(1) : '0.0';
+                const onTimeRate = total > 0 ? (((early + onTime) / total) * 100).toFixed(1) : '0.0';
+                const qualRate = total > 0 ? (((standard + exceeded) / total) * 100).toFixed(1) : '0.0';
+
+                const elTotalAssigned = document.getElementById('dispTotalAssigned');
+                if (elTotalAssigned) elTotalAssigned.innerText = total;
+                const elTotalCompleted = document.getElementById('dispTotalCompleted');
+                if (elTotalCompleted) elTotalCompleted.innerText = completed;
+                const elTotalUncompleted = document.getElementById('dispTotalUncompleted');
+                if (elTotalUncompleted) elTotalUncompleted.innerText = uncompleted;
+                const elCompletionRate = document.getElementById('dispCompletionRate');
+                if (elCompletionRate) elCompletionRate.innerText = compRate + '%';
+
+                const elProgressEarly = document.getElementById('dispProgressEarly');
+                if (elProgressEarly) elProgressEarly.innerText = early;
+                const elProgressOnTime = document.getElementById('dispProgressOnTime');
+                if (elProgressOnTime) elProgressOnTime.innerText = onTime;
+                const elProgressLate = document.getElementById('dispProgressLate');
+                if (elProgressLate) elProgressLate.innerText = late;
+                const elOnTimeRate = document.getElementById('dispOnTimeRate');
+                if (elOnTimeRate) elOnTimeRate.innerText = onTimeRate + '%';
+
+                const elQualityStandard = document.getElementById('dispQualityStandard');
+                if (elQualityStandard) elQualityStandard.innerText = standard;
+                const elQualityExceeded = document.getElementById('dispQualityExceeded');
+                if (elQualityExceeded) elQualityExceeded.innerText = exceeded;
+                const elQualitySubstandard = document.getElementById('dispQualitySubstandard');
+                if (elQualitySubstandard) elQualitySubstandard.innerText = substandard;
+                const elQualityRate = document.getElementById('dispQualityRate');
+                if (elQualityRate) elQualityRate.innerText = qualRate + '%';
+            }
+
+            function submitAction(act) {
+                const tasksJsonInput = document.getElementById('tasksJson');
+                if (tasksJsonInput) {
+                    tasksJsonInput.value = JSON.stringify(tasks);
+                }
+                document.getElementById('actionField').value = act;
+                document.getElementById('wrForm').submit();
+            }
+
+            function showSigningOverlay(title, msg) {
+                let overlay = document.getElementById('nq52SigningOverlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'nq52SigningOverlay';
+                    overlay.style.position = 'fixed';
+                    overlay.style.top = '0';
+                    overlay.style.left = '0';
+                    overlay.style.width = '100%';
+                    overlay.style.height = '100%';
+                    overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.7)';
+                    overlay.style.display = 'flex';
+                    overlay.style.flexDirection = 'column';
+                    overlay.style.alignItems = 'center';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.zIndex = '99999';
+                    overlay.style.backdropFilter = 'blur(4px)';
+                    overlay.innerHTML = `
+                        <div style="background: #ffffff; padding: 28px 36px; border-radius: 16px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); max-width: 420px;">
+                            <div style="display: inline-block; width: 44px; height: 44px; border: 4px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: nq52-spin 1s linear infinite; margin-bottom: 16px;"></div>
+                            <div id="nq52OverlayTitle" style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">Đang thực hiện ký số...</div>
+                            <div id="nq52OverlayMsg" style="font-size: 13px; color: #64748b;">Hệ thống đang áp dụng chứng thư số đã cấu hình và dán con dấu điện tử...</div>
+                        </div>
+                        <style>@keyframes nq52-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+                    `;
+                    document.body.appendChild(overlay);
+                }
+                if (title) document.getElementById('nq52OverlayTitle').textContent = title;
+                if (msg) document.getElementById('nq52OverlayMsg').textContent = msg;
+                overlay.style.display = 'flex';
+            }
+
+            function hideSigningOverlay() {
+                const overlay = document.getElementById('nq52SigningOverlay');
+                if (overlay) overlay.style.display = 'none';
+            }
+
+            function directSignWorkResult(docId, explicitRole) {
+                const isPrincipal = (explicitRole === 'PRINCIPAL');
+                const isDeptLeader = (explicitRole === 'DEPT_LEADER');
+
+                if (isPrincipal) {
+                    if (!confirm('Xác nhận KÝ DUYỆT CHÍNH THỨC và dán chữ ký số Ban Giám Hiệu cho Bảng tự đánh giá của giáo viên?')) {
+                        return;
+                    }
+                } else if (isDeptLeader) {
+                    if (!confirm('Xác nhận KÝ DUYỆT và dán chữ ký số cấp Tổ cho Bảng tự đánh giá của giáo viên?')) {
+                        return;
+                    }
+                } else {
+                    const validTasks = tasks.filter(t => t.content && t.content.trim().length > 0);
+                    if (validTasks.length === 0) {
+                        alert('Vui lòng nhập nội dung cho ít nhất một công việc trước khi ký số và nộp!');
+                        return;
+                    }
+                    if (!confirm('Bạn có chắc chắn muốn ký số điện tử và nộp Bảng tự đánh giá kết quả thực hiện nhiệm vụ? Sau khi nộp, bạn sẽ không thể chỉnh sửa.')) {
+                        return;
+                    }
+                }
+
+                showSigningOverlay(
+                    'Đang lưu dữ liệu...',
+                    'Hệ thống đang lưu các nội dung công việc đã nhập vào cơ sở dữ liệu...'
+                );
+
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') 
+                               || document.querySelector('input[name="_csrf"]')?.value;
+                const jsonHeaders = { 
+                    'Content-Type': 'application/json'
+                };
+                if (csrfToken) {
+                    jsonHeaders['X-XSRF-TOKEN'] = csrfToken;
+                    jsonHeaders['X-CSRF-TOKEN'] = csrfToken;
+                }
+
+                const reviewerNotesEl = document.getElementById('reviewerNotesField') || document.querySelector('textarea[name="reviewerNotes"]');
+                const reviewerNotes = reviewerNotesEl ? reviewerNotesEl.value : null;
+
+                const bghNotesEl = document.getElementById('bghNotesField') || document.querySelector('textarea[name="bghNotes"]');
+                const bghNotes = bghNotesEl ? bghNotesEl.value : null;
+
+                const positionTitleEl = document.querySelector('input[name="positionTitle"]');
+                const evaluationDateStrEl = document.querySelector('input[name="evaluationDateStr"]');
+                const summaryNotesEl = document.querySelector('textarea[name="summaryNotes"]');
+
+                const savePayload = {
+                    id: docId,
+                    positionTitle: positionTitleEl ? positionTitleEl.value : null,
+                    evaluationDateStr: evaluationDateStrEl ? evaluationDateStrEl.value : null,
+                    summaryNotes: summaryNotesEl ? summaryNotesEl.value : null,
+                    reviewerNotes: reviewerNotes,
+                    bghNotes: bghNotes,
+                    tasks: tasks,
+                    tasksJson: JSON.stringify(tasks)
+                };
+
+                let targetSaveApi = '/portal/api/nq52/work-results/' + docId + '/save-draft';
+                if (isPrincipal) {
+                    targetSaveApi = '/portal/api/nq52/work-results/' + docId + '/save-council-review';
+                } else if (isDeptLeader) {
+                    targetSaveApi = '/portal/api/nq52/work-results/' + docId + '/save-review';
+                }
+
+                // 1. Lưu dữ liệu công việc vào CSDL trước
+                fetch(targetSaveApi, {
+                    method: 'POST',
+                    headers: jsonHeaders,
+                    body: JSON.stringify(savePayload)
+                })
+                .then(r => r.json())
+                .then(saveRes => {
+                    hideSigningOverlay();
+                    if (!saveRes.success) {
+                        alert(saveRes.message || 'Lưu dữ liệu kết quả công tác thất bại.');
+                        return;
+                    }
+                    // 2. Mở Modal Ký số SmartCA & gửi xác nhận sang nhà phát hành
+                    const finalNotes = isPrincipal ? bghNotes : (isDeptLeader ? reviewerNotes : null);
+                    openRemoteSigningModal('WORK_RESULT', docId, finalNotes, explicitRole || (isPrincipal ? 'PRINCIPAL' : (isDeptLeader ? 'DEPT_LEADER' : 'TEACHER')));
+                })
+                .catch(err => {
+                    hideSigningOverlay();
+                    console.error('Lỗi khi lưu dữ liệu:', err);
+                    alert('Có lỗi xảy ra trong quá trình lưu dữ liệu: ' + (err.message || err));
+                });
+            }
+
+            function saveWorkResultAndOpenSignModal(docType, docId) {
+                directSignWorkResult(docId, 'TEACHER');
+            }
+
+            function confirmSubmit() {
+                const validTasks = tasks.filter(t => t.content && t.content.trim().length > 0);
+                if (validTasks.length === 0) {
+                    alert('Vui lòng nhập nội dung cho ít nhất một công việc trước khi nộp!');
+                    return;
+                }
+                if (confirm('Bạn có chắc chắn muốn nộp Bảng tự đánh giá kết quả thực hiện nhiệm vụ? Sau khi nộp bạn sẽ không thể chỉnh sửa.')) {
+                    submitAction('SUBMIT');
+                }
+            }
+
+            function submitReviewAction(action) {
+                if (action === 'REJECT') {
+                    if (!confirm('Bạn có chắc chắn muốn trả lại bảng tự đánh giá để giáo viên bổ sung, chỉnh sửa?')) return;
+                } else {
+                    if (!confirm('Xác nhận KÝ DUYỆT bảng tự đánh giá kết quả của giáo viên?')) return;
+                }
+                const notes = document.getElementById('reviewerNotesField') ? document.getElementById('reviewerNotesField').value : '';
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = window.location.pathname.replace(/\/$/, '') + '/review';
+
+                const csrfToken = document.querySelector('input[name="_csrf"]');
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_csrf';
+                    csrfInput.value = csrfToken.value;
+                    form.appendChild(csrfInput);
+                }
+
+                const actInput = document.createElement('input');
+                actInput.type = 'hidden';
+                actInput.name = 'action';
+                actInput.value = action;
+                form.appendChild(actInput);
+
+                const notesInput = document.createElement('input');
+                notesInput.type = 'hidden';
+                notesInput.name = 'reviewerNotes';
+                notesInput.value = notes;
+                form.appendChild(notesInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+
+            function submitBghReviewAction(action) {
+                if (action === 'REJECT') {
+                    if (!confirm('Bạn có chắc chắn muốn Ban Giám Hiệu trả lại bảng tự đánh giá để giáo viên bổ sung, chỉnh sửa?')) return;
+                } else {
+                    if (!confirm('Xác nhận Ban Giám Hiệu KÝ DUYỆT CHÍNH THỨC bảng tự đánh giá kết quả của giáo viên?')) return;
+                }
+                const notes = document.getElementById('bghNotesField') ? document.getElementById('bghNotesField').value : '';
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = window.location.pathname.replace(/\/$/, '') + '/review';
+
+                const csrfToken = document.querySelector('input[name="_csrf"]');
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_csrf';
+                    csrfInput.value = csrfToken.value;
+                    form.appendChild(csrfInput);
+                }
+
+                const actInput = document.createElement('input');
+                actInput.type = 'hidden';
+                actInput.name = 'action';
+                actInput.value = action;
+                form.appendChild(actInput);
+
+                const notesInput = document.createElement('input');
+                notesInput.type = 'hidden';
+                notesInput.name = 'bghNotes';
+                notesInput.value = notes;
+                form.appendChild(notesInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        </script>
+        <!-- BỘ MODAL KÝ SỐ REMOTE SIGNING & USB TOKEN -->
+        <th:block th:replace="~{nq52/signature-modals :: modals}"></th:block>
+    </div>
+</body>
+
+</html>

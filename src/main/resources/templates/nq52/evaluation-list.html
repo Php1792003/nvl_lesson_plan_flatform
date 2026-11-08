@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/layout-base :: layout(${pageTitle}, ~{::contentBlock})}">
+<body>
+<div th:fragment="contentBlock">
+    <style>
+        .nq52-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .nq52-page-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--dark, #0f172a);
+            margin: 0 0 6px 0;
+            letter-spacing: -0.3px;
+        }
+        .nq52-page-subtitle {
+            font-size: 13.5px;
+            color: var(--text-muted, #64748b);
+            margin: 0;
+        }
+
+        /* 4 KPI Stat Cards */
+        .nq52-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .nq52-stat-card {
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: var(--radius-md, 12px);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .nq52-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+        }
+        .nq52-stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .nq52-stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.2;
+            color: var(--dark, #0f172a);
+        }
+        .nq52-stat-desc {
+            font-size: 12px;
+            color: var(--text-muted, #64748b);
+            margin-top: 4px;
+        }
+
+        /* Filter Toolbar Card */
+        .nq52-filter-card {
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: var(--radius-md, 12px);
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+        }
+        .nq52-filter-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dark, #0f172a);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Period Badge */
+        .nq52-period-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            color: #1e40af;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        /* Score Display Box */
+        .nq52-score-box {
+            font-weight: 800;
+            font-size: 14.5px;
+            letter-spacing: -0.2px;
+        }
+
+        /* Table nowrap & horizontal layout */
+        .nq52-table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+        .nq52-table th,
+        .nq52-table td {
+            white-space: nowrap;
+            vertical-align: middle;
+            padding: 12px 18px;
+        }
+
+        /* Reviewer Quick Banner */
+        .reviewer-banner {
+            background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: var(--radius-md, 12px);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .reviewer-banner h4 {
+            margin: 0 0 4px 0;
+            color: #1e40af;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .reviewer-banner p {
+            margin: 0;
+            color: #3b82f6;
+            font-size: 13px;
+        }
+
+        /* Table styles */
+        .sortable-th {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s ease;
+        }
+        .sortable-th:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        .sort-indicator {
+            display: inline-block;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+
+        /* Modal popup */
+        .nq52-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .nq52-modal-backdrop.show {
+            display: flex;
+        }
+        .nq52-modal-dialog {
+            background: var(--surface, #ffffff);
+            border-radius: var(--radius-md, 12px);
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+    </style>
+
+    <!-- Flash message -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+        <span th:text="${successMessage}">Thao tác thành công!</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+        <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
+    </div>
+
+    <!-- Reviewer Quick Banner -->
+    <div th:if="${isReviewer}" class="reviewer-banner">
+        <div>
+            <h4>Khu vực dành cho Tổ trưởng chuyên môn &amp; Ban Giám Hiệu</h4>
+            <p>Bạn có thẩm quyền xem và đánh giá xếp loại các phiếu giáo viên trong tổ đã nộp.</p>
+        </div>
+        <a th:href="@{/nq52/reviews}" class="btn btn-primary btn-sm" style="white-space: nowrap;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                <path d="M9 11l3 3L22 4"></path>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            Duyệt phiếu cấp Tổ
+        </a>
+    </div>
+
+    <!-- Page Header Title Banner -->
+    <div class="nq52-header-container">
+        <div>
+            <h1 class="nq52-page-title">Phiếu theo dõi, đánh giá Nghị quyết 52</h1>
+            <p class="nq52-page-subtitle">Đánh giá, xếp loại chất lượng viên chức hàng tháng theo quy chuẩn Mẫu 03</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" onclick="openCreateModal()" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; font-weight: 600;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Mở / Tạo phiếu kỳ mới</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 4 KPI Stat Cards -->
+    <div class="nq52-stats-grid">
+        <div class="nq52-stat-card">
+            <div class="nq52-stat-label" style="color: var(--text-muted, #64748b);">Tổng số kỳ đã tạo</div>
+            <div class="nq52-stat-value" th:text="${totalCount != null ? totalCount : 0}">0</div>
+            <div class="nq52-stat-desc">Tất cả các tháng đã khởi tạo</div>
+        </div>
+        <div class="nq52-stat-card" style="border-left: 4px solid #94a3b8;">
+            <div class="nq52-stat-label" style="color: #64748b;">Bản nháp đang soạn</div>
+            <div class="nq52-stat-value" style="color: #475569;" th:text="${draftCount != null ? draftCount : 0}">0</div>
+            <div class="nq52-stat-desc">Có thể tiếp tục chỉnh sửa</div>
+        </div>
+        <div class="nq52-stat-card" style="border-left: 4px solid #f59e0b;">
+            <div class="nq52-stat-label" style="color: #d97706;">Đã nộp chờ duyệt</div>
+            <div class="nq52-stat-value" style="color: #d97706;" th:text="${submittedCount != null ? submittedCount : 0}">0</div>
+            <div class="nq52-stat-desc">Đang đợi Tổ trưởng chấm điểm</div>
+        </div>
+        <div class="nq52-stat-card" style="border-left: 4px solid #10b981;">
+            <div class="nq52-stat-label" style="color: #059669;">Đã hoàn tất đánh giá</div>
+            <div class="nq52-stat-value" style="color: #059669;" th:text="${reviewedCount != null ? reviewedCount : 0}">0</div>
+            <div class="nq52-stat-desc">Đã có kết quả xếp loại chính thức</div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Card -->
+    <div class="nq52-filter-card">
+        <div class="nq52-filter-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <span>Bộ lọc danh sách theo Kỳ đánh giá</span>
+        </div>
+        <form th:action="@{/nq52/evaluations}" method="get" style="display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1 1 180px; min-width: 160px;">
+                <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary, #475569);">Tháng đánh giá:</label>
+                <select name="month" class="form-control" style="font-size: 13.5px; height: 38px;">
+                    <option value="">-- Tất cả các tháng --</option>
+                    <option th:each="m : ${#numbers.sequence(1, 12)}" 
+                            th:value="${m}" 
+                            th:text="'Tháng ' + ${m}" 
+                            th:selected="${selectedMonth != null and selectedMonth == m}"></option>
+                </select>
+            </div>
+            <div style="flex: 1 1 180px; min-width: 160px;">
+                <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary, #475569);">Năm đánh giá:</label>
+                <select name="year" class="form-control" style="font-size: 13.5px; height: 38px;">
+                    <option value="">-- Tất cả các năm --</option>
+                    <option th:each="y : ${availableYears}" 
+                            th:value="${y}" 
+                            th:text="'Năm ' + ${y}" 
+                            th:selected="${selectedYear != null and selectedYear == y}"></option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary" style="height: 38px; padding: 0 18px; font-size: 13.5px; font-weight: 600;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>Lọc dữ liệu</span>
+                </button>
+                <a th:href="@{/nq52/evaluations}" class="btn btn-outline" style="height: 38px; padding: 0 14px; font-size: 13.5px;" title="Xóa bộ lọc và xem tất cả các kỳ">
+                    Đặt lại
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table of Evaluations Card -->
+    <div class="card" style="border: 1px solid var(--border, #e2e8f0); border-radius: var(--radius-md, 12px); overflow: hidden; box-shadow: var(--shadow-sm);">
+        <div class="card-body" style="padding: 0;">
+            <div class="table-responsive">
+                <table class="nq52-table table-hover" id="evaluationTable" style="margin: 0;">
+                    <thead>
+                        <tr>
+                            <th class="sortable-th" onclick="sortEvaluationTable('period')" title="Nhấp để sắp xếp theo Kỳ đánh giá">
+                                <span>Kỳ đánh giá</span>
+                                <span class="sort-indicator" id="sort-period-icon" style="color: var(--primary);">▼</span>
+                            </th>
+                            <th class="sortable-th" onclick="sortEvaluationTable('status')" style="text-align: center; width: 140px;" title="Nhấp để sắp xếp theo Trạng thái">
+                                <span>Trạng thái</span>
+                                <span class="sort-indicator" id="sort-status-icon" style="opacity: 0.35;">↕</span>
+                            </th>
+                            <th style="text-align: center; width: 185px;">Thao tác</th>
+                            <th class="sortable-th" onclick="sortEvaluationTable('teacher-name')" title="Nhấp để sắp xếp theo Họ và tên">
+                                <span>Viên chức</span>
+                                <span class="sort-indicator" id="sort-teacher-name-icon" style="opacity: 0.35;">↕</span>
+                            </th>
+                            <th>Tổ chuyên môn</th>
+                            <th class="sortable-th" onclick="sortEvaluationTable('self-score')" style="text-align: center;" title="Nhấp để sắp xếp theo Điểm tự chấm">
+                                <span>Điểm tự chấm</span>
+                                <span class="sort-indicator" id="sort-self-score-icon" style="opacity: 0.35;">↕</span>
+                            </th>
+                            <th class="sortable-th" onclick="sortEvaluationTable('reviewer-score')" style="text-align: center;" title="Nhấp để sắp xếp theo Điểm Tổ trưởng">
+                                <span>Điểm Tổ trưởng</span>
+                                <span class="sort-indicator" id="sort-reviewer-score-icon" style="opacity: 0.35;">↕</span>
+                            </th>
+                            <th>Kết quả xếp loại</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Empty State -->
+                        <tr th:if="${evaluations == null or evaluations.isEmpty()}">
+                            <td colspan="8" style="text-align: center; padding: 50px 16px; color: var(--text-muted, #64748b);">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.45;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                                <div style="font-size: 15px; font-weight: 600; color: var(--dark, #0f172a); margin-bottom: 4px;">Chưa có phiếu đánh giá nào phù hợp</div>
+                                <p style="font-size: 13px; margin: 0 0 16px 0;">Hãy thử chọn lại bộ lọc hoặc bấm nút bên dưới để bắt đầu đánh giá kỳ mới.</p>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    Tạo phiếu kỳ mới ngay
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Row Item -->
+                        <tr th:each="eval : ${evaluations}"
+                            th:attr="data-period=${eval.evaluationYear * 100 + eval.evaluationMonth},
+                                     data-teacher-name=${eval.teacherNameSnapshot},
+                                     data-self-score=${eval.selfTotalScore != null ? eval.selfTotalScore : -1},
+                                     data-reviewer-score=${eval.reviewerTotalScore != null ? eval.reviewerTotalScore : -1},
+                                     data-status=${eval.status.name()}">
+                            
+                            <!-- 1. Kỳ đánh giá -->
+                            <td>
+                                <span class="nq52-period-badge">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <span th:text="'Tháng ' + ${eval.evaluationMonth} + '/' + ${eval.evaluationYear}">Tháng 10/2026</span>
+                                </span>
+                            </td>
+
+                            <!-- 2. Trạng thái -->
+                            <td style="text-align: center;">
+                                <span th:if="${eval.status.name() == 'DRAFT'}" class="badge" style="background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; padding: 4px 10px; font-size: 11.5px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #94a3b8;"></span>
+                                    Bản nháp
+                                </span>
+                                <span th:if="${eval.status.name() == 'SUBMITTED'}" class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 4px 10px; font-size: 11.5px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #f59e0b;"></span>
+                                    Đã nộp Tổ trưởng
+                                </span>
+                                <span th:if="${eval.status.name() == 'REVIEWED'}" class="badge" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; font-size: 11.5px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #10b981;"></span>
+                                    Tổ đã đánh giá
+                                </span>
+                                <span th:if="${eval.status.name() == 'COUNCIL_REVIEWED'}" class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 4px 10px; font-size: 11.5px; border-radius: 20px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #d97706;"></span>
+                                    Hội đồng TĐ-KT đã duyệt
+                                </span>
+                            </td>
+
+                            <!-- 3. Thao tác -->
+                            <td style="text-align: center;">
+                                <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: center;">
+                                    <a th:href="@{'/nq52/evaluations/' + ${eval.id}}" class="btn btn-outline btn-sm" style="font-size: 12.5px; font-weight: 600; padding: 5px 12px;" title="Xem hoặc chỉnh sửa phiếu">
+                                        <span th:if="${eval.status.name() == 'DRAFT'}">Sửa phiếu</span>
+                                        <span th:if="${eval.status.name() != 'DRAFT'}">Xem chi tiết</span>
+                                    </a>
+                                    <!-- Nút Tải file đã lưu trong CSDL -->
+                                    <a th:if="${eval.exportedFileName != null}" th:href="@{'/nq52/evaluations/' + ${eval.id} + '/download'}" 
+                                       class="btn btn-outline btn-sm" style="padding: 5px 8px; color: #15803d; border-color: #86efac; background: #f0fdf4;" 
+                                       th:title="'Tải file đã lưu trong CSDL: ' + ${eval.exportedFileName}">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </a>
+                                    <!-- Nút Xuất file Word Mẫu 03 & Lưu vào DB -->
+                                    <a th:href="@{'/nq52/evaluations/' + ${eval.id} + '/export'}" 
+                                       class="btn btn-outline btn-sm" style="padding: 5px 8px; color: #2563eb; border-color: #93c5fd; background: #eff6ff;" 
+                                       title="Xuất file Word (Mẫu 03) và lưu vào CSDL">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                                        </svg>
+                                    </a>
+                                    <a th:href="@{'/nq52/evaluations/' + ${eval.id} + '/print'}" target="_blank" class="btn btn-outline btn-sm" style="padding: 5px 8px;" title="In phiếu Mẫu 03">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                            <rect x="6" y="14" width="12" height="8"></rect>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </td>
+
+                            <!-- 4. Viên chức: tên + chức vụ nằm ngang trên 1 dòng -->
+                            <td>
+                                <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                    <span style="font-weight: 700; color: var(--dark, #0f172a); font-size: 13.5px;" th:text="${eval.teacherNameSnapshot}"></span>
+                                    <span style="background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px;" th:text="${eval.positionTitle != null ? eval.positionTitle : 'Giáo viên'}">Giáo viên</span>
+                                </div>
+                            </td>
+
+                            <!-- 5. Tổ bộ môn -->
+                            <td>
+                                <span style="font-size: 13.5px; color: #334155;" th:text="${eval.departmentNameSnapshot}">Toán học</span>
+                            </td>
+
+                            <!-- 6. Điểm tự chấm: điểm số và / 100 nằm ngang trên 1 dòng -->
+                            <td style="text-align: center;">
+                                <div style="display: inline-flex; align-items: baseline; gap: 4px;">
+                                    <span class="nq52-score-box text-primary" style="color: #2563eb;" th:text="${eval.selfTotalScore != null ? #numbers.formatDecimal(eval.selfTotalScore, 1, 'COMMA', 2, 'POINT') : '-'}">95,00</span>
+                                    <span style="font-size: 11.5px; color: #94a3b8; font-weight: 500;">/ 100</span>
+                                </div>
+                            </td>
+
+                            <!-- 7. Điểm Tổ trưởng / BGH: điểm số và / 100 nằm ngang trên 1 dòng -->
+                            <td style="text-align: center;">
+                                <div th:if="${eval.bghTotalScore != null}" style="display: inline-flex; align-items: baseline; gap: 4px;" title="Điểm chính thức của Hội đồng thi đua, khen thưởng">
+                                    <span class="nq52-score-box" style="color: #b45309; font-weight: 800;" th:text="${#numbers.formatDecimal(eval.bghTotalScore, 1, 'COMMA', 2, 'POINT')}">92,00</span>
+                                    <span style="font-size: 11.5px; color: #94a3b8; font-weight: 500;">/ 100</span>
+                                </div>
+                                <div th:if="${eval.bghTotalScore == null and eval.reviewerTotalScore != null}" style="display: inline-flex; align-items: baseline; gap: 4px;" title="Điểm Tổ trưởng chấm">
+                                    <span class="nq52-score-box text-success" style="color: #059669;" th:text="${#numbers.formatDecimal(eval.reviewerTotalScore, 1, 'COMMA', 2, 'POINT')}">90,00</span>
+                                    <span style="font-size: 11.5px; color: #94a3b8; font-weight: 500;">/ 100</span>
+                                </div>
+                                <span th:if="${eval.bghTotalScore == null and eval.reviewerTotalScore == null}" class="text-muted" style="font-size: 13px;">-</span>
+                            </td>
+
+                            <!-- 8. Kết quả xếp loại: chữ và tag kiểm duyệt nằm ngang trên 1 dòng -->
+                            <td>
+                                <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 13px; font-weight: 700; color: var(--dark, #0f172a);" 
+                                          th:text="${eval.bghClassification != null ? eval.bghClassification : (eval.reviewerClassification != null ? eval.reviewerClassification : (eval.selfClassification != null ? eval.selfClassification : 'Chưa xếp loại'))}">
+                                        Hoàn thành xuất sắc nhiệm vụ
+                                    </span>
+                                    <span th:if="${eval.bghClassification != null}" 
+                                          style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 4px; font-weight: 700;" 
+                                          title="Đã được Hội đồng thi đua khen thưởng (BGH) duyệt chính thức">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        BGH duyệt
+                                    </span>
+                                    <span th:if="${eval.bghClassification == null and eval.reviewerClassification != null}" 
+                                          style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #15803d; background: #dcfce7; border: 1px solid #bbf7d0; padding: 2px 7px; border-radius: 4px; font-weight: 600;" 
+                                          title="Đã được Tổ trưởng duyệt">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Tổ duyệt
+                                    </span>
+                                    <span th:if="${eval.bghClassification == null and eval.reviewerClassification == null and eval.selfClassification != null}" 
+                                          style="font-size: 11px; color: #64748b; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 4px; font-weight: 500;" 
+                                          title="Cá nhân tự đề xuất">
+                                        Tự đề xuất
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tạo / Mở phiếu kỳ mới -->
+    <div id="createModalBackdrop" class="nq52-modal-backdrop" onclick="if(event.target === this) closeCreateModal()">
+        <div class="nq52-modal-dialog">
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border, #e2e8f0); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--dark, #0f172a);">Mở hoặc Tạo phiếu đánh giá NQ 52</h3>
+                <button type="button" onclick="closeCreateModal()" style="background: none; border: none; font-size: 20px; line-height: 1; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div style="padding: 24px;">
+                <p style="font-size: 13.5px; color: var(--text-muted); margin: 0 0 18px 0; line-height: 1.5;">
+                    Vui lòng chọn <strong>Kỳ đánh giá (Tháng và Năm)</strong>. Nếu phiếu của kỳ đã tồn tại, hệ thống sẽ mở phiếu để bạn tiếp tục; nếu chưa có, hệ thống sẽ tự động khởi tạo phiếu mới.
+                </p>
+                <div style="display: flex; gap: 14px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Tháng:</label>
+                        <select id="modalMonth" class="form-control" style="height: 40px; font-size: 14px;">
+                            <option th:each="m : ${#numbers.sequence(1, 12)}" 
+                                    th:value="${m}" 
+                                    th:text="'Tháng ' + ${m}" 
+                                    th:selected="${m == currentMonth}"></option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Năm:</label>
+                        <select id="modalYear" class="form-control" style="height: 40px; font-size: 14px;">
+                            <option th:each="y : ${availableYears}" 
+                                    th:value="${y}" 
+                                    th:text="'Năm ' + ${y}" 
+                                    th:selected="${y == currentYear}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #475569; display: flex; align-items: center; gap: 8px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <em>Gợi ý: Mẫu đánh giá Mẫu 03 theo Nghị quyết 52 áp dụng thang điểm 100, tự động xếp loại khi lưu hoặc nộp.</em>
+                </div>
+            </div>
+            <div style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid var(--border, #e2e8f0); display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="closeCreateModal()">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="submitCreateModal()" style="font-weight: 600;">Tiếp tục &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var newUrl = /*[[@{/nq52/new}]]*/ '/portal/nq52/new';
+
+        function openCreateModal() {
+            var modal = document.getElementById('createModalBackdrop');
+            if (modal) modal.classList.add('show');
+        }
+
+        function closeCreateModal() {
+            var modal = document.getElementById('createModalBackdrop');
+            if (modal) modal.classList.remove('show');
+        }
+
+        function submitCreateModal() {
+            var m = document.getElementById('modalMonth').value;
+            var y = document.getElementById('modalYear').value;
+            window.location.href = newUrl + '?month=' + encodeURIComponent(m) + '&year=' + encodeURIComponent(y);
+        }
+
+        var sortDirections = {
+            'period': 'desc',
+            'teacher-name': 'none',
+            'self-score': 'none',
+            'reviewer-score': 'none',
+            'status': 'none'
+        };
+
+        function sortEvaluationTable(colName) {
+            var table = document.getElementById('evaluationTable');
+            if (!table) return;
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr[data-period]'));
+            if (!rows.length) return;
+
+            var currentDir = sortDirections[colName] || 'none';
+            var newDir = (currentDir === 'desc') ? 'asc' : 'desc';
+
+            ['period', 'teacher-name', 'self-score', 'reviewer-score', 'status'].forEach(function(k) {
+                var icon = document.getElementById('sort-' + k + '-icon');
+                if (icon) {
+                    if (k === colName) {
+                        icon.textContent = newDir === 'desc' ? '▼' : '▲';
+                        icon.style.opacity = '1';
+                        icon.style.color = 'var(--primary)';
+                    } else {
+                        icon.textContent = '↕';
+                        icon.style.opacity = '0.35';
+                        icon.style.color = 'inherit';
+                    }
+                }
+                sortDirections[k] = (k === colName) ? newDir : 'none';
+            });
+
+            rows.sort(function(a, b) {
+                if (colName === 'period') {
+                    var pA = parseInt(a.getAttribute('data-period') || '0', 10);
+                    var pB = parseInt(b.getAttribute('data-period') || '0', 10);
+                    return newDir === 'desc' ? (pB - pA) : (pA - pB);
+                } else if (colName === 'self-score') {
+                    var sA = parseFloat(a.getAttribute('data-self-score') || '-1');
+                    var sB = parseFloat(b.getAttribute('data-self-score') || '-1');
+                    return newDir === 'desc' ? (sB - sA) : (sA - sB);
+                } else if (colName === 'reviewer-score') {
+                    var rA = parseFloat(a.getAttribute('data-reviewer-score') || '-1');
+                    var rB = parseFloat(b.getAttribute('data-reviewer-score') || '-1');
+                    return newDir === 'desc' ? (rB - rA) : (rA - rB);
+                } else if (colName === 'teacher-name') {
+                    var tA = (a.getAttribute('data-teacher-name') || '').trim();
+                    var tB = (b.getAttribute('data-teacher-name') || '').trim();
+                    var cmp = tA.localeCompare(tB, 'vi');
+                    return newDir === 'desc' ? -cmp : cmp;
+                } else {
+                    var stA = a.getAttribute('data-status') || '';
+                    var stB = b.getAttribute('data-status') || '';
+                    var cmpSt = stA.localeCompare(stB);
+                    return newDir === 'desc' ? -cmpSt : cmpSt;
+                }
+            });
+
+            rows.forEach(function(r) { tbody.appendChild(r); });
+        }
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

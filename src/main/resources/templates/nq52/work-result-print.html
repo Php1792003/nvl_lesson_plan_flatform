@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">In Mẫu 01TKNV - Bảng thống kê, tự đánh giá kết quả</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 15mm 12mm 15mm 12mm;
+        }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 13px;
+            color: #000;
+            background: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        .header-table {
+            width: 100%;
+            margin-bottom: 12px;
+            border-collapse: collapse;
+        }
+        .header-table td {
+            vertical-align: top;
+            text-align: center;
+        }
+        .header-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 12px 0 4px 0;
+            text-transform: uppercase;
+        }
+        .header-sub {
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .header-note {
+            text-align: center;
+            font-size: 12px;
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+        .meta-info {
+            margin-bottom: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+            margin-bottom: 16px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #000;
+            padding: 5px 4px;
+            vertical-align: middle;
+        }
+        .data-table th {
+            text-align: center;
+            font-weight: bold;
+            background: #f2f2f2;
+        }
+        .sec-head {
+            font-weight: bold;
+            background: #e6e6e6 !important;
+            text-align: left !important;
+            padding-left: 8px !important;
+        }
+        .center {
+            text-align: center;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+            margin-bottom: 24px;
+        }
+        .summary-table th, .summary-table td {
+            border: 1px solid #000;
+            padding: 5px 4px;
+            text-align: center;
+        }
+        .summary-table th {
+            font-weight: bold;
+            background: #f2f2f2;
+        }
+        .sig-table {
+            width: 100%;
+            margin-top: 24px;
+            border-collapse: collapse;
+        }
+        .sig-table td {
+            text-align: center;
+            vertical-align: top;
+            width: 33.33%;
+        }
+        .no-print {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #2563eb;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border: none;
+            z-index: 9999;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="no-print" onclick="window.print()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+    In trang này
+</button>
+
+<table class="header-table">
+    <tr>
+        <td style="width: 45%;">
+            <div style="font-size: 12px;">UBND PHƯỜNG CẨM LỆ</div>
+            <div style="font-size: 13px; font-weight: bold; text-decoration: underline;">TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+        </td>
+        <td style="width: 55%;">
+            <div style="font-size: 13px; font-weight: bold;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+            <div style="font-size: 13px; font-weight: bold; text-decoration: underline;">Độc lập - Tự do - Hạnh phúc</div>
+            <div style="font-size: 12px; font-style: italic; margin-top: 6px;" th:text="${wr.evaluationDateStr != null ? wr.evaluationDateStr : 'Cẩm Lệ, ngày ... tháng ... năm ...'}">
+                Cẩm Lệ, ngày 30 tháng 10 năm 2026
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="header-title">
+    BẢNG THỐNG KÊ, TỰ ĐÁNH GIÁ KẾT QUẢ THỰC HIỆN NHIỆM VỤ CỦA CÁ NHÂN VIÊN CHỨC
+</div>
+<div class="header-sub">
+    THÁNG <span th:text="${wr.evaluationMonth}">10</span>/NĂM <span th:text="${wr.evaluationYear}">2026</span>
+</div>
+<div class="header-note">
+    (Kèm theo Phiếu đánh giá, xếp loại chất lượng hàng tháng của cá nhân)
+</div>
+
+<div class="meta-info">
+    <span><strong>Họ và tên viên chức:</strong> <span th:text="${wr.teacherNameSnapshot}"></span></span>
+    <span style="margin-left: 30px;"><strong>Chức danh/Vị trí:</strong> <span th:text="${wr.positionTitle}">Giáo viên</span></span>
+    <span style="margin-left: 30px;"><strong>Tổ chuyên môn:</strong> <span th:text="${wr.departmentNameSnapshot}">Toán học</span></span>
+    <span style="margin-left: 30px;" th:if="${wr.campusNameSnapshot != null}"><strong>Điểm trường:</strong> <span th:text="${wr.campusNameSnapshot}">Điểm trường chính</span></span>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th rowspan="3" style="width: 25px;">TT</th>
+            <th rowspan="3">Nội dung công việc/sản phẩm được giao trong kỳ đánh giá</th>
+            <th colspan="3">Tính chất công việc</th>
+            <th colspan="2">Mức độ tham gia</th>
+            <th colspan="2">Sản phẩm, công việc đã thực hiện</th>
+            <th colspan="4">Thời gian thực hiện</th>
+            <th colspan="3">Chất lượng sản phẩm hoàn thành</th>
+            <th rowspan="3" style="width: 100px;">Kiến nghị, đề xuất</th>
+            <th rowspan="3" style="width: 100px;">Giải trình</th>
+        </tr>
+        <tr>
+            <th colspan="3">Đánh dấu tương ứng</th>
+            <th colspan="2">Đánh dấu tương ứng</th>
+            <th colspan="2">Kết quả thực hiện</th>
+            <th rowspan="2">TG yêu cầu</th>
+            <th colspan="3">TG hoàn thành</th>
+            <th colspan="3">Mức độ đạt được</th>
+        </tr>
+        <tr>
+            <th style="width: 45px;">Bình thường</th>
+            <th style="width: 45px;">Phức tạp</th>
+            <th style="width: 50px;">Rất phức tạp</th>
+            <th style="width: 45px;">Chủ trì</th>
+            <th style="width: 45px;">Phối hợp</th>
+            <th style="width: 50px;">Đã HT</th>
+            <th style="width: 50px;">Chưa HT</th>
+            <th style="width: 45px;">Sớm hạn</th>
+            <th style="width: 45px;">Đúng hạn</th>
+            <th style="width: 45px;">Trễ hạn</th>
+            <th style="width: 50px;">Chưa đạt</th>
+            <th style="width: 50px;">Đảm bảo</th>
+            <th style="width: 50px;">Vượt mức</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Phân loại từng nhóm -->
+        <th:block th:each="cat : ${#strings.arraySplit('I,II,III,IV', ',')}">
+            <tr>
+                <td colspan="18" class="sec-head">
+                    <span th:if="${cat == 'I'}">I. Các nhiệm vụ theo chương trình, kế hoạch đã đề ra (từ kế hoạch công tác tháng/năm của đơn vị)</span>
+                    <span th:if="${cat == 'II'}">II. Các nhiệm vụ chuyên môn, thường xuyên theo vị trí việc làm</span>
+                    <span th:if="${cat == 'III'}">III. Các nhiệm vụ đột xuất, phát sinh được giao theo sự phân công của lãnh đạo đơn vị</span>
+                    <span th:if="${cat == 'IV'}">IV. Các nhiệm vụ khác: Hội họp, tập huấn, đào tạo, bồi dưỡng, phong trào thi đua…</span>
+                </td>
+            </tr>
+            <th:block th:each="task, iter : ${form.tasks}" th:if="${task.category == cat}">
+                <tr>
+                    <td class="center" th:text="${iter.count}">1</td>
+                    <td th:text="${task.content}">Nội dung công việc</td>
+                    <td class="center" th:text="${task.nature == 'NORMAL' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.nature == 'COMPLEX' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.nature == 'VERY_COMPLEX' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.role == 'LEAD' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.role == 'COORDINATE' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.status == 'COMPLETED' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.status == 'UNCOMPLETED' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.timeRequired}"></td>
+                    <td class="center" th:text="${task.timeProgress == 'EARLY' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.timeProgress == 'ON_TIME' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.timeProgress == 'LATE' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.quality == 'SUBSTANDARD' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.quality == 'STANDARD' ? 'X' : ''}"></td>
+                    <td class="center" th:text="${task.quality == 'EXCEEDED' ? 'X' : ''}"></td>
+                    <td th:text="${task.suggestions}"></td>
+                    <td th:text="${task.explanation}"></td>
+                </tr>
+            </th:block>
+        </th:block>
+    </tbody>
+</table>
+
+<div style="font-weight: bold; margin-bottom: 8px;">TỔNG SỐ SẢN PHẨM / CÔNG VIỆC:</div>
+<table class="summary-table">
+    <thead>
+        <tr>
+            <th colspan="4">Tổng số lượng sản phẩm, công việc</th>
+            <th colspan="4">Tiến độ sản phẩm, công việc</th>
+            <th colspan="4">Chất lượng sản phẩm, công việc</th>
+            <th rowspan="3" style="width: 120px;">Ghi chú<br>(13)</th>
+        </tr>
+        <tr>
+            <th>Được giao</th>
+            <th>Hoàn thành</th>
+            <th>Chưa HT</th>
+            <th>Tỷ lệ HT (%)</th>
+            <th>Sớm hạn</th>
+            <th>Đúng hạn</th>
+            <th>Trễ hạn</th>
+            <th>Tỷ lệ đúng/sớm (%)</th>
+            <th>Đảm bảo</th>
+            <th>Vượt mức</th>
+            <th>Chưa đảm bảo</th>
+            <th>Tỷ lệ đạt trở lên (%)</th>
+        </tr>
+        <tr style="font-size: 10.5px; color: #555;">
+            <th>(1)</th>
+            <th>(2)</th>
+            <th>(3)</th>
+            <th>(4) = (2)/(1)x100</th>
+            <th>(5)</th>
+            <th>(6)</th>
+            <th>(7)</th>
+            <th>(8) = (5+6)/(1)x100</th>
+            <th>(9)</th>
+            <th>(10)</th>
+            <th>(11)</th>
+            <th>(12) = (9+10)/(1)x100</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr style="font-weight: bold;">
+            <td th:text="${form.totalAssigned}">0</td>
+            <td th:text="${form.totalCompleted}">0</td>
+            <td th:text="${form.totalUncompleted}">0</td>
+            <td th:text="${#numbers.formatDecimal(form.completionRate, 1, 'COMMA', 1, 'POINT') + '%'}">0.0%</td>
+
+            <td th:text="${form.progressEarly}">0</td>
+            <td th:text="${form.progressOnTime}">0</td>
+            <td th:text="${form.progressLate}">0</td>
+            <td th:text="${#numbers.formatDecimal(form.onTimeRate, 1, 'COMMA', 1, 'POINT') + '%'}">0.0%</td>
+
+            <td th:text="${form.qualityStandard}">0</td>
+            <td th:text="${form.qualityExceeded}">0</td>
+            <td th:text="${form.qualitySubstandard}">0</td>
+            <td th:text="${#numbers.formatDecimal(form.qualityRate, 1, 'COMMA', 1, 'POINT') + '%'}">0.0%</td>
+
+            <td style="font-weight: normal; font-size: 11px;" th:text="${form.summaryNotes}"></td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="sig-table">
+    <tr>
+        <td style="vertical-align: top; width: 33%;">
+            <div style="font-weight: bold;">PHÓ HIỆU TRƯỞNG PHỤ TRÁCH</div>
+            <div style="font-style: italic; font-size: 12px; margin-bottom: 10px;">(Ký, đóng dấu cơ quan)</div>
+            
+            <div th:if="${sigPrincipal != null}" style="border: 2px solid #b91c1c; background: #fff5f5; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 240px; text-align: left; font-size: 10.5px;">
+                <div style="font-weight: 800; color: #991b1b; font-size: 11px;">ĐÃ KÝ DUYỆT CHÍNH THỨC</div>
+                <img th:if="${sigPrincipal.signatureImageBase64 != null and !sigPrincipal.signatureImageBase64.isBlank()}" 
+                     th:src="${sigPrincipal.signatureImageBase64}" alt="Con dấu BGH" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                <div style="font-weight: bold; color: #7f1d1d;" th:text="${sigPrincipal.signerName}">TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+                <div>Thiết bị: <span th:text="${sigPrincipal.signatureTypeDisplayName}">USB Token PKI</span></div>
+                <div>Ngày ký: <span th:text="${sigPrincipal.signedAtFormatted}">02/11/2026 15:30</span></div>
+                <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+            </div>
+            <div th:unless="${sigPrincipal != null}" style="margin-top: 50px; font-weight: bold;" th:if="${wr.bghReviewerNameSnapshot != null}" th:text="${wr.bghReviewerNameSnapshot}">Ban Giám Hiệu</div>
+        </td>
+        <td style="vertical-align: top; width: 33%;">
+            <div style="font-weight: bold;">TỔ TRƯỞNG CHUYÊN MÔN</div>
+            <div style="font-style: italic; font-size: 12px; margin-bottom: 10px;">(Ký, ghi rõ họ tên)</div>
+
+            <div th:if="${sigDeptLeader != null}" style="border: 2px solid #16a34a; background: #f0fdf4; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 240px; text-align: left; font-size: 10.5px;">
+                <div style="font-weight: 800; color: #15803d; font-size: 11px;">ĐÃ KÝ SỐ THẨM ĐỊNH TỔ</div>
+                <img th:if="${sigDeptLeader.signatureImageBase64 != null and !sigDeptLeader.signatureImageBase64.isBlank()}" 
+                     th:src="${sigDeptLeader.signatureImageBase64}" alt="Chữ ký Tổ trưởng" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                <div style="font-weight: bold; color: #14532d;" th:text="${sigDeptLeader.signerName}">Lê Hoàng Long</div>
+                <div>Dịch vụ: <span th:text="${sigDeptLeader.caProvider}">VNPT SmartCA</span></div>
+                <div>Ngày ký: <span th:text="${sigDeptLeader.signedAtFormatted}">02/11/2026 15:20</span></div>
+                <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+            </div>
+            <div th:unless="${sigDeptLeader != null}" style="margin-top: 50px; font-weight: bold;" th:if="${wr.reviewerNameSnapshot != null}" th:text="${wr.reviewerNameSnapshot}">Lê Hoàng Long</div>
+        </td>
+        <td style="vertical-align: top; width: 33%;">
+            <div style="font-weight: bold;">CÁ NHÂN TỰ ĐÁNH GIÁ</div>
+            <div style="font-style: italic; font-size: 12px; margin-bottom: 10px;">(Ký, ghi rõ họ tên)</div>
+
+            <div th:if="${sigTeacher != null}" style="border: 2px solid #2563eb; background: #eff6ff; border-radius: 6px; padding: 8px; margin: 0 auto; max-width: 240px; text-align: left; font-size: 10.5px;">
+                <div style="font-weight: 800; color: #1d4ed8; font-size: 11px;">ĐÃ KÝ SỐ ĐIỆN TỬ</div>
+                <img th:if="${sigTeacher.signatureImageBase64 != null and !sigTeacher.signatureImageBase64.isBlank()}" 
+                     th:src="${sigTeacher.signatureImageBase64}" alt="Chữ ký cá nhân" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
+                <div style="font-weight: bold; color: #1e3a8a;" th:text="${sigTeacher.signerName}"></div>
+                <div>Dịch vụ: <span th:text="${sigTeacher.caProvider}"></span></div>
+                <div>Ngày ký: <span th:text="${sigTeacher.signedAtFormatted}"></span></div>
+                <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
+            </div>
+            <div th:unless="${sigTeacher != null}" style="margin-top: 50px; font-weight: bold;" th:text="${wr.teacherNameSnapshot}"></div>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
+

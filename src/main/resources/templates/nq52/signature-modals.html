@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- REUSABLE DIGITAL SIGNATURE MODALS FRAGMENT -->
+<div th:fragment="modals">
+
+    <!-- ======================================================================= -->
+    <!-- 1. MODAL KÝ SỐ TỪ XA (REMOTE SIGNING & CLOUD CA) - GIÁO VIÊN & TỔ TRƯỞNG-->
+    <!-- ======================================================================= -->
+    <div id="remoteSigningModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1050; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="modal-card" style="background: #ffffff; border-radius: 14px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.28); border: 1px solid #e2e8f0; overflow: hidden; animation: modalPop 0.2s ease-out;">
+            
+            <!-- Header Modal theo đúng mẫu quy định -->
+            <div style="background: #ffffff; padding: 18px 22px 14px 22px; display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #f1f5f9;">
+                <div>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">
+                        Ký số điện tử Nghị quyết 52
+                    </h3>
+                    <p style="margin: 4px 0 0 0; font-size: 12.5px; color: #64748b;">
+                        (Xác thực thời gian thực qua Cổng CA &amp; Ứng dụng di động)
+                    </p>
+                </div>
+                <button type="button" onclick="closeRemoteSignModal()" 
+                        style="background: transparent; border: none; color: #64748b; font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px;" title="Đóng">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div style="padding: 20px 22px;">
+                <!-- Thông tin tài liệu ký ngắn gọn -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%;">
+                        <span style="color: #64748b;">Tài liệu:</span> <strong id="rsDocTitle" style="color: #0f172a;">Phiếu đánh giá chất lượng</strong>
+                        <span id="rsHashShort" style="display: none;"></span>
+                    </div>
+                    <div>
+                        <span style="color: #64748b;">Người ký:</span> <strong id="rsSignerName" style="color: #1e40af;">---</strong>
+                    </div>
+                </div>
+
+                <!-- 1. TH CHƯA LIÊN KẾT TÀI KHOẢN KÝ SỐ -->
+                <div id="rsSectionNotLinked" style="display: none; text-align: center; padding: 14px 6px;">
+                    <div style="width: 52px; height: 52px; margin: 0 auto 12px auto; border-radius: 50%; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: #d97706;">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <h4 style="margin: 0 0 8px 0; font-size: 15.5px; font-weight: 800; color: #92400e;">Chưa liên kết tài khoản chữ ký số</h4>
+                    <p style="font-size: 12.5px; color: #475569; line-height: 1.5; margin: 0 0 18px 0;">
+                        Bạn chưa liên kết tài khoản ký số từ Cổng nhà phát hành (VNPT SmartCA, Viettel MySign, VNeID). Để thực hiện ký số và nộp tài liệu, vui lòng vào trang Quản lý chữ ký số để liên kết Tên đăng nhập và Mật khẩu của nhà phát hành.
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button type="button" class="btn btn-outline" onclick="closeRemoteSignModal()" style="font-size: 13px; padding: 8px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff;">Đóng</button>
+                        <a href="/portal/nq52/digital-signature" class="btn btn-primary" style="font-size: 13px; font-weight: 700; padding: 8px 18px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #2563eb; color: #fff;">
+                            <span>Đi đến Quản lý Chữ ký số</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 2. TH ĐÃ LIÊN KẾT: CHỜ XÁC THỰC KÝ SỐ QUA APP DI ĐỘNG (FLOW CHÍNH) -->
+                <div id="sectionAppSign" style="display: none;">
+                    <!-- Badge thông tin chứng thư số đã liên kết -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; margin-bottom: 14px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="color: #64748b;">Nhà phát hành:</span> <strong id="rsAppProviderName" style="color: #1e40af;">VNPT SmartCA</strong>
+                        </div>
+                        <div>
+                            <span style="color: #64748b;">Tài khoản CA:</span> <code id="rsAppUsername" style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #0f172a;">---</code>
+                        </div>
+                    </div>
+
+                    <!-- Khung trạng thái Đang chờ xác nhận ký số -->
+                    <div id="rsWaitingBox" style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 18px 16px; margin-bottom: 14px; text-align: center;">
+                        <div style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: #dcfce7; color: #16a34a; margin-bottom: 8px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        </div>
+                        <div style="font-weight: 800; font-size: 14.5px; color: #15803d; margin-bottom: 4px;">
+                            Đang chờ xác nhận ký số trên ứng dụng...
+                        </div>
+                        <p id="rsStatusMsg" style="font-size: 13px; color: #334155; margin: 0 0 10px 0; line-height: 1.45;">
+                            Hệ thống đã gửi yêu cầu ký số đến ứng dụng di động. Vui lòng mở ứng dụng trên điện thoại để bấm <strong>Xác nhận</strong> (hoặc Từ chối).
+                        </p>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: #64748b;">
+                            <span>Thời gian còn lại:</span>
+                            <strong id="rsCountdown" style="color: #dc2626; font-size: 14px; font-weight: 800;">120s</strong>
+                            <span style="color: #94a3b8;">|</span>
+                            <span style="color: #059669; display: inline-flex; align-items: center; gap: 4px; font-weight: 600;">
+                                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                                Realtime Polling (1.5s)
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Khung thông báo Bị Từ chối / Hủy từ ứng dụng di động -->
+                    <div id="rsRejectBox" style="display: none; background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 14px;">
+                        <div style="margin-bottom: 8px;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        </div>
+                        <div style="font-weight: 800; font-size: 15px; color: #991b1b; margin-bottom: 6px;">YÊU CẦU KÝ SỐ ĐÃ BỊ TỪ CHỐI / HỦY</div>
+                        <div id="rsRejectMsg" style="font-size: 12.5px; color: #b91c1c; margin-bottom: 14px; line-height: 1.5;">
+                            Bạn đã bấm Hủy hoặc Từ chối ký số trên ứng dụng di động.<br>
+                            <strong>Văn bản chưa được ký và giữ nguyên trạng thái hiện tại.</strong>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button type="button" class="btn btn-outline" onclick="closeRemoteSignModal()" style="font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; cursor: pointer;">
+                                Đóng cửa sổ
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="retryRemoteSigning()" style="font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: 8px; background: #2563eb; color: #fff; border: none; cursor: pointer;">
+                                Thử ký lại
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Nhật ký phản hồi từ Cổng CA Realtime -->
+                    <div id="rsGatewayBox" style="display: none; margin-bottom: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 11.5px; text-align: left;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleGatewayDetails()">
+                            <span style="font-weight: 600; color: #475569;">Cổng CA Realtime: <span id="rsGatewaySummary" style="font-weight: 700;">-</span></span>
+                            <span id="rsGatewayToggle" style="color: #2563eb; font-size: 11px;">Xem phản hồi Cổng &blacktriangledown;</span>
+                        </div>
+                        <div id="rsGatewayDetails" style="display: none; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+                            <div style="font-size: 10.5px; color: #64748b; margin-bottom: 4px;">Dữ liệu phản hồi nguyên bản từ Cổng máy chủ ký số (gwsca.vnpt.vn):</div>
+                            <pre id="rsGatewayRaw" style="background: #1e293b; color: #f8fafc; padding: 8px; border-radius: 6px; font-size: 11px; max-height: 120px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin: 0;"></pre>
+                        </div>
+                    </div>
+
+                    <!-- Khung OTP dự phòng -->
+                    <div id="rsOtpSection" style="margin-bottom: 14px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px 14px;">
+                        <div style="font-size: 11.5px; color: #64748b; margin-bottom: 6px; font-weight: 600; text-align: center;">
+                            Hoặc nhập mã OTP xác thực nếu thiết bị không nhận thông báo đẩy:
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="rsOtpInput" class="form-control" placeholder="Nhập 6 số OTP" maxlength="6"
+                                   style="font-size: 16px; letter-spacing: 3px; text-align: center; font-weight: 700; border-radius: 6px; border: 1.5px solid #94a3b8; height: 38px; width: 60%; box-sizing: border-box;">
+                            <button type="button" id="btnConfirmRemoteSign" class="btn btn-primary" onclick="submitRemoteSignConfirm()" style="font-size: 12.5px; font-weight: 700; padding: 0 14px; height: 38px; border-radius: 6px; width: 40%; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; background: #2563eb; color: #fff; border: none; cursor: pointer;">
+                                <svg id="rsSpinner" style="display: none; animation: spin 1s linear infinite;" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"></path></svg>
+                                <span>Ký bằng OTP</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="rsFooterButtons" style="display: flex; gap: 10px; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                        <a href="javascript:void(0)" onclick="switchSignMethod('DIRECT')" style="font-size: 12px; color: #2563eb; text-decoration: none;">
+                            Nhập mật khẩu CA trực tiếp &rarr;
+                        </a>
+                        <button type="button" class="btn btn-outline" onclick="closeRemoteSignModal()" style="font-size: 13px; padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer;">
+                            Hủy bỏ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. PHẦN DỰ PHÒNG: FORM ĐĂNG NHẬP MẬT KHẨU CHỨNG THƯ SỐ TRỰC TIẾP (DIRECT SIGN) -->
+                <div id="sectionDirectSign" style="display: none;">
+                    <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 12.5px; font-weight: 700; color: #1e293b;">Ký trực tiếp bằng Mật khẩu chứng thư số:</span>
+                        <a href="javascript:void(0)" onclick="switchSignMethod('APP')" style="font-size: 11.5px; color: #2563eb; text-decoration: none;">
+                            &larr; Quay lại xác thực qua App
+                        </a>
+                    </div>
+
+                    <!-- 1. Nhà phát hành -->
+                    <div style="margin-bottom: 14px;">
+                        <label for="rsProviderSelect" style="display: block; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+                            Nhà phát hành <span style="color: #dc2626;">*</span>
+                        </label>
+                        <select id="rsProviderSelect" onchange="onRsProviderSelectChange()"
+                                style="width: 100%; height: 42px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: #ffffff; color: #0f172a; font-weight: 600; cursor: pointer; box-sizing: border-box; outline: none;">
+                            <option value="VNPT_SMARTCA" selected>Tập đoàn Bưu chính Viễn thông Việt Nam (VNPT-CA)</option>
+                            <option value="VIETTEL_CLOUD_CA">Tập đoàn Công nghiệp - Viễn thông Quân đội (Viettel-CA)</option>
+                            <option value="VN_EID">Cục Cảnh sát QLHC về TTXH - Bộ Công An (VNeID)</option>
+                            <option value="BAN_CO_YEU_CHINH_PHU">Ban Cơ yếu Chính phủ</option>
+                        </select>
+                    </div>
+
+                    <!-- 2. Tên đăng nhập -->
+                    <div style="margin-bottom: 14px;">
+                        <label for="rsDirectUsername" style="display: block; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+                            Tên đăng nhập <span style="color: #dc2626;">*</span>
+                        </label>
+                        <input type="text" id="rsDirectUsername" value="" placeholder="Nhập tên đăng nhập"
+                               oninput="clearRsFieldError('rsDirectUsername', 'rsUsernameError')"
+                               onblur="validateRsUsername()"
+                               style="width: 100%; height: 42px; padding: 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1.5px solid #cbd5e1; box-sizing: border-box; outline: none;">
+                        <div id="rsUsernameError" style="color: #dc2626; font-size: 12px; font-weight: 500; margin-top: 4px; display: none;">
+                            Yêu cầu nhập tên đăng nhập
+                        </div>
+                    </div>
+
+                    <!-- 3. Mật khẩu -->
+                    <div style="margin-bottom: 18px;">
+                        <label for="rsDirectPassword" style="display: block; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+                            Mật khẩu <span style="color: #dc2626;">*</span>
+                        </label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="rsDirectPassword" placeholder="Nhập mật khẩu"
+                                   oninput="clearRsFieldError('rsDirectPassword', 'rsPasswordError')"
+                                   onblur="validateRsPassword()"
+                                   onkeydown="if(event.key==='Enter') submitDirectSign();"
+                                   style="width: 100%; height: 42px; padding: 8px 40px 8px 12px; font-size: 13.5px; border-radius: 8px; border: 1.5px solid #cbd5e1; box-sizing: border-box; outline: none;">
+                            <button type="button" onclick="togglePasswordVisibility('rsDirectPassword', this)" 
+                                    style="position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; color: #64748b; padding: 4px; display: inline-flex; align-items: center;" title="Hiện/Ẩn mật khẩu">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <div id="rsPasswordError" style="color: #dc2626; font-size: 12px; font-weight: 500; margin-top: 4px; display: none;">
+                            Yêu cầu nhập mật khẩu
+                        </div>
+                    </div>
+
+                    <!-- Footer Buttons cho Direct Sign -->
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                        <button type="button" class="btn btn-outline" onclick="closeRemoteSignModal()" 
+                                style="font-size: 13.5px; padding: 8px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer;">
+                            Hủy bỏ
+                        </button>
+                        <button type="button" id="btnSubmitDirectSign" class="btn btn-primary" onclick="submitDirectSign()" 
+                                style="font-size: 13.5px; font-weight: 600; padding: 9px 24px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; box-shadow: 0 1px 3px rgba(37,99,235,0.25); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <span id="rsDirectSpinner" style="display: none;">Đang xử lý...</span>
+                            <span id="rsDirectBtnText">Đăng nhập &amp; Ký số</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Alert Error chung -->
+                <div id="rsErrorAlert" class="alert alert-danger" style="display: none; font-size: 12.5px; padding: 10px 14px; margin-top: 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;"></div>
+
+                <!-- Khung thông báo thành công Realtime -->
+                <div id="rsSuccessBox" style="display: none; background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 16px; text-align: center; margin-top: 14px;">
+                    <div style="margin-bottom: 6px;">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                    </div>
+                    <div id="rsSuccessTitle" style="font-weight: 800; font-size: 15px; color: #065f46; margin-bottom: 6px;">Ký số chứng thư số thành công!</div>
+                    <div id="rsSuccessMsg" style="font-size: 12.5px; color: #047857; margin-bottom: 8px; line-height: 1.5;">Chữ ký số đã được chứng thực qua Cổng API Cloud HSM &amp; dán con dấu số hợp lệ.</div>
+                    <div style="font-size: 11.5px; color: #6b7280;">Hệ thống đang tải lại trang để hiển thị con dấu số trên văn bản...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================================================================= -->
+    <!-- 2. MODAL KÝ SỐ USB TOKEN PHẦN CỨNG - BAN GIÁM HIỆU                     -->
+    <!-- ======================================================================= -->
+    <div id="usbTokenModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1050; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; overflow: hidden; animation: modalPop 0.2s ease-out;">
+            
+            <!-- Header -->
+            <div style="background: #991b1b; color: #ffffff; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ffffff;">Ký số USB Token phần cứng</h3>
+                        <p style="margin: 0; font-size: 12px; color: #fecaca;">Phê duyệt &amp; Ban hành chính thức (Ban Giám Hiệu)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeUsbTokenModal()" style="background: transparent; border: none; color: #ffffff; font-size: 20px; cursor: pointer; opacity: 0.8; padding: 4px;">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div style="padding: 24px;">
+                <!-- Trạng thái kết nối Token -->
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px;">
+                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #16a34a;"></span>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 700; color: #15803d;">Đã phát hiện thiết bị USB Token phần cứng</div>
+                        <div style="font-size: 11.5px; color: #475569;">Trình điều khiển PKCS#11 sẵn sàng (SafeNet / ePass2003)</div>
+                    </div>
+                </div>
+
+                <!-- Danh sách Chứng thư số trong Token -->
+                <div style="margin-bottom: 18px;">
+                    <label style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: block;">
+                        Chọn Chứng thư số trong Token:
+                    </label>
+                    <div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
+                        <label style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: #fff5f5; border-bottom: 1px solid #fee2e2; cursor: pointer;">
+                            <input type="radio" name="usbCertSerial" value="54:02:FA:19:88:AC:33:1B" checked style="margin-top: 3px;">
+                            <div>
+                                <div style="font-weight: 700; font-size: 13px; color: #991b1b;">TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+                                <div style="font-size: 11.5px; color: #475569;">Cơ quan cấp: Ban Cơ yếu Chính phủ | Serial: 54:02:FA:19:88:AC:33:1B</div>
+                                <div style="font-size: 11px; color: #16a34a; margin-top: 2px;">Hiệu lực: 15/01/2025 - 15/01/2028</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: #ffffff; cursor: pointer;">
+                            <input type="radio" name="usbCertSerial" value="77:88:99:AA:01:23:45" style="margin-top: 3px;">
+                            <div>
+                                <div style="font-weight: 700; font-size: 13px; color: #1e293b;">HIỆU TRƯỞNG TRƯỜNG THCS NGUYỄN VĂN LINH</div>
+                                <div style="font-size: 11.5px; color: #475569;">Cơ quan cấp: VNPT-CA | Serial: 77:88:99:AA:01:23:45</div>
+                                <div style="font-size: 11px; color: #16a34a; margin-top: 2px;">Hiệu lực: 01/06/2024 - 01/06/2027</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Ô nhập PIN USB Token -->
+                <div style="margin-bottom: 20px;">
+                    <div style="margin-bottom: 6px;">
+                        <label style="font-size: 13px; font-weight: 700; color: #1e293b;">
+                            Nhập mã PIN bảo mật của USB Token:
+                        </label>
+                    </div>
+                    <div style="position: relative;">
+                        <input type="password" id="usbPinInput" class="form-control" placeholder="Nhập mã PIN Token..."
+                               style="font-size: 16px; border-radius: 8px; border: 1.5px solid #94a3b8; height: 44px; padding-right: 44px;">
+                        <button type="button" onclick="togglePinVisibility()" style="position: absolute; right: 10px; top: 10px; background: none; border: none; cursor: pointer; color: #64748b; padding: 4px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                    <div style="font-size: 11.5px; color: #64748b; margin-top: 4px;">
+                        Lưu ý: Mã PIN bảo mật được lưu trực tiếp trên vi mạch Token để thực hiện thuật toán ký PKCS#11.
+                    </div>
+                </div>
+
+                <div id="usbErrorAlert" class="alert alert-danger" style="display: none; font-size: 12.5px; padding: 8px 12px; margin-bottom: 16px;"></div>
+
+                <!-- Footer Buttons -->
+                <div style="display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+                    <button type="button" class="btn btn-outline" onclick="closeUsbTokenModal()" style="font-size: 13px; padding: 8px 16px;">
+                        Đóng
+                    </button>
+                    <button type="button" id="btnConfirmUsbSign" class="btn" onclick="submitUsbTokenSign()" 
+                            style="background: #b91c1c; color: #ffffff; border: 1px solid #991b1b; font-size: 13.5px; font-weight: 600; padding: 8px 22px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(185,28,28,0.25);">
+                        <span id="usbSpinner" style="display: none;">Đang ký...</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Ký số &amp; Ban hành chính thức</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================================================================= -->
+    <!-- 3. MODAL XEM CHI TIẾT CHỨNG THƯ SỐ (CERTIFICATE INSPECTION MODAL)       -->
+    <!-- ======================================================================= -->
+    <div id="certDetailModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1060; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 560px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; overflow: hidden; animation: modalPop 0.2s ease-out;">
+            <div style="background: #0f172a; color: #ffffff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #ffffff;">Chi tiết Chứng thư số &amp; Tính toàn vẹn</h3>
+                </div>
+                <button type="button" onclick="closeCertDetailModal()" style="background: transparent; border: none; color: #ffffff; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 20px; max-height: 80vh; overflow-y: auto;">
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: #dcfce7; color: #15803d; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Chữ ký số hợp lệ &amp; Tài liệu toàn vẹn</span>
+                    </div>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b; width: 140px;">Người ký:</td>
+                            <td style="padding: 8px 4px; font-weight: 700; color: #0f172a;" id="cdSignerName">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b;">Vai trò / Chức vụ:</td>
+                            <td style="padding: 8px 4px; color: #0f172a;" id="cdSignerRole">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b;">Phương thức ký:</td>
+                            <td style="padding: 8px 4px;" id="cdSignatureType">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b;">Tổ chức cấp CA:</td>
+                            <td style="padding: 8px 4px; font-weight: 600; color: #1d4ed8;" id="cdCaProvider">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b;">Số Serial:</td>
+                            <td style="padding: 8px 4px;"><code id="cdCertSerial" style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">-</code></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b;">Thời gian ký (TSA):</td>
+                            <td style="padding: 8px 4px; font-weight: 600; color: #0f172a;" id="cdSignedAt">-</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 4px; color: #64748b; vertical-align: top;">Mã băm SHA-256:</td>
+                            <td style="padding: 8px 4px;"><code id="cdHash" style="word-break: break-all; background: #f8fafc; padding: 4px; border-radius: 4px; font-size: 11px; display: block; border: 1px solid #e2e8f0;">-</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn btn-outline" onclick="closeCertDetailModal()">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================================================================= -->
+    <!-- 4. MODAL BÁO CÁO XÁC THỰC CHỮ KÝ SỐ THỜI GIAN THỰC (REALTIME VERIFICATION)-->
+    <!-- ======================================================================= -->
+    <div id="realtimeVerifyModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); z-index: 1070; align-items: center; justify-content: center; backdrop-filter: blur(6px);">
+        <div class="modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 600px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; animation: modalPop 0.25s ease-out;">
+            <div style="background: #065f46; color: #ffffff; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ffffff;">Xác thực Chữ ký số Thời gian thực</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 12px; color: #d1fae5;">Realtime Validation qua OCSP / CRL &amp; SHA-256 Digest</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeRealtimeVerifyModal()" style="background: transparent; border: none; color: #ffffff; font-size: 22px; cursor: pointer; opacity: 0.85;">&times;</button>
+            </div>
+
+            <div style="padding: 22px 24px; max-height: 80vh; overflow-y: auto;">
+                <div style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 18px;">
+                    <div style="margin-bottom: 6px;">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div style="font-weight: 800; font-size: 15px; color: #065f46; margin-bottom: 4px;">CHỮ KÝ SỐ HỢP LỆ VÀ NGUYÊN BẢN 100%</div>
+                    <div id="rvMessage" style="font-size: 12.5px; color: #047857; line-height: 1.4;">Tài liệu nguyên vẹn, không bị chỉnh sửa kể từ thời điểm ký số. Chứng thư số đang hoạt động bình thường.</div>
+                    <div style="font-size: 11px; color: #6b7280; margin-top: 6px;">Thời điểm kiểm tra Realtime: <strong id="rvVerifiedAt">-</strong></div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 600;">1. Toàn vẹn dữ liệu (SHA-256):</div>
+                        <div style="font-size: 13px; font-weight: 700; color: #15803d; margin-top: 2px;">100% Khớp nguyên bản</div>
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 600;">2. Trạng thái OCSP máy chủ CA:</div>
+                        <div id="rvOcspStatus" style="font-size: 13px; font-weight: 700; color: #15803d; margin-top: 2px;">Good (Đang hoạt động)</div>
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 600;">3. Danh sách thu hồi (CRL):</div>
+                        <div id="rvCrlStatus" style="font-size: 13px; font-weight: 700; color: #15803d; margin-top: 2px;">Not Revoked (Chưa thu hồi)</div>
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 600;">4. Dấu thời gian TSA:</div>
+                        <div style="font-size: 13px; font-weight: 700; color: #15803d; margin-top: 2px;">Đã chứng thực chuẩn</div>
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 7px 4px; color: #64748b; width: 140px;">Người ký / Vai trò:</td>
+                            <td style="padding: 7px 4px; font-weight: 700; color: #0f172a;"><span id="rvSignerName">-</span> (<span id="rvSignerRole">-</span>)</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 7px 4px; color: #64748b;">Đơn vị cung cấp CA:</td>
+                            <td style="padding: 7px 4px; font-weight: 700; color: #1d4ed8;" id="rvCaProvider">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 7px 4px; color: #64748b;">Số Serial chứng thư:</td>
+                            <td style="padding: 7px 4px;"><code id="rvCertSerial" style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">-</code></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 7px 4px; color: #64748b;">Thời gian ký TSA:</td>
+                            <td style="padding: 7px 4px; font-weight: 600; color: #0f172a;" id="rvSignedAt">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 7px 4px; color: #64748b; vertical-align: top;">Mã băm khi ký:</td>
+                            <td style="padding: 7px 4px;"><code id="rvSignedHash" style="word-break: break-all; background: #eff6ff; color: #1e40af; padding: 3px 6px; border-radius: 4px; font-size: 10.5px; display: block;">-</code></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 7px 4px; color: #64748b; vertical-align: top;">Mã băm hiện tại:</td>
+                            <td style="padding: 7px 4px;"><code id="rvCurrentHash" style="word-break: break-all; background: #f0fdf4; color: #166534; padding: 3px 6px; border-radius: 4px; font-size: 10.5px; display: block;">-</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 11px; color: #94a3b8;">Xác thực theo Luật GDĐT 2023 &amp; NĐ 30/2020/NĐ-CP</span>
+                    <button type="button" class="btn btn-outline" onclick="closeRealtimeVerifyModal()" style="font-size: 13px; padding: 7px 18px;">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- JAVASCRIPT LOGIC ĐIỀU KHIỂN KÝ SỐ (SHARED CLIENT-SIDE ENGINE)           -->
+    <!-- ======================================================================= -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        let currentSignDocType = /*[[${docType}]]*/ 'WORK_RESULT';
+        let currentSignDocId = /*[[${docId}]]*/ 0;
+        let currentSignerRole = 'TEACHER';
+        let currentSignMethod = 'DIRECT'; // 'DIRECT' or 'APP'
+        let rsCountdownTimer = null;
+        let rsPollInterval = null;
+        let activeTransactionId = null;
+
+        function getCsrfToken() {
+            const match = document.cookie.match(new RegExp('(^| )XSRF-TOKEN=([^;]+)'));
+            if (match) return decodeURIComponent(match[2]);
+            const meta = document.querySelector('meta[name="_csrf"]');
+            if (meta) return meta.getAttribute('content');
+            return '';
+        }
+
+        function getHeaders() {
+            const h = { 'Content-Type': 'application/json' };
+            const csrf = getCsrfToken();
+            if (csrf) h['X-XSRF-TOKEN'] = csrf;
+            return h;
+        }
+
+        let currentReviewerNotes = null;
+        let currentSelfClassification = null;
+        let currentReviewerClassification = null;
+
+        function formatProviderDisplayName(p) {
+            if (!p) return 'VNPT SmartCA';
+            if (p.includes('VIETTEL')) return 'Viettel MySign';
+            if (p.includes('VNEID') || p.includes('VN_EID')) return 'Cục CS QLHC - VNeID (Mức độ 2)';
+            if (p.includes('BAN_CO_YEU')) return 'Ban Cơ yếu Chính phủ';
+            return 'VNPT SmartCA';
+        }
+
+        // Chuyển đổi giữa 2 chế độ: Ủy quyền qua App vs Nhập mật khẩu trực tiếp
+        function switchSignMethod(method) {
+            currentSignMethod = method;
+            const secDirect = document.getElementById('sectionDirectSign');
+            const secApp = document.getElementById('sectionAppSign');
+            const notLinkedSec = document.getElementById('rsSectionNotLinked');
+            const errAlert = document.getElementById('rsErrorAlert');
+            if (errAlert) errAlert.style.display = 'none';
+            if (notLinkedSec) notLinkedSec.style.display = 'none';
+
+            if (method === 'DIRECT') {
+                if (secDirect) secDirect.style.display = 'block';
+                if (secApp) secApp.style.display = 'none';
+
+                if (rsCountdownTimer) clearInterval(rsCountdownTimer);
+                if (rsPollInterval) clearInterval(rsPollInterval);
+            } else {
+                if (secApp) secApp.style.display = 'block';
+                if (secDirect) secDirect.style.display = 'none';
+
+                initiateRemoteSigningCall();
+            }
+        }
+
+        // Bật/tắt hiển thị mật khẩu
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+            } else {
+                input.type = 'password';
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+            }
+        }
+
+        function toggleGatewayDetails() {
+            const d = document.getElementById('rsGatewayDetails');
+            const t = document.getElementById('rsGatewayToggle');
+            if (!d) return;
+            if (d.style.display === 'none') {
+                d.style.display = 'block';
+                if (t) t.innerHTML = 'Thu gọn &blacktriangle;';
+            } else {
+                d.style.display = 'none';
+                if (t) t.innerHTML = 'Xem phản hồi Cổng &blacktriangledown;';
+            }
+        }
+
+        // Mở Modal Remote Signing & Cloud CA
+        function openRemoteSigningModal(docType, docId, customNotes = null, explicitRole = null, selfClass = null, revClass = null) {
+            currentSignDocType = docType || currentSignDocType;
+            currentSignDocId = docId || currentSignDocId;
+            currentSignerRole = explicitRole || 'TEACHER';
+            currentReviewerNotes = customNotes;
+            currentSelfClassification = selfClass;
+            currentReviewerClassification = revClass;
+
+            // Reset UI
+            const successBox = document.getElementById('rsSuccessBox');
+            if (successBox) successBox.style.display = 'none';
+            const rejectBox = document.getElementById('rsRejectBox');
+            if (rejectBox) rejectBox.style.display = 'none';
+            const waitingBox = document.getElementById('rsWaitingBox');
+            if (waitingBox) waitingBox.style.display = 'block';
+            const otpSection = document.getElementById('rsOtpSection');
+            if (otpSection) otpSection.style.display = 'block';
+            const footerButtons = document.getElementById('rsFooterButtons');
+            if (footerButtons) footerButtons.style.display = 'flex';
+            const errAlert = document.getElementById('rsErrorAlert');
+            if (errAlert) errAlert.style.display = 'none';
+            const notLinkedSec = document.getElementById('rsSectionNotLinked');
+            if (notLinkedSec) notLinkedSec.style.display = 'none';
+            const gwBox = document.getElementById('rsGatewayBox');
+            if (gwBox) gwBox.style.display = 'none';
+            const appSec = document.getElementById('sectionAppSign');
+            if (appSec) appSec.style.display = 'none';
+            const directSec = document.getElementById('sectionDirectSign');
+            if (directSec) directSec.style.display = 'none';
+
+            // Mở Modal ngay
+            const modal = document.getElementById('remoteSigningModal');
+            if (modal) modal.style.display = 'flex';
+
+            // Fetch thông tin chuẩn bị ký từ máy chủ
+            fetch('/portal/api/nq52/signatures/prepare?docType=' + encodeURIComponent(currentSignDocType) + '&docId=' + currentSignDocId)
+                .then(r => r.json())
+                .then(data => {
+                    const docTitleEl = document.getElementById('rsDocTitle');
+                    if (docTitleEl) docTitleEl.textContent = data.documentTitle || 'Tài liệu Nghị quyết 52';
+                    const signerNameEl = document.getElementById('rsSignerName');
+                    if (signerNameEl) signerNameEl.textContent = data.signerName || 'Giáo viên';
+
+                    if (explicitRole) {
+                        currentSignerRole = explicitRole;
+                    } else if (data.signerRole) {
+                        currentSignerRole = data.signerRole;
+                    }
+
+                    if (data.signerIdentifier) {
+                        const userInput = document.getElementById('rsDirectUsername');
+                        if (userInput) userInput.value = data.signerIdentifier;
+                    }
+
+                    if (!data.hasConfiguredProfile) {
+                        // Người dùng CHƯA liên kết tài khoản chứng thư số
+                        if (notLinkedSec) notLinkedSec.style.display = 'block';
+                    } else {
+                        // Người dùng ĐÃ liên kết tài khoản chứng thư số -> Chuyển sang flow xác thực di động
+                        if (appSec) appSec.style.display = 'block';
+                        const provNameEl = document.getElementById('rsAppProviderName');
+                        if (provNameEl) provNameEl.textContent = formatProviderDisplayName(data.profileProvider);
+                        const userEl = document.getElementById('rsAppUsername');
+                        if (userEl) userEl.textContent = data.signerIdentifier || '-';
+
+                        initiateRemoteSigningCall(data.profileProvider);
+                    }
+                })
+                .catch(err => {
+                    console.error('Lỗi kết nối khi chuẩn bị ký số:', err);
+                    showRsError('Không thể kết nối đến máy chủ: ' + err);
+                });
+        }
+
+        function getSelectedRsProvider() {
+            const sel = document.getElementById('rsProviderSelect');
+            if (sel && sel.value) return sel.value;
+            const radio = document.querySelector('input[name="rsProvider"]:checked');
+            return radio ? radio.value : 'VNPT_SMARTCA';
+        }
+
+        function onRsProviderSelectChange() {
+            const provider = getSelectedRsProvider();
+            updateProviderUiText(provider);
+            if (currentSignMethod === 'APP') {
+                if (rsPollInterval) clearInterval(rsPollInterval);
+                initiateRemoteSigningCall();
+            }
+        }
+
+        function validateRsUsername() {
+            const el = document.getElementById('rsDirectUsername');
+            const errEl = document.getElementById('rsUsernameError');
+            if (!el) return true;
+            const val = el.value.trim();
+            if (!val) {
+                if (errEl) errEl.style.display = 'block';
+                el.style.borderColor = '#dc2626';
+                return false;
+            } else {
+                if (errEl) errEl.style.display = 'none';
+                el.style.borderColor = '#cbd5e1';
+                return true;
+            }
+        }
+
+        function validateRsPassword() {
+            const el = document.getElementById('rsDirectPassword');
+            const errEl = document.getElementById('rsPasswordError');
+            if (!el) return true;
+            const val = el.value.trim();
+            if (!val) {
+                if (errEl) errEl.style.display = 'block';
+                el.style.borderColor = '#dc2626';
+                return false;
+            } else {
+                if (errEl) errEl.style.display = 'none';
+                el.style.borderColor = '#cbd5e1';
+                return true;
+            }
+        }
+
+        function clearRsFieldError(inputId, errorId) {
+            const el = document.getElementById(inputId);
+            const errEl = document.getElementById(errorId);
+            if (errEl) errEl.style.display = 'none';
+            if (el) el.style.borderColor = '#2563eb';
+        }
+
+        // Ký số trực tiếp bằng Cấu hình chứng thư số đã lưu DB (1 chạm)
+        function submitSignWithSavedProfile() {
+            const provider = getSelectedRsProvider();
+            const username = document.getElementById('rsDirectUsername').value.trim();
+            doExecuteDirectSign(provider, username, '');
+        }
+
+        // Ký trực tiếp bằng Username & Password của tài khoản chứng thư số
+        function submitDirectSign() {
+            const isUserValid = validateRsUsername();
+            const isPassValid = validateRsPassword();
+            if (!isUserValid || !isPassValid) {
+                if (!isUserValid) document.getElementById('rsDirectUsername').focus();
+                else document.getElementById('rsDirectPassword').focus();
+                return;
+            }
+
+            const provider = getSelectedRsProvider();
+            const username = document.getElementById('rsDirectUsername').value.trim();
+            const password = document.getElementById('rsDirectPassword').value.trim();
+            doExecuteDirectSign(provider, username, password);
+        }
+
+        function doExecuteDirectSign(provider, username, password) {
+            let reviewerNotes = null;
+            const notesEl = document.getElementById('reviewerNotesField') || document.querySelector('textarea[name="reviewerNotes"]');
+            if (notesEl) reviewerNotes = notesEl.value;
+
+            let selfClassification = null;
+            const selfRadio = document.querySelector('input[name="selfClassification"]:checked');
+            if (selfRadio) selfClassification = selfRadio.value;
+
+            const btn = document.getElementById('btnSubmitDirectSign');
+            const spinner = document.getElementById('rsDirectSpinner');
+            const btnText = document.getElementById('rsDirectBtnText');
+            if (btn) btn.disabled = true;
+            if (spinner) spinner.style.display = 'inline';
+            if (btnText) btnText.textContent = password ? 'Đang xác thực API & Ký số...' : 'Đang ký bằng cấu hình DB...';
+
+            fetch('/portal/api/nq52/signatures/direct-sign', {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    documentType: currentSignDocType,
+                    documentId: currentSignDocId,
+                    signerRole: currentSignerRole,
+                    provider: provider,
+                    username: username,
+                    password: password,
+                    reviewerNotes: reviewerNotes,
+                    selfClassification: selfClassification
+                })
+            })
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
+            .then(res => {
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                if (btnText) btnText.textContent = 'Đăng nhập & Ký số ngay';
+
+                if (res.success) {
+                    handleDirectSignSuccess(res);
+                } else {
+                    showRsError(res.message || 'Xác thực tài khoản chứng thư số thất bại.');
+                }
+            })
+            .catch(err => {
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                if (btnText) btnText.textContent = 'Đăng nhập & Ký số ngay';
+                showRsError('Lỗi kết nối tới Cổng ký số: ' + err);
+            });
+        }
+
+        function handleDirectSignSuccess(res) {
+            const secDirect = document.getElementById('sectionDirectSign');
+            if (secDirect) secDirect.style.display = 'none';
+            const secApp = document.getElementById('sectionAppSign');
+            if (secApp) secApp.style.display = 'none';
+            const errAlert = document.getElementById('rsErrorAlert');
+            if (errAlert) errAlert.style.display = 'none';
+
+            const successBox = document.getElementById('rsSuccessBox');
+            const titleEl = document.getElementById('rsSuccessTitle');
+            const msgEl = document.getElementById('rsSuccessMsg');
+
+            if (titleEl) titleEl.textContent = 'Ký số chứng thư số thành công!';
+            if (msgEl) {
+                msgEl.innerHTML = 
+                    'Người ký: <strong>' + (res.signerName || '') + '</strong><br>' +
+                    'Nhà cung cấp CA: <strong style="color: #1d4ed8;">' + (res.caProvider || 'Cloud CA') + '</strong> | Serial: <code style="background: #dcfce7; padding: 2px 6px; border-radius: 4px;">' + (res.certSerial || '') + '</code><br>' +
+                    'Thời gian ký TSA: <strong>' + (res.signedAt ? new Date(res.signedAt).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN')) + '</strong><br>' +
+                    '<span style="color: #065f46; font-weight: 700;">Đã xác thực API thành công & dán con dấu điện tử vào văn bản!</span>';
+            }
+            if (successBox) successBox.style.display = 'block';
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 1200);
+        }
+
+        function initiateRemoteSigningCall(overrideProvider) {
+            const provider = overrideProvider || getSelectedRsProvider();
+            updateProviderUiText(provider);
+
+            let reviewerNotes = currentReviewerNotes;
+            if (!reviewerNotes) {
+                const notesEl = document.getElementById('reviewerNotesField') || document.querySelector('textarea[name="reviewerNotes"]');
+                if (notesEl) reviewerNotes = notesEl.value;
+            }
+
+            fetch('/portal/api/nq52/signatures/remote/initiate', {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    documentType: currentSignDocType,
+                    documentId: currentSignDocId,
+                    provider: provider,
+                    signerRole: currentSignerRole,
+                    reviewerNotes: reviewerNotes,
+                    selfClassification: currentSelfClassification,
+                    reviewerClassification: currentReviewerClassification
+                })
+            })
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
+            .then(res => {
+                if (res.gatewayRawResponse || res.gatewayStatusCode) {
+                    const gwBox = document.getElementById('rsGatewayBox');
+                    const gwSummary = document.getElementById('rsGatewaySummary');
+                    const gwRaw = document.getElementById('rsGatewayRaw');
+                    if (gwBox) gwBox.style.display = 'block';
+                    if (gwSummary) {
+                        gwSummary.textContent = 'Mã ' + (res.gatewayStatusCode != null ? res.gatewayStatusCode : 200) + ' từ ' + (res.provider || 'CA Gateway');
+                        gwSummary.style.color = (res.gatewayStatusCode === 200) ? '#15803d' : '#d97706';
+                    }
+                    if (gwRaw) gwRaw.textContent = res.gatewayRawResponse || '';
+                }
+
+                if (res.success) {
+                    activeTransactionId = res.transactionId;
+                    startCountdown(res.expiresInSeconds || 120);
+                    if (res.message) {
+                        const msgEl = document.getElementById('rsStatusMsg');
+                        if (msgEl) msgEl.textContent = res.message;
+                    }
+                    // Bắt đầu Polling realtime kiểm tra trạng thái từ ứng dụng di động (mỗi 2s)
+                    startRealtimePolling(activeTransactionId);
+                } else {
+                    showRsError(res.message || 'Không thể khởi tạo giao dịch ký số từ xa.');
+                }
+            })
+            .catch(err => {
+                console.error('Lỗi initiate remote signing:', err);
+                showRsError('Lỗi kết nối tới Cổng ký số: ' + err);
+            });
+        }
+
+        function updateProviderUiText(provider) {
+            const msgEl = document.getElementById('rsStatusMsg');
+            const otpLabelEl = document.getElementById('rsOtpLabel');
+            const userLabelEl = document.getElementById('rsDirectUserLabel');
+            const userInputEl = document.getElementById('rsDirectUsername');
+
+            ['VNPT', 'VIETTEL', 'VNEID'].forEach(key => {
+                const el = document.getElementById('providerCard_' + key);
+                if (el) {
+                    el.style.border = '1.5px solid #cbd5e1';
+                    el.style.background = '#ffffff';
+                }
+            });
+
+            if (provider === 'VIETTEL_CLOUD_CA') {
+                const card = document.getElementById('providerCard_VIETTEL');
+                if (card) { card.style.border = '2px solid #2563eb'; card.style.background = '#eff6ff'; }
+                if (userLabelEl) userLabelEl.textContent = 'Tên đăng nhập / Số CCCD / SĐT đăng ký Viettel MySign:';
+                if (userInputEl) userInputEl.placeholder = 'Ví dụ: 0988123456 hoặc tài khoản MySign';
+                if (msgEl) msgEl.textContent = 'Vui lòng mở ứng dụng Viettel MySign trên điện thoại để xác nhận, hoặc nhập mã OTP bên dưới:';
+                if (otpLabelEl) otpLabelEl.textContent = 'Mã xác thực OTP Viettel MySign:';
+            } else if (provider === 'VN_EID') {
+                const card = document.getElementById('providerCard_VNEID');
+                if (card) { card.style.border = '2px solid #2563eb'; card.style.background = '#eff6ff'; }
+                if (userLabelEl) userLabelEl.textContent = 'Số Căn cước công dân (12 số định danh VNeID Mức độ 2):';
+                if (userInputEl) userInputEl.placeholder = 'Ví dụ: 048089001234';
+                if (msgEl) msgEl.textContent = 'Vui lòng mở ứng dụng VNeID (mức độ 2) trên điện thoại để xác nhận, hoặc nhập mã OTP bên dưới:';
+                if (otpLabelEl) otpLabelEl.textContent = 'Mã xác thực OTP VNeID:';
+            } else {
+                const card = document.getElementById('providerCard_VNPT');
+                if (card) { card.style.border = '2px solid #2563eb'; card.style.background = '#eff6ff'; }
+                if (userLabelEl) userLabelEl.textContent = 'Tên đăng nhập / Số CCCD / SĐT đăng ký VNPT SmartCA:';
+                if (userInputEl) userInputEl.placeholder = 'Ví dụ: 048089001234 hoặc tài khoản SmartCA';
+                if (msgEl) msgEl.textContent = 'Vui lòng mở ứng dụng SmartCA trên điện thoại để xác nhận, hoặc nhập mã OTP bên dưới:';
+                if (otpLabelEl) otpLabelEl.textContent = 'Mã xác thực OTP SmartCA:';
+            }
+        }
+
+        function onRsProviderChange() {
+            const provider = getSelectedRsProvider();
+            updateProviderUiText(provider);
+            if (currentSignMethod === 'APP') {
+                if (rsPollInterval) clearInterval(rsPollInterval);
+                initiateRemoteSigningCall();
+            }
+        }
+
+        function startCountdown(seconds) {
+            if (rsCountdownTimer) clearInterval(rsCountdownTimer);
+            let rem = seconds;
+            const el = document.getElementById('rsCountdown');
+            el.textContent = rem + 's';
+            rsCountdownTimer = setInterval(() => {
+                rem--;
+                el.textContent = rem + 's';
+                if (rem <= 0) {
+                    clearInterval(rsCountdownTimer);
+                    if (rsPollInterval) clearInterval(rsPollInterval);
+                    el.textContent = 'Hết hạn';
+                    showRsError('Thời gian hiệu lực ký số đã hết (120s). Vui lòng thử lại.');
+                }
+            }, 1000);
+        }
+
+        function startRealtimePolling(txId) {
+            if (rsPollInterval) clearInterval(rsPollInterval);
+            rsPollInterval = setInterval(() => {
+                if (!txId) return;
+                fetch('/portal/api/nq52/signatures/remote/status/' + encodeURIComponent(txId))
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.completed) {
+                            clearInterval(rsPollInterval);
+                            if (rsCountdownTimer) clearInterval(rsCountdownTimer);
+                            handleSignSuccess(res.message || 'Ký số từ xa qua ứng dụng di động thành công!');
+                        } else if (res.status === 'REJECTED') {
+                            clearInterval(rsPollInterval);
+                            if (rsCountdownTimer) clearInterval(rsCountdownTimer);
+                            handleSignRejected(res.message || 'Yêu cầu ký số đã bị từ chối / hủy trên ứng dụng di động.');
+                        } else if (res.status === 'EXPIRED') {
+                            clearInterval(rsPollInterval);
+                            if (rsCountdownTimer) clearInterval(rsCountdownTimer);
+                            showRsError(res.message || 'Phiên ký đã hết hạn hiệu lực.');
+                        }
+                    })
+                    .catch(err => console.debug('Polling status info:', err));
+            }, 1500);
+        }
+
+        function handleSignRejected(msg) {
+            if (rsPollInterval) clearInterval(rsPollInterval);
+            if (rsCountdownTimer) clearInterval(rsCountdownTimer);
+
+            const waitingBox = document.getElementById('rsWaitingBox');
+            if (waitingBox) waitingBox.style.display = 'none';
+            const otpSection = document.getElementById('rsOtpSection');
+            if (otpSection) otpSection.style.display = 'none';
+            const footerButtons = document.getElementById('rsFooterButtons');
+            if (footerButtons) footerButtons.style.display = 'none';
+            const errorAlert = document.getElementById('rsErrorAlert');
+            if (errorAlert) errorAlert.style.display = 'none';
+
+            const rejectBox = document.getElementById('rsRejectBox');
+            const rejectMsg = document.getElementById('rsRejectMsg');
+            if (rejectMsg) {
+                rejectMsg.innerHTML = '<span style="font-weight: 700; color: #991b1b; font-size: 13.5px;">' + (msg || 'Yêu cầu ký số đã bị từ chối / hủy trên ứng dụng di động.') + '</span><br>' +
+                    '<span style="font-size: 12px; color: #b91c1c; margin-top: 6px; display: inline-block;">Văn bản chưa được ký và giữ nguyên trạng thái hiện tại. Không có thay đổi nào được lưu.</span>';
+            }
+            if (rejectBox) rejectBox.style.display = 'block';
+        }
+
+        function retryRemoteSigning() {
+            const rejectBox = document.getElementById('rsRejectBox');
+            if (rejectBox) rejectBox.style.display = 'none';
+            const waitingBox = document.getElementById('rsWaitingBox');
+            if (waitingBox) waitingBox.style.display = 'block';
+            const otpSection = document.getElementById('rsOtpSection');
+            if (otpSection) otpSection.style.display = 'block';
+            const footerButtons = document.getElementById('rsFooterButtons');
+            if (footerButtons) footerButtons.style.display = 'flex';
+            initiateRemoteSigningCall();
+        }
+
+        function handleSignSuccess(msg) {
+            const waitingBox = document.getElementById('rsWaitingBox');
+            if (waitingBox) waitingBox.style.display = 'none';
+            const rejectBox = document.getElementById('rsRejectBox');
+            if (rejectBox) rejectBox.style.display = 'none';
+            const otpSection = document.getElementById('rsOtpSection');
+            if (otpSection) otpSection.style.display = 'none';
+            const footerButtons = document.getElementById('rsFooterButtons');
+            if (footerButtons) footerButtons.style.display = 'none';
+            const errorAlert = document.getElementById('rsErrorAlert');
+            if (errorAlert) errorAlert.style.display = 'none';
+
+            const successBox = document.getElementById('rsSuccessBox');
+            const msgEl = document.getElementById('rsSuccessMsg');
+            if (msgEl) {
+                msgEl.innerHTML = 
+                    '<span style="font-weight: 700; color: #047857; font-size: 13.5px;">' + (msg || 'Ký số chứng thư số thành công!') + '</span><br>' +
+                    '<span style="color: #065f46; font-size: 12px; margin-top: 4px; display: inline-block;">Đã dán con dấu điện tử và cập nhật trạng thái văn bản thành công.</span>';
+            }
+            if (successBox) successBox.style.display = 'block';
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 1200);
+        }
+
+        function closeRemoteSignModal() {
+            document.getElementById('remoteSigningModal').style.display = 'none';
+            if (rsCountdownTimer) clearInterval(rsCountdownTimer);
+            if (rsPollInterval) clearInterval(rsPollInterval);
+        }
+
+        function submitRemoteSignConfirm() {
+            const otp = document.getElementById('rsOtpInput').value.trim();
+            if (!otp) {
+                showRsError('Vui lòng nhập mã OTP xác thực SmartCA.');
+                return;
+            }
+
+            const btn = document.getElementById('btnConfirmRemoteSign');
+            const spinner = document.getElementById('rsSpinner');
+            btn.disabled = true;
+            spinner.style.display = 'inline';
+
+            let reviewerNotes = null;
+            const notesEl = document.getElementById('reviewerNotesField') || document.querySelector('textarea[name="reviewerNotes"]');
+            if (notesEl) reviewerNotes = notesEl.value;
+
+            fetch('/portal/api/nq52/signatures/remote/confirm', {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    documentType: currentSignDocType,
+                    documentId: currentSignDocId,
+                    transactionId: activeTransactionId,
+                    otp: otp,
+                    reviewerNotes: reviewerNotes
+                })
+            })
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
+            .then(res => {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                if (res.success) {
+                    if (rsPollInterval) clearInterval(rsPollInterval);
+                    if (rsCountdownTimer) clearInterval(rsCountdownTimer);
+                    handleSignSuccess(res.message || 'Ký số thành công!');
+                } else {
+                    showRsError(res.message || 'Xác thực OTP thất bại.');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                showRsError('Lỗi máy chủ khi hoàn tất ký số: ' + err);
+            });
+        }
+
+        function showRsError(msg) {
+            const el = document.getElementById('rsErrorAlert');
+            if (el) {
+                el.innerHTML = '<strong>Thông báo từ Cổng ký số:</strong><br>' + msg;
+                el.style.display = 'block';
+            }
+            const statusMsg = document.getElementById('rsStatusMsg');
+            if (statusMsg) {
+                statusMsg.textContent = msg;
+                statusMsg.style.color = '#dc2626';
+            }
+        }
+
+        // ==================== USB TOKEN MODAL LOGIC ====================
+        function openUsbTokenModal(docType, docId) {
+            currentSignDocType = docType || currentSignDocType;
+            currentSignDocId = docId || currentSignDocId;
+            document.getElementById('usbPinInput').value = '';
+            document.getElementById('usbErrorAlert').style.display = 'none';
+            document.getElementById('usbTokenModal').style.display = 'flex';
+        }
+
+        function closeUsbTokenModal() {
+            document.getElementById('usbTokenModal').style.display = 'none';
+        }
+
+        function togglePinVisibility() {
+            const el = document.getElementById('usbPinInput');
+            el.type = el.type === 'password' ? 'text' : 'password';
+        }
+
+        function submitUsbTokenSign() {
+            const pin = document.getElementById('usbPinInput').value.trim();
+            if (!pin) {
+                showUsbError('Vui lòng nhập mã PIN bảo mật của thiết bị USB Token.');
+                return;
+            }
+
+            const certSerial = document.querySelector('input[name="usbCertSerial"]:checked')?.value || '54:02:FA:19:88:AC:33:1B';
+            const btn = document.getElementById('btnConfirmUsbSign');
+            const spinner = document.getElementById('usbSpinner');
+            btn.disabled = true;
+            spinner.style.display = 'inline';
+
+            let bghNotes = null;
+            const bghNotesEl = document.querySelector('textarea[name="bghNotes"]');
+            if (bghNotesEl) bghNotes = bghNotesEl.value;
+
+            fetch('/portal/api/nq52/signatures/usb-token/sign', {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    documentType: currentSignDocType,
+                    documentId: currentSignDocId,
+                    certSerial: certSerial,
+                    pin: pin,
+                    bghNotes: bghNotes
+                })
+            })
+            .then(async r => {
+                const text = await r.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng tải lại trang hoặc đăng nhập lại.');
+                    }
+                    throw new Error('Máy chủ phản hồi: ' + (text.substring(0, 120)));
+                }
+            })
+            .then(res => {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                if (res.success) {
+                    closeUsbTokenModal();
+                    alert(res.message);
+                    window.location.reload();
+                } else {
+                    showUsbError(res.message || 'Mã PIN không đúng hoặc chữ ký Token không hợp lệ.');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                showUsbError('Lỗi máy chủ khi ký số USB Token: ' + err);
+            });
+        }
+
+        function showUsbError(msg) {
+            const el = document.getElementById('usbErrorAlert');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        // ==================== CERT INSPECTION MODAL ====================
+        function inspectSignature(sigId) {
+            fetch('/portal/api/nq52/signatures/document/' + encodeURIComponent(currentSignDocType) + '/' + currentSignDocId)
+                .then(r => r.json())
+                .then(list => {
+                    const item = list.find(s => s.id == sigId) || list[0];
+                    if (!item) return;
+                    document.getElementById('cdSignerName').textContent = item.signerName;
+                    document.getElementById('cdSignerRole').textContent = item.signerPosition + ' (' + item.signingRoleDisplayName + ')';
+                    document.getElementById('cdSignatureType').textContent = item.signatureTypeDisplayName;
+                    document.getElementById('cdCaProvider').textContent = item.caProvider;
+                    document.getElementById('cdCertSerial').textContent = item.certSerial || '-';
+                    document.getElementById('cdSignedAt').textContent = item.signedAtFormatted;
+                    document.getElementById('cdHash').textContent = item.dataHashSha256 || '-';
+                    document.getElementById('certDetailModal').style.display = 'flex';
+                })
+                .catch(err => alert('Không thể tải chi tiết chứng thư: ' + err));
+        }
+
+        function closeCertDetailModal() {
+            document.getElementById('certDetailModal').style.display = 'none';
+        }
+
+        // ==================== REALTIME VERIFICATION MODAL ====================
+        function verifyRealtimeSignature(sigId) {
+            const docType = currentSignDocType;
+            const docId = currentSignDocId;
+            let url = '/portal/api/nq52/signatures/verify-realtime?docType=' + encodeURIComponent(docType) + '&docId=' + docId;
+            if (sigId) url += '&sigId=' + sigId;
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('rvVerifiedAt').textContent = data.verifiedAtFormatted || '-';
+                    document.getElementById('rvMessage').textContent = data.message || 'Chữ ký số hợp lệ và toàn vẹn 100%.';
+                    document.getElementById('rvOcspStatus').textContent = data.ocspStatus || 'Good (Đang hoạt động)';
+                    document.getElementById('rvCrlStatus').textContent = data.crlStatus || 'Not Revoked (Chưa thu hồi)';
+                    document.getElementById('rvSignerName').textContent = data.signerName || '-';
+                    document.getElementById('rvSignerRole').textContent = data.signerRoleDisplayName || '-';
+                    document.getElementById('rvCaProvider').textContent = data.caProvider || '-';
+                    document.getElementById('rvCertSerial').textContent = data.certSerial || '-';
+                    document.getElementById('rvSignedAt').textContent = data.signedAtFormatted || '-';
+                    document.getElementById('rvSignedHash').textContent = data.signedHash || '-';
+                    document.getElementById('rvCurrentHash').textContent = data.currentHash || '-';
+
+                    document.getElementById('realtimeVerifyModal').style.display = 'flex';
+                })
+                .catch(err => alert('Lỗi khi gọi xác thực Realtime: ' + err));
+        }
+
+        function closeRealtimeVerifyModal() {
+            document.getElementById('realtimeVerifyModal').style.display = 'none';
+        }
+        /*]]>*/
+    </script>
+</div>
+
+</body>
+</html>
+
