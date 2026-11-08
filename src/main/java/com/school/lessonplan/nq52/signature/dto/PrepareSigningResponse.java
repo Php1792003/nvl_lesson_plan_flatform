@@ -11,9 +11,29 @@ public class PrepareSigningResponse {
     private String signerRole;
     private String signerIdentifier;
     private String recommendedSignatureType; // 'REMOTE_SIGNING' or 'USB_TOKEN'
+    private boolean hasConfiguredProfile;
+    private String profileProvider;
+    private String profileCertSerial;
+    private String profileSubject;
+    private String profileRegistrationStatus;
     private List<SignatureItemDto> existingSignatures;
 
     public PrepareSigningResponse() {}
+
+    public boolean isHasConfiguredProfile() { return hasConfiguredProfile; }
+    public void setHasConfiguredProfile(boolean hasConfiguredProfile) { this.hasConfiguredProfile = hasConfiguredProfile; }
+
+    public String getProfileProvider() { return profileProvider; }
+    public void setProfileProvider(String profileProvider) { this.profileProvider = profileProvider; }
+
+    public String getProfileCertSerial() { return profileCertSerial; }
+    public void setProfileCertSerial(String profileCertSerial) { this.profileCertSerial = profileCertSerial; }
+
+    public String getProfileSubject() { return profileSubject; }
+    public void setProfileSubject(String profileSubject) { this.profileSubject = profileSubject; }
+
+    public String getProfileRegistrationStatus() { return profileRegistrationStatus; }
+    public void setProfileRegistrationStatus(String profileRegistrationStatus) { this.profileRegistrationStatus = profileRegistrationStatus; }
 
     public String getDocumentType() { return documentType; }
     public void setDocumentType(String documentType) { this.documentType = documentType; }

@@ -25,6 +25,13 @@ public class VnptSmartCaClientTest {
     }
 
     @Test
+    public void testGetCertificateOnly_EmptyUsername_ReturnsError() {
+        CaSignResult result = client.getCertificateOnly("", "Nguyễn Văn An", "Trường THCS Nguyễn Văn Linh");
+        assertFalse(result.isSuccess());
+        assertTrue(result.getErrorMessage().contains("Tên đăng nhập"));
+    }
+
+    @Test
     public void testAuthenticateAndSign_EmptyUsername_ReturnsError() {
         CaSignResult result = client.authenticateAndSign(
                 "",

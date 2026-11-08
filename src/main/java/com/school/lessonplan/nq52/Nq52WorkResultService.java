@@ -102,13 +102,10 @@ public class Nq52WorkResultService {
             } catch (Exception ignored) {}
             recalculateSummary(wr, tasks);
             workResultRepository.save(wr);
-        } else if (wr.getTotalAssigned() == 0 || wr.getTotalAssigned() != tasks.size()) {
-            recalculateSummary(wr, tasks);
-            workResultRepository.save(wr);
         }
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Nq52WorkResult getWorkResultForView(Long id, User currentUser) {
         Nq52WorkResult wr = workResultRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bảng tự đánh giá kết quả ID: " + id));
@@ -118,6 +115,7 @@ public class Nq52WorkResultService {
             throw new AccessDeniedException("Bạn không có quyền truy cập bảng kết quả này.");
         }
 
+        ensureDefaultTasksIfEmpty(wr);
         return wr;
     }
 
@@ -199,19 +197,35 @@ public class Nq52WorkResultService {
         }
         wr.setSummaryNotes(form.getSummaryNotes());
 
-        List<Nq52WorkResultTaskItem> tasks = form.getTasks() != null ? form.getTasks() : new ArrayList<>();
-        // Filter out empty items
-        tasks = tasks.stream()
-                .filter(t -> t.getContent() != null && !t.getContent().isBlank())
-                .toList();
+        List<Nq52WorkResultTaskItem> tasks = null;
+        if (form.getTasksJson() != null && !form.getTasksJson().isBlank()) {
+            tasks = parseTasksJson(form.getTasksJson());
+        }
+        if (tasks == null || tasks.isEmpty()) {
+            tasks = form.getTasks() != null ? form.getTasks() : new ArrayList<>();
+        }
+        List<Nq52WorkResultTaskItem> validTasks = new ArrayList<>();
+        for (Nq52WorkResultTaskItem t : tasks) {
+            if (t.getContent() != null && !t.getContent().trim().isBlank()) {
+                t.setContent(t.getContent().trim());
+                if (t.getTimeRequired() != null) t.setTimeRequired(t.getTimeRequired().trim());
+                if (t.getSuggestions() != null) t.setSuggestions(t.getSuggestions().trim());
+                if (t.getExplanation() != null) t.setExplanation(t.getExplanation().trim());
+                validTasks.add(t);
+            }
+        }
+
+        // Nếu người dùng đã nhập ít nhất 1 nhiệm vụ, lưu danh sách nhiệm vụ đã nhập
+        // Nếu tất cả đều rỗng (lưu nháp mẫu trắng), lưu mẫu trắng 4 phần để không bị mất hàng khi tải lại
+        List<Nq52WorkResultTaskItem> tasksToSave = validTasks.isEmpty() ? createBlankTasks() : validTasks;
 
         try {
-            wr.setTasksDataJson(objectMapper.writeValueAsString(tasks));
+            wr.setTasksDataJson(objectMapper.writeValueAsString(tasksToSave));
         } catch (Exception e) {
             log.error("Lỗi parse JSON tasks", e);
         }
 
-        recalculateSummary(wr, tasks);
+        recalculateSummary(wr, validTasks);
 
         if (isSubmit) {
             wr.setStatus(Nq52Status.SUBMITTED);
@@ -223,23 +237,37 @@ public class Nq52WorkResultService {
         return workResultRepository.save(wr);
     }
 
-    public Nq52WorkResult reviewWorkResult(Long id, String reviewerNotes, User reviewer) {
+    public Nq52WorkResult reviewWorkResult(Long id, String notes, User reviewer) {
         Nq52WorkResult wr = workResultRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bảng kết quả ID: " + id));
 
-        if (!canReview(reviewer, wr)) {
-            throw new AccessDeniedException("Bạn không có quyền đánh giá bảng kết quả của giáo viên này.");
+        boolean admin = isAdmin(reviewer);
+        if (admin) {
+            if (wr.getStatus() == Nq52Status.DRAFT || wr.getStatus() == Nq52Status.SUBMITTED) {
+                throw new IllegalStateException("Hồ sơ chưa được Tổ trưởng chuyên môn thẩm định, Ban Giám Hiệu duyệt cuối cùng sau khi Tổ trưởng hoàn tất.");
+            }
+            wr.setBghReviewer(reviewer);
+            wr.setBghReviewerNameSnapshot(reviewer.getFullName());
+            if (notes != null && !notes.isBlank()) {
+                wr.setBghNotes(notes.trim());
+            }
+            wr.setStatus(Nq52Status.COUNCIL_REVIEWED);
+            wr.setBghReviewedAt(Instant.now());
+        } else {
+            if (!isDeptLeaderOf(reviewer, wr)) {
+                throw new AccessDeniedException("Bạn không có quyền thẩm định bảng kết quả của giáo viên này.");
+            }
+            if (wr.getStatus() == Nq52Status.DRAFT) {
+                throw new IllegalStateException("Giáo viên chưa nộp bảng tự đánh giá kết quả, Tổ trưởng chưa thể ký duyệt.");
+            }
+            wr.setReviewer(reviewer);
+            wr.setReviewerNameSnapshot(reviewer.getFullName());
+            if (notes != null && !notes.isBlank()) {
+                wr.setReviewerNotes(notes.trim());
+            }
+            wr.setStatus(Nq52Status.REVIEWED);
+            wr.setReviewedAt(Instant.now());
         }
-
-        if (wr.getStatus() == Nq52Status.DRAFT) {
-            throw new IllegalStateException("Giáo viên chưa nộp bảng tự đánh giá kết quả, Tổ trưởng chưa thể ký duyệt.");
-        }
-
-        wr.setReviewer(reviewer);
-        wr.setReviewerNameSnapshot(reviewer.getFullName());
-        wr.setReviewerNotes(reviewerNotes);
-        wr.setStatus(Nq52Status.REVIEWED);
-        wr.setReviewedAt(Instant.now());
 
         Nq52WorkResult saved = workResultRepository.save(wr);
 
@@ -252,6 +280,22 @@ public class Nq52WorkResultService {
         return saved;
     }
 
+    public Nq52WorkResult saveReviewNotes(Long id, String notes, User reviewer) {
+        Nq52WorkResult wr = workResultRepository.findByIdWithDetails(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bảng kết quả ID: " + id));
+
+        if (!canReview(reviewer, wr)) {
+            throw new AccessDeniedException("Bạn không có quyền đánh giá bảng kết quả của giáo viên này.");
+        }
+
+        if (isAdmin(reviewer)) {
+            wr.setBghNotes(notes != null ? notes.trim() : null);
+        } else {
+            wr.setReviewerNotes(notes != null ? notes.trim() : null);
+        }
+        return workResultRepository.save(wr);
+    }
+
     public Nq52WorkResult rejectWorkResult(Long id, String reason, User reviewer) {
         Nq52WorkResult wr = workResultRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bảng kết quả ID: " + id));
@@ -261,7 +305,11 @@ public class Nq52WorkResultService {
         }
 
         wr.setStatus(Nq52Status.DRAFT);
-        wr.setReviewerNotes(reason != null && !reason.isBlank() ? "Yêu cầu chỉnh sửa: " + reason : wr.getReviewerNotes());
+        if (isAdmin(reviewer)) {
+            wr.setBghNotes(reason != null && !reason.isBlank() ? "BGH yêu cầu chỉnh sửa: " + reason : wr.getBghNotes());
+        } else {
+            wr.setReviewerNotes(reason != null && !reason.isBlank() ? "Yêu cầu chỉnh sửa: " + reason : wr.getReviewerNotes());
+        }
         wr.setSubmittedAt(null);
         return workResultRepository.save(wr);
     }
@@ -322,8 +370,12 @@ public class Nq52WorkResultService {
         form.setEvaluationDateStr(wr.getEvaluationDateStr());
         form.setSummaryNotes(wr.getSummaryNotes());
         form.setReviewerNotes(wr.getReviewerNotes());
+        form.setBghNotes(wr.getBghNotes());
 
         List<Nq52WorkResultTaskItem> tasks = parseTasksJson(wr.getTasksDataJson());
+        if (tasks.isEmpty()) {
+            tasks = createBlankTasks();
+        }
         form.setTasks(tasks);
 
         // Luôn tính toán lại số liệu thống kê chuẩn xác từ danh sách nhiệm vụ
@@ -452,8 +504,18 @@ public class Nq52WorkResultService {
 
     public boolean canReview(User user, Nq52WorkResult wr) {
         if (user == null || wr == null) return false;
-        if (isAdmin(user)) return true;
-        return isDeptLeaderOf(user, wr);
+        if (isAdmin(user)) return canBghReview(user, wr);
+        return canDeptReview(user, wr);
+    }
+
+    public boolean canDeptReview(User user, Nq52WorkResult wr) {
+        if (user == null || wr == null) return false;
+        return isDeptLeaderOf(user, wr) && (wr.getStatus() == Nq52Status.SUBMITTED || wr.getStatus() == Nq52Status.REVIEWED);
+    }
+
+    public boolean canBghReview(User user, Nq52WorkResult wr) {
+        if (user == null || wr == null) return false;
+        return isAdmin(user) && (wr.getStatus() == Nq52Status.REVIEWED || wr.getStatus() == Nq52Status.COUNCIL_REVIEWED);
     }
 
     private static final String PERM_NQ52_REVIEW = "NQ52_REVIEW";
@@ -499,21 +561,6 @@ public class Nq52WorkResultService {
         list.add(createTask("task_2", "II", 1, "", "NORMAL", "LEAD", "COMPLETED", "", "ON_TIME", "STANDARD"));
         list.add(createTask("task_3", "III", 1, "", "NORMAL", "LEAD", "COMPLETED", "", "ON_TIME", "STANDARD"));
         list.add(createTask("task_4", "IV", 1, "", "NORMAL", "LEAD", "COMPLETED", "", "ON_TIME", "STANDARD"));
-        return list;
-    }
-
-    private List<Nq52WorkResultTaskItem> createDefaultTasks(int month, int year) {
-        List<Nq52WorkResultTaskItem> list = new ArrayList<>();
-        // Nhóm I
-        list.add(createTask("task_1", "I", 1, "Thực hiện giảng dạy đúng chương trình, phân phối chương trình Tháng " + month + "/" + year, "NORMAL", "LEAD", "COMPLETED", "01/" + month + " - 30/" + month, "ON_TIME", "STANDARD"));
-        list.add(createTask("task_2", "I", 2, "Xây dựng kế hoạch bài dạy (giáo án) đầy đủ, đúng quy định chuyên môn", "NORMAL", "LEAD", "COMPLETED", "Hàng tuần", "ON_TIME", "STANDARD"));
-        // Nhóm II
-        list.add(createTask("task_3", "II", 1, "Thao giảng, dự giờ đồng nghiệp theo kế hoạch của tổ chuyên môn", "NORMAL", "COORDINATE", "COMPLETED", "Trong tháng", "ON_TIME", "STANDARD"));
-        list.add(createTask("task_4", "II", 2, "Bồi dưỡng học sinh giỏi và phụ đạo học sinh chưa đạt chuẩn kiến thức", "COMPLEX", "LEAD", "COMPLETED", "Thường xuyên", "EARLY", "EXCEEDED"));
-        // Nhóm III
-        list.add(createTask("task_5", "III", 1, "Hỗ trợ công tác kiểm tra định kỳ, coi thi và chấm bài theo phân công của nhà trường", "NORMAL", "COORDINATE", "COMPLETED", "Theo lịch", "ON_TIME", "STANDARD"));
-        // Nhóm IV
-        list.add(createTask("task_6", "IV", 1, "Tham gia sinh hoạt chuyên môn, hội họp hội đồng sư phạm và tập huấn bồi dưỡng", "NORMAL", "COORDINATE", "COMPLETED", "Hàng tuần", "ON_TIME", "STANDARD"));
         return list;
     }
 

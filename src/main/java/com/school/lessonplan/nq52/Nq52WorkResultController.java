@@ -96,14 +96,15 @@ public class Nq52WorkResultController {
         long myTotalCount = myWorkResults.size();
         long myDraftCount = myWorkResults.stream().filter(w -> w.getStatus() == Nq52Status.DRAFT).count();
         long mySubmittedCount = myWorkResults.stream().filter(w -> w.getStatus() == Nq52Status.SUBMITTED).count();
-        long myReviewedCount = myWorkResults.stream().filter(w -> w.getStatus() == Nq52Status.REVIEWED).count();
+        long myReviewedCount = myWorkResults.stream().filter(w -> w.getStatus() == Nq52Status.REVIEWED || w.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
 
         // 2. Danh sách bảng kết quả cần duyệt (cho Reviewer)
         List<Nq52WorkResult> reviewWorkResults = List.of();
         long pendingReviewCount = 0;
         long completedReviewCount = 0;
         long totalReviewCount = 0;
-        String selectedStatus = (statusStr != null && !statusStr.isBlank()) ? statusStr.toUpperCase() : "SUBMITTED";
+        String defaultStatus = isAdmin ? "REVIEWED" : "SUBMITTED";
+        String selectedStatus = (statusStr != null && !statusStr.isBlank()) ? statusStr.toUpperCase() : defaultStatus;
 
         if (isReviewer) {
             Nq52Status filterStatus = null;
@@ -111,12 +112,28 @@ public class Nq52WorkResultController {
                 filterStatus = Nq52Status.SUBMITTED;
             } else if ("REVIEWED".equals(selectedStatus)) {
                 filterStatus = Nq52Status.REVIEWED;
+            } else if ("COUNCIL_REVIEWED".equals(selectedStatus)) {
+                filterStatus = Nq52Status.COUNCIL_REVIEWED;
             }
 
             List<Nq52WorkResult> allDept = workResultService.getDepartmentWorkResults(user, campusId, deptId, null, null, null);
-            pendingReviewCount = allDept.stream().filter(r -> r.getStatus() == Nq52Status.SUBMITTED).count();
-            completedReviewCount = allDept.stream().filter(r -> r.getStatus() == Nq52Status.REVIEWED).count();
-            totalReviewCount = pendingReviewCount + completedReviewCount;
+            if (isAdmin) {
+                // Đối với Ban Giám Hiệu:
+                // - Cần duyệt: Các bảng kết quả Tổ trưởng đã duyệt xong (REVIEWED)
+                // - Đã đánh giá / Hoàn thành: Ban Giám Hiệu đã duyệt chính thức (COUNCIL_REVIEWED)
+                // - Tổng hồ sơ tiếp nhận: Hồ sơ đã qua cấp Tổ (REVIEWED + COUNCIL_REVIEWED)
+                pendingReviewCount = allDept.stream().filter(r -> r.getStatus() == Nq52Status.REVIEWED).count();
+                completedReviewCount = allDept.stream().filter(r -> r.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
+                totalReviewCount = pendingReviewCount + completedReviewCount;
+            } else {
+                // Đối với Tổ trưởng:
+                // - Cần duyệt: Các bảng kết quả giáo viên đã nộp chờ Tổ trưởng duyệt (SUBMITTED)
+                // - Đã đánh giá: Các bảng kết quả Tổ trưởng đã hoàn tất (REVIEWED hoặc COUNCIL_REVIEWED)
+                // - Tổng hồ sơ: SUBMITTED + REVIEWED + COUNCIL_REVIEWED
+                pendingReviewCount = allDept.stream().filter(r -> r.getStatus() == Nq52Status.SUBMITTED).count();
+                completedReviewCount = allDept.stream().filter(r -> r.getStatus() == Nq52Status.REVIEWED || r.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
+                totalReviewCount = pendingReviewCount + completedReviewCount;
+            }
 
             reviewWorkResults = workResultService.getDepartmentWorkResults(user, campusId, deptId, filterStatus, month, year);
             reviewWorkResults = reviewWorkResults.stream().filter(r -> r.getStatus() != Nq52Status.DRAFT).toList();
@@ -184,8 +201,14 @@ public class Nq52WorkResultController {
         Nq52WorkResult wr = workResultService.getWorkResultForView(id, user);
 
         boolean isOwner = wr.getUser().getId().equals(user.getId());
+        boolean isAdmin = workResultService.isAdmin(user);
+        boolean isDeptLeader = workResultService.isDeptLeaderOf(user, wr);
+
         boolean canEdit = isOwner && wr.getStatus() == Nq52Status.DRAFT;
-        boolean canReview = workResultService.canReview(user, wr) && wr.getStatus() != Nq52Status.DRAFT;
+        boolean canDeptReview = !isAdmin && workResultService.canDeptReview(user, wr);
+        boolean canBghReview = isAdmin && workResultService.canBghReview(user, wr);
+        boolean canReview = canDeptReview || canBghReview;
+        boolean isWaitingDeptReview = isAdmin && wr.getStatus() == Nq52Status.SUBMITTED;
 
         Nq52WorkResultForm form = workResultService.populateForm(wr);
 
@@ -195,8 +218,12 @@ public class Nq52WorkResultController {
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("canEdit", canEdit);
         model.addAttribute("canReview", canReview);
+        model.addAttribute("canDeptReview", canDeptReview);
+        model.addAttribute("canBghReview", canBghReview);
+        model.addAttribute("isWaitingDeptReview", isWaitingDeptReview);
+        model.addAttribute("isDeptLeader", isDeptLeader);
         model.addAttribute("isReviewer", workResultService.isReviewer(user));
-        model.addAttribute("isAdmin", workResultService.isAdmin(user));
+        model.addAttribute("isAdmin", isAdmin);
 
         List<com.school.lessonplan.nq52.signature.dto.SignatureItemDto> signatures = signatureService.getSignaturesForDocument("WORK_RESULT", id);
         model.addAttribute("signatures", signatures);
@@ -249,20 +276,29 @@ public class Nq52WorkResultController {
     public String reviewWorkResult(@PathVariable("id") Long id,
                                    @RequestParam(name = "action", required = false, defaultValue = "APPROVE") String action,
                                    @RequestParam(name = "reviewerNotes", required = false) String reviewerNotes,
+                                   @RequestParam(name = "bghNotes", required = false) String bghNotes,
                                    @AuthenticationPrincipal CurrentUser currentUser,
                                    RedirectAttributes redirectAttributes) {
         User user = getUser(currentUser);
+        boolean isAdmin = workResultService.isAdmin(user);
+        String notes = isAdmin ? (bghNotes != null && !bghNotes.isBlank() ? bghNotes : reviewerNotes) : reviewerNotes;
         try {
             if ("REJECT".equalsIgnoreCase(action)) {
-                workResultService.rejectWorkResult(id, reviewerNotes, user);
-                signatureService.revokeSignatures("WORK_RESULT", id, reviewerNotes, user);
+                workResultService.rejectWorkResult(id, notes, user);
+                signatureService.revokeSignatures("WORK_RESULT", id, notes, user);
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Đã trả lại bảng tự đánh giá để giáo viên bổ sung, chỉnh sửa.");
             } else {
-                Nq52WorkResult reviewed = workResultService.reviewWorkResult(id, reviewerNotes, user);
-                redirectAttributes.addFlashAttribute("successMessage",
-                        "Đã ký duyệt và xác nhận Bảng tự đánh giá kết quả Tháng "
-                                + reviewed.getEvaluationMonth() + "/" + reviewed.getEvaluationYear() + " thành công!");
+                Nq52WorkResult reviewed = workResultService.reviewWorkResult(id, notes, user);
+                if (isAdmin) {
+                    redirectAttributes.addFlashAttribute("successMessage",
+                            "Ban Giám Hiệu đã hoàn tất xét duyệt và ký chính thức Bảng tự đánh giá kết quả Tháng "
+                                    + reviewed.getEvaluationMonth() + "/" + reviewed.getEvaluationYear() + " thành công!");
+                } else {
+                    redirectAttributes.addFlashAttribute("successMessage",
+                            "Tổ trưởng đã thẩm định và ký xác nhận Bảng tự đánh giá kết quả Tháng "
+                                    + reviewed.getEvaluationMonth() + "/" + reviewed.getEvaluationYear() + " thành công!");
+                }
             }
         } catch (IllegalStateException | AccessDeniedException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

@@ -12,6 +12,7 @@ public class UserSignatureProfileForm {
     private String signatureType;
     private String caProvider;
     private String caUsername;
+    private String caPassword;
 
     private String certSerial;
     private String certSubject;
@@ -50,6 +51,9 @@ public class UserSignatureProfileForm {
 
     public String getCaUsername() { return caUsername; }
     public void setCaUsername(String caUsername) { this.caUsername = caUsername; }
+
+    public String getCaPassword() { return caPassword; }
+    public void setCaPassword(String caPassword) { this.caPassword = caPassword; }
 
     public String getCertSerial() { return certSerial; }
     public void setCertSerial(String certSerial) { this.certSerial = certSerial; }

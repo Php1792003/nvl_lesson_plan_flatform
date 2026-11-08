@@ -7,8 +7,16 @@ public class RemoteSignInitiateResponse {
     private String message;
     private String provider;
     private String suggestedOtp; // For testing / demo environment
+    private String gatewayRawResponse;
+    private Integer gatewayStatusCode;
 
     public RemoteSignInitiateResponse() {}
+
+    public String getGatewayRawResponse() { return gatewayRawResponse; }
+    public void setGatewayRawResponse(String gatewayRawResponse) { this.gatewayRawResponse = gatewayRawResponse; }
+
+    public Integer getGatewayStatusCode() { return gatewayStatusCode; }
+    public void setGatewayStatusCode(Integer gatewayStatusCode) { this.gatewayStatusCode = gatewayStatusCode; }
 
     public boolean isSuccess() { return success; }
     public void setSuccess(boolean success) { this.success = success; }

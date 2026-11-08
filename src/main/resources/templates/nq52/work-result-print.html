@@ -153,7 +153,7 @@
 </div>
 
 <div class="meta-info">
-    <span><strong>Họ và tên viên chức:</strong> <span th:text="${wr.teacherNameSnapshot}">Nguyễn Văn An</span></span>
+    <span><strong>Họ và tên viên chức:</strong> <span th:text="${wr.teacherNameSnapshot}"></span></span>
     <span style="margin-left: 30px;"><strong>Chức danh/Vị trí:</strong> <span th:text="${wr.positionTitle}">Giáo viên</span></span>
     <span style="margin-left: 30px;"><strong>Tổ chuyên môn:</strong> <span th:text="${wr.departmentNameSnapshot}">Toán học</span></span>
     <span style="margin-left: 30px;" th:if="${wr.campusNameSnapshot != null}"><strong>Điểm trường:</strong> <span th:text="${wr.campusNameSnapshot}">Điểm trường chính</span></span>
@@ -308,7 +308,7 @@
                 <div>Ngày ký: <span th:text="${sigPrincipal.signedAtFormatted}">02/11/2026 15:30</span></div>
                 <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
             </div>
-            <div th:unless="${sigPrincipal != null}" style="margin-top: 50px; font-weight: bold;" th:if="${wr.reviewerNameSnapshot != null and wr.reviewer != null and #strings.contains(wr.reviewer.email, 'admin')}" th:text="${wr.reviewerNameSnapshot}">Ban Giám Hiệu</div>
+            <div th:unless="${sigPrincipal != null}" style="margin-top: 50px; font-weight: bold;" th:if="${wr.bghReviewerNameSnapshot != null}" th:text="${wr.bghReviewerNameSnapshot}">Ban Giám Hiệu</div>
         </td>
         <td style="vertical-align: top; width: 33%;">
             <div style="font-weight: bold;">TỔ TRƯỞNG CHUYÊN MÔN</div>
@@ -323,7 +323,7 @@
                 <div>Ngày ký: <span th:text="${sigDeptLeader.signedAtFormatted}">02/11/2026 15:20</span></div>
                 <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
             </div>
-            <div th:unless="${sigDeptLeader != null}" style="margin-top: 50px; font-weight: bold;" th:if="${wr.reviewerNameSnapshot != null and (wr.reviewer == null or !#strings.contains(wr.reviewer.email, 'admin'))}" th:text="${wr.reviewerNameSnapshot}">Lê Hoàng Long</div>
+            <div th:unless="${sigDeptLeader != null}" style="margin-top: 50px; font-weight: bold;" th:if="${wr.reviewerNameSnapshot != null}" th:text="${wr.reviewerNameSnapshot}">Lê Hoàng Long</div>
         </td>
         <td style="vertical-align: top; width: 33%;">
             <div style="font-weight: bold;">CÁ NHÂN TỰ ĐÁNH GIÁ</div>
@@ -333,12 +333,12 @@
                 <div style="font-weight: 800; color: #1d4ed8; font-size: 11px;">ĐÃ KÝ SỐ ĐIỆN TỬ</div>
                 <img th:if="${sigTeacher.signatureImageBase64 != null and !sigTeacher.signatureImageBase64.isBlank()}" 
                      th:src="${sigTeacher.signatureImageBase64}" alt="Chữ ký cá nhân" style="max-height: 48px; max-width: 160px; display: block; margin: 4px auto;">
-                <div style="font-weight: bold; color: #1e3a8a;" th:text="${sigTeacher.signerName}">Nguyễn Văn An</div>
-                <div>Dịch vụ: <span th:text="${sigTeacher.caProvider}">VNPT SmartCA</span></div>
-                <div>Ngày ký: <span th:text="${sigTeacher.signedAtFormatted}">01/11/2026 10:15</span></div>
+                <div style="font-weight: bold; color: #1e3a8a;" th:text="${sigTeacher.signerName}"></div>
+                <div>Dịch vụ: <span th:text="${sigTeacher.caProvider}"></span></div>
+                <div>Ngày ký: <span th:text="${sigTeacher.signedAtFormatted}"></span></div>
                 <div style="margin-top: 4px; font-weight: 700; color: #15803d; font-size: 9.5px;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
             </div>
-            <div th:unless="${sigTeacher != null}" style="margin-top: 50px; font-weight: bold;" th:text="${wr.teacherNameSnapshot}">Nguyễn Văn An</div>
+            <div th:unless="${sigTeacher != null}" style="margin-top: 50px; font-weight: bold;" th:text="${wr.teacherNameSnapshot}"></div>
         </td>
     </tr>
 </table>

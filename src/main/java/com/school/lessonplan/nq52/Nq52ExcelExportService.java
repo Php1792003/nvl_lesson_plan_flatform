@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -178,13 +179,38 @@ public class Nq52ExcelExportService {
             c2_2.setCellStyle(metaCenterBold);
             sheet.addMergedRegion(new CellRangeAddress(2, 2, 7, 17));
 
+            // Xác định chữ ký số của từng bên sớm để lấy ngày ký chính xác
+            Nq52DigitalSignature sigTeacher = null;
+            Nq52DigitalSignature sigDeptLeader = null;
+            Nq52DigitalSignature sigPrincipal = null;
+
+            if (signatures != null) {
+                for (Nq52DigitalSignature s : signatures) {
+                    if (s.getStatus() == Nq52SignatureStatus.VALID) {
+                        if (s.getSigningRole() == Nq52SigningRole.TEACHER) sigTeacher = s;
+                        else if (s.getSigningRole() == Nq52SigningRole.DEPT_LEADER) sigDeptLeader = s;
+                        else if (s.getSigningRole() == Nq52SigningRole.PRINCIPAL) sigPrincipal = s;
+                    }
+                }
+            }
+
+            ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
+            LocalDate todayVn = LocalDate.now(vnZone);
+
+            LocalDate teacherDate = todayVn;
+            if (sigTeacher != null && sigTeacher.getSignedAt() != null) {
+                teacherDate = sigTeacher.getSignedAt().atZone(vnZone).toLocalDate();
+            } else if (result.getSubmittedAt() != null) {
+                teacherDate = result.getSubmittedAt().atZone(vnZone).toLocalDate();
+            }
+            String teacherDateLine = "Cẩm Lệ, ngày " + String.format("%02d", teacherDate.getDayOfMonth())
+                    + " tháng " + String.format("%02d", teacherDate.getMonthValue())
+                    + " năm " + teacherDate.getYear();
+
             // Row 3: Date
             Row r3 = sheet.createRow(rowIdx++);
             Cell c3 = r3.createCell(7);
-            String dateStr = (result.getEvaluationDateStr() != null && !result.getEvaluationDateStr().isBlank())
-                    ? result.getEvaluationDateStr()
-                    : "Cẩm Lệ, ngày 30 tháng " + result.getEvaluationMonth() + " năm " + result.getEvaluationYear();
-            c3.setCellValue(dateStr);
+            c3.setCellValue(teacherDateLine);
             c3.setCellStyle(metaCenterItalic);
             sheet.addMergedRegion(new CellRangeAddress(3, 3, 7, 17));
 
@@ -330,8 +356,12 @@ public class Nq52ExcelExportService {
                 rCat.getCell(1).setCellValue(categoryTitles[i]);
                 sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 1, 17));
 
-                List<Nq52WorkResultTaskItem> catTasks = groupedTasks.get(cat);
-                if (catTasks != null && !catTasks.isEmpty()) {
+                List<Nq52WorkResultTaskItem> rawCatTasks = groupedTasks.get(cat);
+                List<Nq52WorkResultTaskItem> catTasks = (rawCatTasks != null)
+                        ? rawCatTasks.stream().filter(t -> t.getContent() != null && !t.getContent().trim().isEmpty()).toList()
+                        : Collections.emptyList();
+
+                if (!catTasks.isEmpty()) {
                     int subIdx = 1;
                     for (Nq52WorkResultTaskItem task : catTasks) {
                         Row rTask = createStyledRow(sheet, rowIdx++, 18, cellStyleCenter);
@@ -372,6 +402,11 @@ public class Nq52ExcelExportService {
                         rTask.getCell(16).setCellValue(task.getSuggestions() != null ? task.getSuggestions() : "");
                         rTask.getCell(17).setCellValue(task.getExplanation() != null ? task.getExplanation() : "");
                     }
+                } else {
+                    // Để 1 dòng trống cho phần này
+                    Row rEmpty = createStyledRow(sheet, rowIdx++, 18, cellStyleCenter);
+                    rEmpty.getCell(0).setCellValue(1);
+                    rEmpty.getCell(1).setCellValue("");
                 }
             }
 
@@ -477,6 +512,43 @@ public class Nq52ExcelExportService {
             // ==========================================
             // Signature Section with Digital Signature Stamps
             // ==========================================
+            // Hàng ngày tháng phía trên chức danh ký
+            Row rSigDate = sheet.createRow(rowIdx++);
+
+            // Cột 13-17: CÁ NHÂN TỰ ĐÁNH GIÁ (ngày ký của giáo viên)
+            Cell cDateTeacher = rSigDate.createCell(13);
+            cDateTeacher.setCellValue(teacherDateLine);
+            cDateTeacher.setCellStyle(metaCenterItalic);
+            sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 13, 17));
+
+            // Cột 6-10: TỔ TRƯỞNG CHUYÊN MÔN (ngày ký của tổ trưởng nếu có)
+            if (sigDeptLeader != null || result.getReviewedAt() != null) {
+                LocalDate revDate = sigDeptLeader != null && sigDeptLeader.getSignedAt() != null
+                        ? sigDeptLeader.getSignedAt().atZone(vnZone).toLocalDate()
+                        : result.getReviewedAt().atZone(vnZone).toLocalDate();
+                String revDateLine = "Cẩm Lệ, ngày " + String.format("%02d", revDate.getDayOfMonth())
+                        + " tháng " + String.format("%02d", revDate.getMonthValue())
+                        + " năm " + revDate.getYear();
+                Cell cDateDept = rSigDate.createCell(6);
+                cDateDept.setCellValue(revDateLine);
+                cDateDept.setCellStyle(metaCenterItalic);
+                sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 6, 10));
+            }
+
+            // Cột 1-4: PHÓ HIỆU TRƯỞNG PHỤ TRÁCH / BAN GIÁM HIỆU (ngày ký duyệt của BGH nếu có)
+            if (sigPrincipal != null || result.getBghReviewedAt() != null) {
+                LocalDate bghDate = (sigPrincipal != null && sigPrincipal.getSignedAt() != null)
+                        ? sigPrincipal.getSignedAt().atZone(vnZone).toLocalDate()
+                        : result.getBghReviewedAt().atZone(vnZone).toLocalDate();
+                String bghDateLine = "Cẩm Lệ, ngày " + String.format("%02d", bghDate.getDayOfMonth())
+                        + " tháng " + String.format("%02d", bghDate.getMonthValue())
+                        + " năm " + bghDate.getYear();
+                Cell cDateBgh = rSigDate.createCell(1);
+                cDateBgh.setCellValue(bghDateLine);
+                cDateBgh.setCellStyle(metaCenterItalic);
+                sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 1, 4));
+            }
+
             Row rSigTitle = sheet.createRow(rowIdx++);
             Cell sig1 = rSigTitle.createCell(1);
             sig1.setCellValue("PHÓ HIỆU TRƯỞNG PHỤ TRÁCH");
@@ -508,21 +580,6 @@ public class Nq52ExcelExportService {
             sn3.setCellValue("(Ký và ghi rõ họ tên)");
             sn3.setCellStyle(metaCenterItalic);
             sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 13, 17));
-
-            // Xác định chữ ký số của từng bên
-            Nq52DigitalSignature sigTeacher = null;
-            Nq52DigitalSignature sigDeptLeader = null;
-            Nq52DigitalSignature sigPrincipal = null;
-
-            if (signatures != null) {
-                for (Nq52DigitalSignature s : signatures) {
-                    if (s.getStatus() == Nq52SignatureStatus.VALID) {
-                        if (s.getSigningRole() == Nq52SigningRole.TEACHER) sigTeacher = s;
-                        else if (s.getSigningRole() == Nq52SigningRole.DEPT_LEADER) sigDeptLeader = s;
-                        else if (s.getSigningRole() == Nq52SigningRole.PRINCIPAL) sigPrincipal = s;
-                    }
-                }
-            }
 
             // Khu vực dán chữ ký: chừa 4 dòng trống để dán hình ảnh chữ ký / con dấu số
             int sigImgRowStart = rowIdx;
@@ -560,6 +617,11 @@ public class Nq52ExcelExportService {
             if (sigPrincipal != null) {
                 Cell nameCell = rSigNames.createCell(1);
                 nameCell.setCellValue("Ban Giám Hiệu");
+                nameCell.setCellStyle(metaCenterBold);
+                sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 1, 4));
+            } else if (result.getBghReviewerNameSnapshot() != null && !result.getBghReviewerNameSnapshot().isBlank()) {
+                Cell nameCell = rSigNames.createCell(1);
+                nameCell.setCellValue(result.getBghReviewerNameSnapshot());
                 nameCell.setCellStyle(metaCenterBold);
                 sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 1, 4));
             } else if (result.getReviewerNameSnapshot() != null) {

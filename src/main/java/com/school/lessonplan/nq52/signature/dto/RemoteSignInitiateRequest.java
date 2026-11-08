@@ -4,7 +4,10 @@ public class RemoteSignInitiateRequest {
     private String documentType;
     private Long documentId;
     private String provider = "VNPT_SMARTCA"; // VNPT_SMARTCA, VIETTEL_CLOUD_CA, VN_EID
+    private String signerRole; // TEACHER, DEPT_LEADER, PRINCIPAL
     private String reviewerNotes;
+    private String selfClassification;
+    private String reviewerClassification;
 
     public RemoteSignInitiateRequest() {}
 
@@ -17,7 +20,15 @@ public class RemoteSignInitiateRequest {
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
 
+    public String getSignerRole() { return signerRole; }
+    public void setSignerRole(String signerRole) { this.signerRole = signerRole; }
+
     public String getReviewerNotes() { return reviewerNotes; }
     public void setReviewerNotes(String reviewerNotes) { this.reviewerNotes = reviewerNotes; }
-}
 
+    public String getSelfClassification() { return selfClassification; }
+    public void setSelfClassification(String selfClassification) { this.selfClassification = selfClassification; }
+
+    public String getReviewerClassification() { return reviewerClassification; }
+    public void setReviewerClassification(String reviewerClassification) { this.reviewerClassification = reviewerClassification; }
+}

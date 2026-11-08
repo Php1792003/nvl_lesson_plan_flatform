@@ -5,7 +5,7 @@
 ifeq ($(OS),Windows_NT)
 	GRADLE = gradlew.bat
 else
-	GRADLE = ./gradlew
+	GRADLE = sh ./gradlew
 endif
 
 .PHONY: help up up-nvl-devtools up-nvl-devtool start run down down-nvl-devtools down-nvl-devtool stop restart logs status build test clean

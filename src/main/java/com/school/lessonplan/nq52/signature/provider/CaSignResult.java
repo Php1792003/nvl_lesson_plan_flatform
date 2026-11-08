@@ -12,6 +12,11 @@ public class CaSignResult {
     private String signatureValue;
     private String timestampToken;
     private String errorMessage;
+    private String warningMessage;
+    private String rawResponse;
+    private String certStatus;
+    private String serviceName;
+    private String deviceInfo;
 
     public CaSignResult() {}
 
@@ -63,5 +68,20 @@ public class CaSignResult {
 
     public String getErrorMessage() { return errorMessage; }
     public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+
+    public String getWarningMessage() { return warningMessage; }
+    public void setWarningMessage(String warningMessage) { this.warningMessage = warningMessage; }
+
+    public String getRawResponse() { return rawResponse; }
+    public void setRawResponse(String rawResponse) { this.rawResponse = rawResponse; }
+
+    public String getCertStatus() { return certStatus; }
+    public void setCertStatus(String certStatus) { this.certStatus = certStatus; }
+
+    public String getServiceName() { return serviceName; }
+    public void setServiceName(String serviceName) { this.serviceName = serviceName; }
+
+    public String getDeviceInfo() { return deviceInfo; }
+    public void setDeviceInfo(String deviceInfo) { this.deviceInfo = deviceInfo; }
 }
 

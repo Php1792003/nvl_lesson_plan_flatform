@@ -6,6 +6,7 @@ import com.school.lessonplan.nq52.signature.Nq52SignatureImageHelper;
 import com.school.lessonplan.nq52.signature.Nq52SignatureStatus;
 import com.school.lessonplan.nq52.signature.Nq52SigningRole;
 import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSpacing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -15,11 +16,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -138,7 +142,7 @@ public class Nq52DocxExportService {
                 fillCriteriaTables(doc, eval, form);
 
                 // 3. Đánh dấu kết quả xếp loại vào Table 5
-                fillClassificationCheckbox(doc, eval);
+                fillClassificationCheckbox(doc, eval, form);
 
                 // 4. Xuất file dạng byte array
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -171,11 +175,11 @@ public class Nq52DocxExportService {
             }
         }
 
-        BigDecimal finalScoreA = eval.getBghScoreA() != null ? eval.getBghScoreA() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreA() != null ? eval.getReviewerScoreA() : eval.getSelfScoreA());
-        BigDecimal finalScoreB = eval.getBghScoreB() != null ? eval.getBghScoreB() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreB() != null ? eval.getReviewerScoreB() : eval.getSelfScoreB());
-        BigDecimal finalTotal = eval.getBghTotalScore() != null ? eval.getBghTotalScore() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerTotalScore() != null ? eval.getReviewerTotalScore() : eval.getSelfTotalScore());
-        BigDecimal finalCPlus = eval.getBghScoreCPlus() != null ? eval.getBghScoreCPlus() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreCPlus() != null ? eval.getReviewerScoreCPlus() : eval.getSelfScoreCPlus());
-        BigDecimal finalCMinus = eval.getBghScoreCMinus() != null ? eval.getBghScoreCMinus() : (eval.getStatus() == Nq52Status.REVIEWED && eval.getReviewerScoreCMinus() != null ? eval.getReviewerScoreCMinus() : eval.getSelfScoreCMinus());
+        BigDecimal finalScoreA = eval.getBghScoreA() != null ? eval.getBghScoreA() : (eval.getReviewerScoreA() != null ? eval.getReviewerScoreA() : eval.getSelfScoreA());
+        BigDecimal finalScoreB = eval.getBghScoreB() != null ? eval.getBghScoreB() : (eval.getReviewerScoreB() != null ? eval.getReviewerScoreB() : eval.getSelfScoreB());
+        BigDecimal finalTotal = eval.getBghTotalScore() != null ? eval.getBghTotalScore() : (eval.getReviewerTotalScore() != null ? eval.getReviewerTotalScore() : eval.getSelfTotalScore());
+        BigDecimal finalCPlus = eval.getBghScoreCPlus() != null ? eval.getBghScoreCPlus() : (eval.getReviewerScoreCPlus() != null ? eval.getReviewerScoreCPlus() : eval.getSelfScoreCPlus());
+        BigDecimal finalCMinus = eval.getBghScoreCMinus() != null ? eval.getBghScoreCMinus() : (eval.getReviewerScoreCMinus() != null ? eval.getReviewerScoreCMinus() : eval.getSelfScoreCMinus());
 
         String scoreAStr = "Điểm tiêu chí chung: " + formatScore(finalScoreA) + " điểm";
         String scoreBStr = "Điểm tiêu chí kết quả thực hiện nhiệm vụ: " + formatScore(finalScoreB) + " điểm";
@@ -187,8 +191,55 @@ public class Nq52DocxExportService {
         String strengths = "Ưu điểm: " + (eval.getStrengths() != null && !eval.getStrengths().isBlank() ? eval.getStrengths() : "Hoàn thành tốt nhiệm vụ giảng dạy và công tác được giao.");
         String weaknesses = "Hạn chế, khuyết điểm: " + (eval.getWeaknesses() != null && !eval.getWeaknesses().isBlank() ? eval.getWeaknesses() : "Không");
 
-        LocalDate today = LocalDate.now();
-        String dateLine = "Cẩm Lệ, ngày " + String.format("%02d", today.getDayOfMonth()) + " tháng " + String.format("%02d", today.getMonthValue()) + " năm " + today.getYear();
+        ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDate todayVn = LocalDate.now(vnZone);
+
+        // 1. Ngày ký của Giáo viên (P37 - phía trên "NGƯỜI TỰ ĐÁNH GIÁ")
+        LocalDate teacherDate = todayVn;
+        if (sigTeacher != null && sigTeacher.getSignedAt() != null) {
+            teacherDate = sigTeacher.getSignedAt().atZone(vnZone).toLocalDate();
+        } else if (eval.getSubmittedAt() != null) {
+            teacherDate = eval.getSubmittedAt().atZone(vnZone).toLocalDate();
+        }
+        String teacherDateLine = "Cẩm Lệ, ngày " + String.format("%02d", teacherDate.getDayOfMonth())
+                + " tháng " + String.format("%02d", teacherDate.getMonthValue())
+                + " năm " + teacherDate.getYear();
+
+        // 2. Ngày ký của Tổ trưởng (P52 - phía trên "NGƯỜI CÓ THẨM QUYỀN QUẢN LÝ TRỰC TIẾP ĐÁNH GIÁ")
+        String reviewerDateLine;
+        if (sigDeptLeader != null && sigDeptLeader.getSignedAt() != null) {
+            LocalDate revDate = sigDeptLeader.getSignedAt().atZone(vnZone).toLocalDate();
+            reviewerDateLine = "Cẩm Lệ, ngày " + String.format("%02d", revDate.getDayOfMonth())
+                    + " tháng " + String.format("%02d", revDate.getMonthValue())
+                    + " năm " + revDate.getYear();
+        } else if (eval.getReviewedAt() != null) {
+            LocalDate revDate = eval.getReviewedAt().atZone(vnZone).toLocalDate();
+            reviewerDateLine = "Cẩm Lệ, ngày " + String.format("%02d", revDate.getDayOfMonth())
+                    + " tháng " + String.format("%02d", revDate.getMonthValue())
+                    + " năm " + revDate.getYear();
+        } else {
+            reviewerDateLine = "Cẩm Lệ, ngày    tháng " + String.format("%02d", eval.getEvaluationMonth()) + " năm " + eval.getEvaluationYear();
+        }
+
+        // 3. Ngày ký của Ban Giám Hiệu (P66 - phía trên "THỦ TRƯỞNG ĐƠN VỊ")
+        String bghDateLine;
+        if (sigPrincipal != null && sigPrincipal.getSignedAt() != null) {
+            LocalDate bghDate = sigPrincipal.getSignedAt().atZone(vnZone).toLocalDate();
+            bghDateLine = "Cẩm Lệ, ngày " + String.format("%02d", bghDate.getDayOfMonth())
+                    + " tháng " + String.format("%02d", bghDate.getMonthValue())
+                    + " năm " + bghDate.getYear();
+        } else if (eval.getBghReviewedAt() != null) {
+            LocalDate bghDate = eval.getBghReviewedAt().atZone(vnZone).toLocalDate();
+            bghDateLine = "Cẩm Lệ, ngày " + String.format("%02d", bghDate.getDayOfMonth())
+                    + " tháng " + String.format("%02d", bghDate.getMonthValue())
+                    + " năm " + bghDate.getYear();
+        } else {
+            bghDateLine = "Cẩm Lệ, ngày     tháng " + String.format("%02d", eval.getEvaluationMonth()) + " năm " + eval.getEvaluationYear();
+        }
+
+        // 4. Ngày ở tiêu đề đầu văn bản (P8) dưới "Độc lập – Tự do – Hạnh phúc":
+        // Luôn là ngày giáo viên đánh giá và ký số (hoặc ngày nộp phiếu)
+        String headerDateLine = teacherDateLine;
 
         for (int i = 0; i < doc.getParagraphs().size(); i++) {
             XWPFParagraph p = doc.getParagraphs().get(i);
@@ -216,19 +267,60 @@ public class Nq52DocxExportService {
                 replaceParagraphText(p, strengths, false, false, ParagraphAlignment.LEFT);
             } else if (text.startsWith("Hạn chế, khuyết điểm:")) {
                 replaceParagraphText(p, weaknesses, false, false, ParagraphAlignment.LEFT);
-            } else if (text.contains("Cẩm Lệ, ngày 01 tháng 11  năm 2026") || text.contains("Cẩm Lệ, ngày 01 tháng 11 năm 2026")) {
-                replaceParagraphText(p, dateLine, false, true, p.getAlignment());
+            } else if (text.contains("Cẩm Lệ, ngày") && (text.contains("năm 2026") || text.contains("năm 20") || text.contains("tháng"))) {
+                if (i < 15) {
+                    replaceParagraphText(p, headerDateLine, false, true, p.getAlignment());
+                } else {
+                    String nextText = "";
+                    for (int k = i + 1; k < Math.min(i + 4, doc.getParagraphs().size()); k++) {
+                        String t = doc.getParagraphs().get(k).getText().trim();
+                        if (!t.isEmpty()) {
+                            nextText = t;
+                            break;
+                        }
+                    }
+                    if (nextText.contains("NGƯỜI TỰ ĐÁNH GIÁ")) {
+                        replaceParagraphText(p, teacherDateLine, false, true, p.getAlignment());
+                    } else if (nextText.contains("NGƯỜI CÓ THẨM QUYỀN") || nextText.contains("QUẢN LÝ TRỰC TIẾP")) {
+                        replaceParagraphText(p, reviewerDateLine, false, true, p.getAlignment());
+                    } else if (nextText.contains("THỦ TRƯỞNG ĐƠN VỊ") || nextText.contains("HIỆU TRƯỞNG")) {
+                        replaceParagraphText(p, bghDateLine, false, true, p.getAlignment());
+                    } else {
+                        replaceParagraphText(p, headerDateLine, false, true, p.getAlignment());
+                    }
+                }
+            } else if (text.contains("NHẬN XÉT, ĐÁNH GIÁ") && text.contains("ĐƠN VỊ TRỰC TIẾP SỬ DỤNG")) {
+                String revNotes = eval.getReviewerNotes();
+                if ((revNotes == null || revNotes.isBlank()) && form != null) {
+                    revNotes = form.getReviewerNotes();
+                }
+                fillReviewerNotes(doc, i, revNotes);
             } else if (text.contains("* Đề xuất mức xếp loại chất lượng:")) {
                 String revClass = eval.getReviewerClassification();
-                if (revClass != null && !revClass.isBlank()) {
-                    replaceParagraphText(p, "* Đề xuất mức xếp loại chất lượng: " + revClass, true, false, ParagraphAlignment.LEFT);
-                } else {
-                    replaceParagraphText(p, "* Đề xuất mức xếp loại chất lượng: ..............................................................", false, false, ParagraphAlignment.LEFT);
+                if ((revClass == null || revClass.isBlank()) && form != null) {
+                    revClass = form.getReviewerClassification();
                 }
-                p.setIndentationLeft(994);
-                p.setIndentationRight(0);
-                p.setIndentationFirstLine(0);
-                p.setIndentationHanging(0);
+                if ((revClass == null || revClass.isBlank()) && eval.getReviewerTotalScore() != null && eval.getReviewerTotalScore().compareTo(BigDecimal.ZERO) > 0) {
+                    revClass = Nq52CriteriaCatalog.determineClassification(eval.getReviewerTotalScore());
+                }
+                if (revClass != null && !revClass.isBlank()) {
+                    replaceParagraphRun(p, "* Đề xuất mức xếp loại chất lượng: " + revClass, true, false, 14, "000000", ParagraphAlignment.LEFT, 994, 0);
+                } else {
+                    replaceParagraphRun(p, "* Đề xuất mức xếp loại chất lượng: ..............................................................", false, false, 14, "000000", ParagraphAlignment.LEFT, 994, 0);
+                }
+            } else if (text.trim().startsWith("Xếp loại:") || (text.contains("Xếp loại:") && (text.contains("…") || text.contains("...")))) {
+                String bghClass = eval.getBghClassification();
+                if ((bghClass == null || bghClass.isBlank()) && form != null) {
+                    bghClass = form.getBghClassification();
+                }
+                if ((bghClass == null || bghClass.isBlank()) && eval.getBghTotalScore() != null && eval.getBghTotalScore().compareTo(BigDecimal.ZERO) > 0) {
+                    bghClass = Nq52CriteriaCatalog.determineClassification(eval.getBghTotalScore());
+                }
+                if (bghClass != null && !bghClass.isBlank()) {
+                    replaceParagraphRun(p, "Xếp loại: " + bghClass.trim(), true, false, 14, "000000", ParagraphAlignment.LEFT, 994, 0);
+                } else {
+                    replaceParagraphRun(p, "Xếp loại: ………………………………………………………………………….", false, false, 14, "000000", ParagraphAlignment.LEFT, 994, 0);
+                }
             } else if (text.contains("NGƯỜI TỰ ĐÁNH GIÁ")) {
                 insertTeacherSignatureBlock(doc, i, eval.getTeacherNameSnapshot(), sigTeacher);
             } else if (text.contains("NGƯỜI CÓ THẨM QUYỀN QUẢN LÝ TRỰC TIẾP ĐÁNH GIÁ")) {
@@ -454,7 +546,7 @@ public class Nq52DocxExportService {
         return normRowKey.equals(normSelected);
     }
 
-    private void fillClassificationCheckbox(XWPFDocument doc, Nq52Evaluation eval) {
+    private void fillClassificationCheckbox(XWPFDocument doc, Nq52Evaluation eval, Nq52EvaluationForm form) {
         if (doc.getTables().size() < 6) return;
         XWPFTable t5 = doc.getTables().get(5);
         if (t5.getRows().isEmpty()) return;
@@ -474,12 +566,32 @@ public class Nq52DocxExportService {
             }
         }
 
-        String selfClass = eval.getBghClassification() != null && !eval.getBghClassification().isBlank()
-                ? eval.getBghClassification()
-                : (eval.getReviewerClassification() != null && !eval.getReviewerClassification().isBlank()
-                    ? eval.getReviewerClassification()
-                    : eval.getSelfClassification());
-        if (selfClass == null || selfClass.isBlank()) return;
+        // 1. CỐ ĐỊNH THEO DỮ LIỆU CỦA GIÁO VIÊN TỰ ĐÁNH GIÁ:
+        // Dấu X tại Bảng 5 (mục "1. Tự đề xuất xếp loại mức chất lượng") hoàn toàn phụ thuộc
+        // vào dữ liệu tự đánh giá của cá nhân người giáo viên, luôn giữ giá trị cố định theo dữ liệu
+        // giáo viên nhập, gửi và ký số. TUYỆT ĐỐI KHÔNG THAY ĐỔI khi tổ trưởng và ban giám hiệu đánh giá ký số.
+        String selfClass = eval.getSelfClassification();
+        if ((selfClass == null || selfClass.isBlank()) && form != null) {
+            selfClass = form.getSelfClassification();
+        }
+
+        // 2. Nếu giáo viên chưa có chuỗi xếp loại rõ ràng, tự động tính toán cố định từ tổng điểm tự chấm của giáo viên (selfTotalScore)
+        if (selfClass == null || selfClass.isBlank()) {
+            BigDecimal selfScore = eval.getSelfTotalScore();
+            if ((selfScore == null || selfScore.compareTo(BigDecimal.ZERO) <= 0) && form != null && form.getSelfTotalScore() > 0) {
+                selfScore = BigDecimal.valueOf(form.getSelfTotalScore());
+            }
+            if (selfScore != null && selfScore.compareTo(BigDecimal.ZERO) > 0) {
+                selfClass = Nq52CriteriaCatalog.determineClassification(selfScore);
+            }
+        }
+
+        // 3. Nếu chưa có dữ liệu tự chấm hoặc chưa chọn, mặc định mức tự đề xuất là "Hoàn thành nhiệm vụ" (Cell 4)
+        // LƯU Ý BẮT BUỘC: Tuyệt đối không fallback sang reviewerClassification hay bghClassification,
+        // cũng như không phụ thuộc vào reviewerTotalScore hay bghTotalScore vì bảng này là phần "Tự đề xuất" của giáo viên.
+        if (selfClass == null || selfClass.isBlank()) {
+            selfClass = "Hoàn thành nhiệm vụ";
+        }
         selfClass = selfClass.trim().toLowerCase();
 
         // Cell 0: Hoàn thành xuất sắc nhiệm vụ (Từ 90 điểm trở lên)
@@ -505,12 +617,24 @@ public class Nq52DocxExportService {
                 while (!p0.getRuns().isEmpty()) {
                     p0.removeRun(0);
                 }
+                if (p0.getCTP().getPPr() != null && p0.getCTP().getPPr().getSpacing() != null) {
+                    CTSpacing sp = p0.getCTP().getPPr().getSpacing();
+                    if (sp.isSetBefore()) sp.unsetBefore();
+                    if (sp.isSetAfter()) sp.unsetAfter();
+                    if (sp.isSetLine()) sp.unsetLine();
+                    if (sp.isSetLineRule()) sp.unsetLineRule();
+                }
                 p0.setAlignment(ParagraphAlignment.CENTER);
+                p0.setIndentationLeft(0);
+                p0.setIndentationRight(0);
+                p0.setIndentationFirstLine(0);
+                p0.setIndentationHanging(0);
                 XWPFRun run = p0.createRun();
                 run.setText("X");
                 run.setFontFamily("Times New Roman");
-                run.setFontSize(13);
+                run.setFontSize(14);
                 run.setBold(true);
+                run.setColor("000000");
             }
         }
     }
@@ -677,51 +801,143 @@ public class Nq52DocxExportService {
         run.setItalic(italic);
     }
 
-    private void insertTeacherSignatureBlock(XWPFDocument doc, int afterParaIdx, String teacherName, Nq52DigitalSignature sig) {
-        if (sig != null) {
-            byte[] img = Nq52SignatureImageHelper.getSignaturePngBytes(sig, teacherName, "Giáo viên", false, false);
-            if (afterParaIdx + 2 < doc.getParagraphs().size()) {
-                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 2));
+    private void fillReviewerNotes(XWPFDocument doc, int headingParaIdx, String revNotes) {
+        if (revNotes == null || revNotes.isBlank()) {
+            return;
+        }
+
+        List<XWPFParagraph> dotParas = new ArrayList<>();
+        for (int j = headingParaIdx + 1; j < doc.getParagraphs().size(); j++) {
+            XWPFParagraph pNext = doc.getParagraphs().get(j);
+            String tNext = pNext.getText();
+            if (tNext.contains("Đề xuất mức xếp loại") || tNext.contains("NGƯỜI CÓ THẨM QUYỀN")) {
+                break;
             }
-            if (afterParaIdx + 3 < doc.getParagraphs().size()) {
-                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 3));
-            }
-            // Đặt ảnh chữ ký vào đoạn văn bản ngay phía trên Họ và tên để căn giữa chuẩn xác
-            if (img != null && afterParaIdx + 4 < doc.getParagraphs().size()) {
-                XWPFParagraph pImg = doc.getParagraphs().get(afterParaIdx + 4);
-                insertPictureToParagraph(pImg, img, 140, 48, 3850, 0);
+            dotParas.add(pNext);
+        }
+        if (dotParas.isEmpty()) return;
+
+        List<String> lines = Arrays.stream(revNotes.trim().split("\\r?\\n"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+        if (lines.isEmpty()) return;
+
+        for (int k = 0; k < dotParas.size(); k++) {
+            XWPFParagraph p = dotParas.get(k);
+            if (k < lines.size()) {
+                if (k == dotParas.size() - 1 && lines.size() > dotParas.size()) {
+                    List<String> remaining = lines.subList(k, lines.size());
+                    setMultilineParagraphText(p, remaining, false, false, 14, "000000", ParagraphAlignment.BOTH, 994, 0);
+                } else {
+                    replaceParagraphRun(p, lines.get(k), false, false, 14, "000000", ParagraphAlignment.BOTH, 994, 0);
+                }
+            } else {
+                collapseParagraph(p);
             }
         }
-        if (afterParaIdx + 5 < doc.getParagraphs().size()) {
-            XWPFParagraph p = doc.getParagraphs().get(afterParaIdx + 5);
-            String name = teacherName != null ? teacherName : (sig != null ? sig.getSignerNameSnapshot() : "");
-            replaceParagraphRun(p, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 3850, 0);
+    }
+
+    private void setMultilineParagraphText(XWPFParagraph p, List<String> lines, boolean bold, boolean italic, int fontSize, String hexColor, ParagraphAlignment alignment, int indentLeft, int indentRight) {
+        while (!p.getRuns().isEmpty()) {
+            p.removeRun(0);
+        }
+        if (p.getCTP().getPPr() != null && p.getCTP().getPPr().getSpacing() != null) {
+            CTSpacing sp = p.getCTP().getPPr().getSpacing();
+            if (sp.isSetLine()) sp.unsetLine();
+            if (sp.isSetLineRule()) sp.unsetLineRule();
+        }
+        if (alignment != null) {
+            p.setAlignment(alignment);
+        }
+        p.setIndentationLeft(indentLeft);
+        p.setIndentationRight(indentRight);
+        p.setIndentationFirstLine(0);
+        p.setIndentationHanging(0);
+
+        XWPFRun run = p.createRun();
+        run.setFontFamily("Times New Roman");
+        run.setFontSize(fontSize);
+        run.setBold(bold);
+        run.setItalic(italic);
+        if (hexColor != null) {
+            run.setColor(hexColor);
+        }
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0) {
+                run.addBreak();
+            }
+            run.setText(lines.get(i));
+        }
+    }
+
+    private void insertTeacherSignatureBlock(XWPFDocument doc, int afterParaIdx, String teacherName, Nq52DigitalSignature sig) {
+        String name = teacherName != null && !teacherName.isBlank() ? teacherName : (sig != null ? sig.getSignerNameSnapshot() : "");
+        if (sig != null) {
+            byte[] img = Nq52SignatureImageHelper.getSignaturePngBytes(sig, teacherName, "Giáo viên", false, false);
+            // P[afterParaIdx + 2]: Dán ảnh chữ ký số ngay phía dưới dòng "(Ký, ghi rõ họ tên)"
+            if (img != null && afterParaIdx + 2 < doc.getParagraphs().size()) {
+                XWPFParagraph pImg = doc.getParagraphs().get(afterParaIdx + 2);
+                insertPictureToParagraph(pImg, img, 140, 48, 3850, 0);
+            }
+            // P[afterParaIdx + 3]: Họ và tên ngay phía dưới ảnh chữ ký
+            if (afterParaIdx + 3 < doc.getParagraphs().size()) {
+                XWPFParagraph pName = doc.getParagraphs().get(afterParaIdx + 3);
+                replaceParagraphRun(pName, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 3850, 0);
+            }
+            // P[afterParaIdx + 4] và P[afterParaIdx + 5]: Thu gọn paragraph trống để tránh đẩy trang
+            if (afterParaIdx + 4 < doc.getParagraphs().size()) {
+                collapseParagraph(doc.getParagraphs().get(afterParaIdx + 4));
+            }
+            if (afterParaIdx + 5 < doc.getParagraphs().size()) {
+                collapseParagraph(doc.getParagraphs().get(afterParaIdx + 5));
+            }
+        } else {
+            // Chưa ký số điện tử: Để khoảng trống cho chữ ký tay và ghi tên ở P[afterParaIdx + 5]
+            if (afterParaIdx + 2 < doc.getParagraphs().size()) clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 2));
+            if (afterParaIdx + 3 < doc.getParagraphs().size()) clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 3));
+            if (afterParaIdx + 4 < doc.getParagraphs().size()) clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 4));
+            if (afterParaIdx + 5 < doc.getParagraphs().size()) {
+                XWPFParagraph p = doc.getParagraphs().get(afterParaIdx + 5);
+                replaceParagraphRun(p, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 3850, 0);
+            }
         }
     }
 
     private void insertReviewerSignatureBlock(XWPFDocument doc, int afterParaIdx, String reviewerName, Nq52DigitalSignature sig) {
+        String name = reviewerName != null && !reviewerName.isBlank() ? reviewerName : (sig != null ? sig.getSignerNameSnapshot() : "");
         if (sig != null) {
             byte[] img = Nq52SignatureImageHelper.getSignaturePngBytes(sig, reviewerName, "Tổ trưởng chuyên môn", false, true);
-            if (afterParaIdx + 2 < doc.getParagraphs().size()) {
-                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 2));
-            }
-            if (afterParaIdx + 3 < doc.getParagraphs().size()) {
-                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 3));
-            }
-            if (afterParaIdx + 4 < doc.getParagraphs().size()) {
-                clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 4));
-            }
-            // Đặt ảnh chữ ký vào đoạn văn bản ngay phía trên Họ và tên người đánh giá
-            if (img != null && afterParaIdx + 5 < doc.getParagraphs().size()) {
-                XWPFParagraph pImg = doc.getParagraphs().get(afterParaIdx + 5);
+            // P[afterParaIdx + 2]: Dán ảnh chữ ký số ngay dưới "(Ký, ghi rõ họ tên)"
+            if (img != null && afterParaIdx + 2 < doc.getParagraphs().size()) {
+                XWPFParagraph pImg = doc.getParagraphs().get(afterParaIdx + 2);
                 insertPictureToParagraph(pImg, img, 140, 48, 5137, 469);
             }
-        }
-        if (afterParaIdx + 6 < doc.getParagraphs().size()) {
-            XWPFParagraph p = doc.getParagraphs().get(afterParaIdx + 6);
-            String name = reviewerName != null && !reviewerName.isBlank() ? reviewerName : (sig != null ? sig.getSignerNameSnapshot() : "");
-            if (!name.isBlank()) {
-                replaceParagraphRun(p, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 5137, 469);
+            // P[afterParaIdx + 3]: Họ và tên người đánh giá ngay dưới ảnh chữ ký
+            if (afterParaIdx + 3 < doc.getParagraphs().size()) {
+                XWPFParagraph pName = doc.getParagraphs().get(afterParaIdx + 3);
+                if (!name.isBlank()) {
+                    replaceParagraphRun(pName, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 5137, 469);
+                } else {
+                    collapseParagraph(pName);
+                }
+            }
+            // Thu gọn các đoạn văn bản thừa còn lại
+            for (int k = 4; k <= 10; k++) {
+                if (afterParaIdx + k < doc.getParagraphs().size()) {
+                    collapseParagraph(doc.getParagraphs().get(afterParaIdx + k));
+                }
+            }
+        } else {
+            if (afterParaIdx + 2 < doc.getParagraphs().size()) clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 2));
+            if (afterParaIdx + 3 < doc.getParagraphs().size()) clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 3));
+            if (afterParaIdx + 4 < doc.getParagraphs().size()) clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 4));
+            if (afterParaIdx + 5 < doc.getParagraphs().size()) clearParagraphRuns(doc.getParagraphs().get(afterParaIdx + 5));
+            if (afterParaIdx + 6 < doc.getParagraphs().size()) {
+                XWPFParagraph p = doc.getParagraphs().get(afterParaIdx + 6);
+                if (!name.isBlank()) {
+                    replaceParagraphRun(p, name, true, false, 12, "000000", ParagraphAlignment.CENTER, 5137, 469);
+                }
             }
         }
     }
@@ -759,9 +975,29 @@ public class Nq52DocxExportService {
         }
     }
 
+    private void collapseParagraph(XWPFParagraph p) {
+        if (p == null) return;
+        clearParagraphRuns(p);
+        if (p.getCTP().getPPr() != null && p.getCTP().getPPr().getSpacing() != null) {
+            CTSpacing sp = p.getCTP().getPPr().getSpacing();
+            if (sp.isSetLine()) sp.unsetLine();
+            if (sp.isSetLineRule()) sp.unsetLineRule();
+            sp.setBefore(BigInteger.ZERO);
+            sp.setAfter(BigInteger.ZERO);
+        }
+    }
+
     private void insertPictureToParagraph(XWPFParagraph p, byte[] imgBytes, int maxWPt, int maxHPt, int indentLeft, int indentRight) {
         if (p == null || imgBytes == null || imgBytes.length == 0) return;
         clearParagraphRuns(p);
+        // Hủy bỏ giới hạn chiều cao dòng cố định (lineRule="exact") để ảnh không bị che/mất
+        if (p.getCTP().getPPr() != null && p.getCTP().getPPr().getSpacing() != null) {
+            CTSpacing sp = p.getCTP().getPPr().getSpacing();
+            if (sp.isSetLine()) sp.unsetLine();
+            if (sp.isSetLineRule()) sp.unsetLineRule();
+            sp.setBefore(BigInteger.valueOf(40));
+            sp.setAfter(BigInteger.valueOf(20));
+        }
         p.setAlignment(ParagraphAlignment.CENTER);
         p.setIndentationLeft(indentLeft);
         p.setIndentationRight(indentRight);
@@ -787,6 +1023,11 @@ public class Nq52DocxExportService {
     private void replaceParagraphRun(XWPFParagraph p, String text, boolean bold, boolean italic, int fontSize, String hexColor, ParagraphAlignment alignment, int indentLeft, int indentRight) {
         while (!p.getRuns().isEmpty()) {
             p.removeRun(0);
+        }
+        if (p.getCTP().getPPr() != null && p.getCTP().getPPr().getSpacing() != null) {
+            CTSpacing sp = p.getCTP().getPPr().getSpacing();
+            if (sp.isSetLine()) sp.unsetLine();
+            if (sp.isSetLineRule()) sp.unsetLineRule();
         }
         if (alignment != null) {
             p.setAlignment(alignment);

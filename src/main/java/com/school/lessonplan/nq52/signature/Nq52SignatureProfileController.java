@@ -95,7 +95,11 @@ public class Nq52SignatureProfileController {
             Nq52UserSignatureProfile updated = profileService.authenticateAndLinkCa(user, provider, username, password);
             Map<String, Object> result = new java.util.LinkedHashMap<>();
             result.put("success", true);
-            result.put("message", "Đăng nhập và liên kết chứng thư số thành công!");
+            if (updated.getWarningMessage() != null && !updated.getWarningMessage().isBlank()) {
+                result.put("message", "Tra cứu và liên kết chứng thư số thành công! (" + updated.getWarningMessage() + ")");
+            } else {
+                result.put("message", "Tra cứu và liên kết chứng thư số thành công!");
+            }
             result.put("registrationStatus", updated.getRegistrationStatus());
             result.put("caProvider", updated.getCaProvider());
             result.put("caUsername", updated.getCaUsername());
@@ -111,12 +115,46 @@ public class Nq52SignatureProfileController {
             result.put("validTo", updated.getValidTo());
             result.put("ownerInfo", updated.getOwnerInfo());
             result.put("signatureImageBase64", updated.getSignatureImageBase64() != null ? updated.getSignatureImageBase64() : "");
+            result.put("lastCaResponse", updated.getLastCaResponse() != null ? updated.getLastCaResponse() : "");
+            result.put("linkedAt", updated.getLinkedAtFormatted());
+            result.put("linkExpireAt", updated.getLinkExpireAtFormatted());
+            result.put("daysRemaining", updated.getDaysRemaining());
+            result.put("isLinkValid", updated.isLinkValid());
             return ResponseEntity.ok(result);
+        } catch (CaAuthenticationException e) {
+            log.warn("Lỗi xác thực chứng thư số: {}", e.getMessage());
+            Map<String, Object> errMap = new java.util.LinkedHashMap<>();
+            errMap.put("success", false);
+            errMap.put("message", e.getMessage());
+            errMap.put("lastCaResponse", e.getRawResponse() != null ? e.getRawResponse() : "");
+            return ResponseEntity.badRequest().body(errMap);
         } catch (Exception e) {
             log.warn("Lỗi đăng nhập chứng thư số: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", e.getMessage() != null ? e.getMessage() : "Xác thực tài khoản chữ ký số thất bại."
+            ));
+        }
+    }
+
+    /**
+     * API Hủy liên kết / Đặt lại tài khoản chứng thư số
+     */
+    @PostMapping("/api/nq52/signature-profile/unlink")
+    @ResponseBody
+    public ResponseEntity<?> unlinkCaAccount(@AuthenticationPrincipal CurrentUser currentUser) {
+        try {
+            User user = resolveUser(currentUser);
+            profileService.unlinkCa(user);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Đã hủy liên kết tài khoản chứng thư số thành công."
+            ));
+        } catch (Exception e) {
+            log.warn("Lỗi hủy liên kết chứng thư số: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Lỗi khi hủy liên kết: " + e.getMessage()
             ));
         }
     }

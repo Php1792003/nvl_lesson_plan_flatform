@@ -158,25 +158,73 @@ public class Nq52EvaluationService {
         Nq52Evaluation eval = evaluationRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu đánh giá ID: " + id));
 
-        // Kiểm tra quyền sở hữu
-        if (!eval.getUser().getId().equals(currentUser.getId())) {
+        // Kiểm tra quyền sở hữu (cho phép chính chủ sở hữu hoặc Ban Giám Hiệu quản trị)
+        if (!eval.getUser().getId().equals(currentUser.getId()) && !isAdmin(currentUser)) {
             throw new AccessDeniedException("Bạn chỉ được chỉnh sửa phiếu đánh giá của chính mình.");
         }
 
-        // Nếu đã nộp hoặc đã được đánh giá thì khóa chỉnh sửa
-        if (eval.getStatus() != Nq52Status.DRAFT) {
-            throw new IllegalStateException("Phiếu đã được nộp hoặc đã được đánh giá, không thể chỉnh sửa.");
+        // Nếu đã được Tổ trưởng hoặc BGH thẩm định hoàn tất thì khóa chỉnh sửa (ngoại trừ BGH)
+        if ((eval.getStatus() == Nq52Status.REVIEWED || eval.getStatus() == Nq52Status.COUNCIL_REVIEWED) && !isAdmin(currentUser)) {
+            throw new IllegalStateException("Phiếu đã được Tổ trưởng hoặc Ban Giám Hiệu thẩm định, không thể chỉnh sửa.");
         }
+
+        // Đọc dữ liệu JSON hiện có để bảo toàn dữ liệu đa cấp
+        Map<String, Object> data = parseJson(eval.getCriteriaDataJson());
 
         if (form.getPositionTitle() != null && !form.getPositionTitle().isBlank()) {
             eval.setPositionTitle(form.getPositionTitle().trim());
         }
-        eval.setStrengths(form.getStrengths());
-        eval.setWeaknesses(form.getWeaknesses());
+        if (form.getStrengths() != null && !form.getStrengths().isBlank()) {
+            eval.setStrengths(form.getStrengths());
+        }
+        if (form.getWeaknesses() != null && !form.getWeaknesses().isBlank()) {
+            eval.setWeaknesses(form.getWeaknesses());
+        }
+
+        // Bảo toàn lựa chọn Phần B nếu form không gửi lên
+        String selB1 = form.getSelectedB1();
+        if ((selB1 == null || selB1.isBlank()) && data.containsKey("selectedB1")) {
+            selB1 = (String) data.get("selectedB1");
+        }
+        String selB2 = form.getSelectedB2();
+        if ((selB2 == null || selB2.isBlank()) && data.containsKey("selectedB2")) {
+            selB2 = (String) data.get("selectedB2");
+        }
+        String selB3 = form.getSelectedB3();
+        if ((selB3 == null || selB3.isBlank()) && data.containsKey("selectedB3")) {
+            selB3 = (String) data.get("selectedB3");
+        }
+
+        // Bảo toàn selfScores: đọc scores cũ và merge thêm scores mới nếu có
+        Map<String, Double> existingSelfScores = new HashMap<>();
+        if (data.containsKey("selfScores") && data.get("selfScores") instanceof Map<?, ?> rawMap) {
+            rawMap.forEach((k, v) -> {
+                if (k instanceof String sk && v instanceof Number nv) {
+                    existingSelfScores.put(sk, nv.doubleValue());
+                }
+            });
+        }
+        Map<String, Double> incomingScores = sanitizeAndClampScores(form.getSelfScores());
+        Map<String, Double> selfScores = new HashMap<>(existingSelfScores);
+        if (incomingScores != null && !incomingScores.isEmpty()) {
+            selfScores.putAll(incomingScores);
+        }
+
+        // Bảo toàn giải trình nếu form không gửi lên
+        Map<String, String> existingExplanations = new HashMap<>();
+        if (data.containsKey("explanations") && data.get("explanations") instanceof Map<?, ?> rawExp) {
+            rawExp.forEach((k, v) -> {
+                if (k instanceof String sk && v != null) {
+                    existingExplanations.put(sk, v.toString());
+                }
+            });
+        }
+        if (form.getExplanations() != null && !form.getExplanations().isEmpty()) {
+            existingExplanations.putAll(form.getExplanations());
+        }
 
         // 1. Tính điểm Phần A (Tối đa 30) - Ràng buộc cứng không vượt quá thang điểm tối đa
         double scoreA = 0.0;
-        Map<String, Double> selfScores = sanitizeAndClampScores(form.getSelfScores());
         for (Map.Entry<String, Double> entry : Nq52CriteriaCatalog.MAX_SCORES_PART_A.entrySet()) {
             Double val = selfScores.get(entry.getKey());
             if (val != null && val > 0) {
@@ -187,9 +235,9 @@ public class Nq52EvaluationService {
         eval.setSelfScoreA(BigDecimal.valueOf(scoreA).setScale(2, RoundingMode.HALF_UP));
 
         // 2. Tính điểm Phần B (Tối đa 70)
-        double scoreB = Nq52CriteriaCatalog.getScoreB1(form.getSelectedB1())
-                      + Nq52CriteriaCatalog.getScoreB2(form.getSelectedB2())
-                      + Nq52CriteriaCatalog.getScoreB3(form.getSelectedB3());
+        double scoreB = Nq52CriteriaCatalog.getScoreB1(selB1)
+                      + Nq52CriteriaCatalog.getScoreB2(selB2)
+                      + Nq52CriteriaCatalog.getScoreB3(selB3);
         scoreB = Math.min(scoreB, 70.0);
         eval.setSelfScoreB(BigDecimal.valueOf(scoreB).setScale(2, RoundingMode.HALF_UP));
 
@@ -222,17 +270,16 @@ public class Nq52EvaluationService {
         // Xếp loại tự đề xuất
         if (form.getSelfClassification() != null && !form.getSelfClassification().isBlank()) {
             eval.setSelfClassification(form.getSelfClassification().trim());
-        } else {
+        } else if (eval.getSelfClassification() == null || eval.getSelfClassification().isBlank() || eval.getSelfTotalScore().compareTo(BigDecimal.ZERO) > 0) {
             eval.setSelfClassification(Nq52CriteriaCatalog.determineClassification(eval.getSelfTotalScore()));
         }
 
         // Lưu toàn bộ chi tiết vào JSON
-        Map<String, Object> data = parseJson(eval.getCriteriaDataJson());
-        data.put("selectedB1", form.getSelectedB1());
-        data.put("selectedB2", form.getSelectedB2());
-        data.put("selectedB3", form.getSelectedB3());
+        data.put("selectedB1", selB1);
+        data.put("selectedB2", selB2);
+        data.put("selectedB3", selB3);
         data.put("selfScores", selfScores);
-        data.put("explanations", form.getExplanations() != null ? form.getExplanations() : new HashMap<>());
+        data.put("explanations", existingExplanations);
         try {
             eval.setCriteriaDataJson(objectMapper.writeValueAsString(data));
         } catch (Exception e) {
@@ -266,9 +313,38 @@ public class Nq52EvaluationService {
             throw new IllegalStateException("Giáo viên chưa nộp phiếu, Tổ trưởng chưa thể đánh giá.");
         }
 
+        // Đọc dữ liệu JSON hiện có để bảo toàn dữ liệu
+        Map<String, Object> data = parseJson(eval.getCriteriaDataJson());
+
+        String revB1 = form.getReviewerSelectedB1();
+        if ((revB1 == null || revB1.isBlank()) && data.containsKey("reviewerSelectedB1")) {
+            revB1 = (String) data.get("reviewerSelectedB1");
+        }
+        String revB2 = form.getReviewerSelectedB2();
+        if ((revB2 == null || revB2.isBlank()) && data.containsKey("reviewerSelectedB2")) {
+            revB2 = (String) data.get("reviewerSelectedB2");
+        }
+        String revB3 = form.getReviewerSelectedB3();
+        if ((revB3 == null || revB3.isBlank()) && data.containsKey("reviewerSelectedB3")) {
+            revB3 = (String) data.get("reviewerSelectedB3");
+        }
+
+        Map<String, Double> existingRevScores = new HashMap<>();
+        if (data.containsKey("reviewerScores") && data.get("reviewerScores") instanceof Map<?, ?> rawMap) {
+            rawMap.forEach((k, v) -> {
+                if (k instanceof String sk && v instanceof Number nv) {
+                    existingRevScores.put(sk, nv.doubleValue());
+                }
+            });
+        }
+        Map<String, Double> incomingRevScores = sanitizeAndClampScores(form.getReviewerScores());
+        Map<String, Double> reviewerScores = new HashMap<>(existingRevScores);
+        if (incomingRevScores != null && !incomingRevScores.isEmpty()) {
+            reviewerScores.putAll(incomingRevScores);
+        }
+
         // 1. Tính điểm Tổ trưởng Phần A (Tối đa 30) - Ràng buộc cứng không vượt quá thang điểm tối đa
         double scoreA = 0.0;
-        Map<String, Double> reviewerScores = sanitizeAndClampScores(form.getReviewerScores());
         for (Map.Entry<String, Double> entry : Nq52CriteriaCatalog.MAX_SCORES_PART_A.entrySet()) {
             Double val = reviewerScores.get(entry.getKey());
             if (val != null && val > 0) {
@@ -279,9 +355,9 @@ public class Nq52EvaluationService {
         eval.setReviewerScoreA(BigDecimal.valueOf(scoreA).setScale(2, RoundingMode.HALF_UP));
 
         // 2. Tính điểm Tổ trưởng Phần B (Tối đa 70)
-        double scoreB = Nq52CriteriaCatalog.getScoreB1(form.getReviewerSelectedB1())
-                      + Nq52CriteriaCatalog.getScoreB2(form.getReviewerSelectedB2())
-                      + Nq52CriteriaCatalog.getScoreB3(form.getReviewerSelectedB3());
+        double scoreB = Nq52CriteriaCatalog.getScoreB1(revB1)
+                      + Nq52CriteriaCatalog.getScoreB2(revB2)
+                      + Nq52CriteriaCatalog.getScoreB3(revB3);
         scoreB = Math.min(scoreB, 70.0);
         eval.setReviewerScoreB(BigDecimal.valueOf(scoreB).setScale(2, RoundingMode.HALF_UP));
 
@@ -314,21 +390,22 @@ public class Nq52EvaluationService {
         // Xếp loại Tổ trưởng đề xuất
         if (form.getReviewerClassification() != null && !form.getReviewerClassification().isBlank()) {
             eval.setReviewerClassification(form.getReviewerClassification().trim());
-        } else {
+        } else if (eval.getReviewerClassification() == null || eval.getReviewerClassification().isBlank() || eval.getReviewerTotalScore().compareTo(BigDecimal.ZERO) > 0) {
             eval.setReviewerClassification(Nq52CriteriaCatalog.determineClassification(eval.getReviewerTotalScore()));
         }
 
-        eval.setReviewerNotes(form.getReviewerNotes());
+        if (form.getReviewerNotes() != null && !form.getReviewerNotes().isBlank()) {
+            eval.setReviewerNotes(form.getReviewerNotes());
+        }
         eval.setReviewer(reviewer);
         eval.setReviewerNameSnapshot(reviewer.getFullName());
         eval.setStatus(Nq52Status.REVIEWED);
         eval.setReviewedAt(Instant.now());
 
         // Cập nhật JSON
-        Map<String, Object> data = parseJson(eval.getCriteriaDataJson());
-        data.put("reviewerSelectedB1", form.getReviewerSelectedB1());
-        data.put("reviewerSelectedB2", form.getReviewerSelectedB2());
-        data.put("reviewerSelectedB3", form.getReviewerSelectedB3());
+        data.put("reviewerSelectedB1", revB1);
+        data.put("reviewerSelectedB2", revB2);
+        data.put("reviewerSelectedB3", revB3);
         data.put("reviewerScores", reviewerScores);
         try {
             eval.setCriteriaDataJson(objectMapper.writeValueAsString(data));
@@ -364,9 +441,42 @@ public class Nq52EvaluationService {
             throw new IllegalStateException("Giáo viên chưa nộp phiếu, Hội đồng thi đua khen thưởng chưa thể đánh giá.");
         }
 
+        if (eval.getStatus() == Nq52Status.SUBMITTED) {
+            throw new IllegalStateException("Hồ sơ chưa được Tổ trưởng chuyên môn thẩm định, Ban Giám Hiệu duyệt cuối cùng sau khi Tổ trưởng hoàn tất.");
+        }
+
+        // Đọc dữ liệu JSON hiện có để bảo toàn dữ liệu
+        Map<String, Object> data = parseJson(eval.getCriteriaDataJson());
+
+        String bghB1 = form.getBghSelectedB1();
+        if ((bghB1 == null || bghB1.isBlank()) && data.containsKey("bghSelectedB1")) {
+            bghB1 = (String) data.get("bghSelectedB1");
+        }
+        String bghB2 = form.getBghSelectedB2();
+        if ((bghB2 == null || bghB2.isBlank()) && data.containsKey("bghSelectedB2")) {
+            bghB2 = (String) data.get("bghSelectedB2");
+        }
+        String bghB3 = form.getBghSelectedB3();
+        if ((bghB3 == null || bghB3.isBlank()) && data.containsKey("bghSelectedB3")) {
+            bghB3 = (String) data.get("bghSelectedB3");
+        }
+
+        Map<String, Double> existingBghScores = new HashMap<>();
+        if (data.containsKey("bghScores") && data.get("bghScores") instanceof Map<?, ?> rawMap) {
+            rawMap.forEach((k, v) -> {
+                if (k instanceof String sk && v instanceof Number nv) {
+                    existingBghScores.put(sk, nv.doubleValue());
+                }
+            });
+        }
+        Map<String, Double> incomingBghScores = sanitizeAndClampScores(form.getBghScores());
+        Map<String, Double> bghScores = new HashMap<>(existingBghScores);
+        if (incomingBghScores != null && !incomingBghScores.isEmpty()) {
+            bghScores.putAll(incomingBghScores);
+        }
+
         // 1. Tính điểm Hội đồng Phần A (Tối đa 30)
         double scoreA = 0.0;
-        Map<String, Double> bghScores = sanitizeAndClampScores(form.getBghScores());
         for (Map.Entry<String, Double> entry : Nq52CriteriaCatalog.MAX_SCORES_PART_A.entrySet()) {
             Double val = bghScores.get(entry.getKey());
             if (val != null && val > 0) {
@@ -377,9 +487,9 @@ public class Nq52EvaluationService {
         eval.setBghScoreA(BigDecimal.valueOf(scoreA).setScale(2, RoundingMode.HALF_UP));
 
         // 2. Tính điểm Hội đồng Phần B (Tối đa 70)
-        double scoreB = Nq52CriteriaCatalog.getScoreB1(form.getBghSelectedB1())
-                      + Nq52CriteriaCatalog.getScoreB2(form.getBghSelectedB2())
-                      + Nq52CriteriaCatalog.getScoreB3(form.getBghSelectedB3());
+        double scoreB = Nq52CriteriaCatalog.getScoreB1(bghB1)
+                      + Nq52CriteriaCatalog.getScoreB2(bghB2)
+                      + Nq52CriteriaCatalog.getScoreB3(bghB3);
         scoreB = Math.min(scoreB, 70.0);
         eval.setBghScoreB(BigDecimal.valueOf(scoreB).setScale(2, RoundingMode.HALF_UP));
 
@@ -412,21 +522,22 @@ public class Nq52EvaluationService {
         // Xếp loại Hội đồng đề xuất
         if (form.getBghClassification() != null && !form.getBghClassification().isBlank()) {
             eval.setBghClassification(form.getBghClassification().trim());
-        } else {
+        } else if (eval.getBghClassification() == null || eval.getBghClassification().isBlank() || eval.getBghTotalScore().compareTo(BigDecimal.ZERO) > 0) {
             eval.setBghClassification(Nq52CriteriaCatalog.determineClassification(eval.getBghTotalScore()));
         }
 
-        eval.setBghNotes(form.getBghNotes());
+        if (form.getBghNotes() != null && !form.getBghNotes().isBlank()) {
+            eval.setBghNotes(form.getBghNotes());
+        }
         eval.setBghReviewer(bghAdmin);
         eval.setBghReviewerNameSnapshot(bghAdmin.getFullName());
         eval.setStatus(Nq52Status.COUNCIL_REVIEWED);
         eval.setBghReviewedAt(Instant.now());
 
         // Cập nhật JSON
-        Map<String, Object> data = parseJson(eval.getCriteriaDataJson());
-        data.put("bghSelectedB1", form.getBghSelectedB1());
-        data.put("bghSelectedB2", form.getBghSelectedB2());
-        data.put("bghSelectedB3", form.getBghSelectedB3());
+        data.put("bghSelectedB1", bghB1);
+        data.put("bghSelectedB2", bghB2);
+        data.put("bghSelectedB3", bghB3);
         data.put("bghScores", bghScores);
         try {
             eval.setCriteriaDataJson(objectMapper.writeValueAsString(data));
@@ -521,7 +632,13 @@ public class Nq52EvaluationService {
             Map<String, Object> rawScores = (Map<String, Object>) data.get("selfScores");
             Map<String, Double> scores = new HashMap<>();
             rawScores.forEach((k, v) -> {
-                if (v instanceof Number n) scores.put(k, n.doubleValue());
+                if (v instanceof Number n) {
+                    scores.put(k, n.doubleValue());
+                } else if (v instanceof String s && !s.isBlank()) {
+                    try {
+                        scores.put(k, Double.parseDouble(s.trim()));
+                    } catch (Exception ignored) {}
+                }
             });
             form.setSelfScores(scores);
         }
@@ -530,7 +647,13 @@ public class Nq52EvaluationService {
             Map<String, Object> rawScores = (Map<String, Object>) data.get("reviewerScores");
             Map<String, Double> scores = new HashMap<>();
             rawScores.forEach((k, v) -> {
-                if (v instanceof Number n) scores.put(k, n.doubleValue());
+                if (v instanceof Number n) {
+                    scores.put(k, n.doubleValue());
+                } else if (v instanceof String s && !s.isBlank()) {
+                    try {
+                        scores.put(k, Double.parseDouble(s.trim()));
+                    } catch (Exception ignored) {}
+                }
             });
             form.setReviewerScores(scores);
         }
@@ -539,7 +662,13 @@ public class Nq52EvaluationService {
             Map<String, Object> rawScores = (Map<String, Object>) data.get("bghScores");
             Map<String, Double> scores = new HashMap<>();
             rawScores.forEach((k, v) -> {
-                if (v instanceof Number n) scores.put(k, n.doubleValue());
+                if (v instanceof Number n) {
+                    scores.put(k, n.doubleValue());
+                } else if (v instanceof String s && !s.isBlank()) {
+                    try {
+                        scores.put(k, Double.parseDouble(s.trim()));
+                    } catch (Exception ignored) {}
+                }
             });
             form.setBghScores(scores);
         }
@@ -547,6 +676,17 @@ public class Nq52EvaluationService {
         if (data.containsKey("explanations")) {
             Map<String, String> exp = (Map<String, String>) data.get("explanations");
             form.setExplanations(exp);
+        }
+
+        // Tự động suy luận xếp loại nếu chưa có nhưng đã có điểm tổng
+        if ((form.getSelfClassification() == null || form.getSelfClassification().isBlank()) && eval.getSelfTotalScore() != null && eval.getSelfTotalScore().compareTo(BigDecimal.ZERO) > 0) {
+            form.setSelfClassification(Nq52CriteriaCatalog.determineClassification(eval.getSelfTotalScore()));
+        }
+        if ((form.getReviewerClassification() == null || form.getReviewerClassification().isBlank()) && eval.getReviewerTotalScore() != null && eval.getReviewerTotalScore().compareTo(BigDecimal.ZERO) > 0) {
+            form.setReviewerClassification(Nq52CriteriaCatalog.determineClassification(eval.getReviewerTotalScore()));
+        }
+        if ((form.getBghClassification() == null || form.getBghClassification().isBlank()) && eval.getBghTotalScore() != null && eval.getBghTotalScore().compareTo(BigDecimal.ZERO) > 0) {
+            form.setBghClassification(Nq52CriteriaCatalog.determineClassification(eval.getBghTotalScore()));
         }
 
         return form;
@@ -572,7 +712,7 @@ public class Nq52EvaluationService {
 
     public boolean canBghReview(User user, Nq52Evaluation eval) {
         if (user == null || eval == null) return false;
-        return isAdmin(user);
+        return isAdmin(user) && (eval.getStatus() == Nq52Status.REVIEWED || eval.getStatus() == Nq52Status.COUNCIL_REVIEWED);
     }
 
     private static final String PERM_NQ52_REVIEW = "NQ52_REVIEW";

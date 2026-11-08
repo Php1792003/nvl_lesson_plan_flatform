@@ -7,9 +7,15 @@ public class CertificateDirectSignRequest {
     private String username;
     private String password;
     private String pin;
+    private String signerRole; // "TEACHER", "DEPT_LEADER", "PRINCIPAL"
     private String reviewerNotes;
+    private String selfClassification;
+    private String reviewerClassification;
 
     public CertificateDirectSignRequest() {}
+
+    public String getSignerRole() { return signerRole; }
+    public void setSignerRole(String signerRole) { this.signerRole = signerRole; }
 
     public String getDocumentType() { return documentType; }
     public void setDocumentType(String documentType) { this.documentType = documentType; }
@@ -31,5 +37,11 @@ public class CertificateDirectSignRequest {
 
     public String getReviewerNotes() { return reviewerNotes; }
     public void setReviewerNotes(String reviewerNotes) { this.reviewerNotes = reviewerNotes; }
+
+    public String getSelfClassification() { return selfClassification; }
+    public void setSelfClassification(String selfClassification) { this.selfClassification = selfClassification; }
+
+    public String getReviewerClassification() { return reviewerClassification; }
+    public void setReviewerClassification(String reviewerClassification) { this.reviewerClassification = reviewerClassification; }
 }
 

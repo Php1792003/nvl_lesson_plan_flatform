@@ -405,69 +405,75 @@
 
     <!-- 3 KPI Stat Cards - Tối ưu tập trung cho việc duyệt hồ sơ -->
     <div class="nq52-stats-grid">
-        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='SUBMITTED', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+        <!-- Card 1: Cần duyệt -->
+        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'REVIEWED' : 'SUBMITTED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
            class="nq52-stat-card card-pending" 
-           th:classappend="${selectedStatus == 'SUBMITTED' ? 'active-card' : ''}"
-           title="Nhấp để xem danh sách hồ sơ đang chờ duyệt">
+           th:classappend="${(isAdmin and selectedStatus == 'REVIEWED') or (!isAdmin and selectedStatus == 'SUBMITTED') ? 'active-card' : ''}"
+           th:title="${isAdmin ? 'Nhấp để xem danh sách hồ sơ Tổ trưởng đã duyệt, chờ Ban Giám Hiệu kết luận & ban hành' : 'Nhấp để xem danh sách hồ sơ đang chờ Tổ trưởng duyệt'}">
             <div class="nq52-stat-header">
-                <div class="nq52-stat-label" style="color: #b45309;">Hồ sơ cần duyệt ngay</div>
+                <div class="nq52-stat-label" style="color: #b45309;" th:text="${isAdmin ? 'Hồ sơ chờ BGH duyệt' : 'Hồ sơ cần duyệt ngay'}">Hồ sơ cần duyệt ngay</div>
                 <span class="nq52-pulse-dot" th:if="${pendingCount > 0}"></span>
             </div>
             <div class="nq52-stat-value" style="color: #d97706;" th:text="${pendingCount != null ? pendingCount : 0}">0</div>
-            <div class="nq52-stat-desc">Giáo viên đã nộp, cần chấm điểm xếp loại</div>
+            <div class="nq52-stat-desc" th:text="${isAdmin ? 'Tổ trưởng đã duyệt xong, chờ BGH kết luận xếp loại &amp; ký số' : 'Giáo viên đã nộp, cần Tổ trưởng chấm điểm xếp loại'}">Giáo viên đã nộp, cần chấm điểm xếp loại</div>
         </a>
 
-        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='REVIEWED', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+        <!-- Card 2: Đã hoàn thành đánh giá -->
+        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'COUNCIL_REVIEWED' : 'REVIEWED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
            class="nq52-stat-card card-completed"
-           th:classappend="${selectedStatus == 'REVIEWED' ? 'active-card' : ''}"
-           title="Nhấp để xem danh sách hồ sơ đã đánh giá xong">
+           th:classappend="${(isAdmin and selectedStatus == 'COUNCIL_REVIEWED') or (!isAdmin and selectedStatus == 'REVIEWED') ? 'active-card' : ''}"
+           th:title="${isAdmin ? 'Nhấp để xem danh sách hồ sơ Ban Giám Hiệu đã hoàn tất đánh giá &amp; ban hành' : 'Nhấp để xem danh sách hồ sơ Tổ trưởng đã đánh giá xong'}">
             <div class="nq52-stat-header">
-                <div class="nq52-stat-label" style="color: #15803d;">Đã hoàn thành đánh giá</div>
+                <div class="nq52-stat-label" style="color: #15803d;" th:text="${isAdmin ? 'BGH đã duyệt chính thức' : 'Đã hoàn thành đánh giá'}">Đã hoàn thành đánh giá</div>
             </div>
             <div class="nq52-stat-value" style="color: #059669;" th:text="${completedCount != null ? completedCount : 0}">0</div>
-            <div class="nq52-stat-desc">Đã có kết quả điểm số và xếp loại chính thức</div>
+            <div class="nq52-stat-desc" th:text="${isAdmin ? 'Ban Giám Hiệu đã hoàn tất kết luận &amp; ký số ban hành' : 'Đã có kết quả điểm số và xếp loại của Tổ'}">Đã có kết quả điểm số và xếp loại chính thức</div>
         </a>
 
+        <!-- Card 3: Tổng hồ sơ -->
         <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='ALL', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
            class="nq52-stat-card card-total"
            th:classappend="${selectedStatus == 'ALL' ? 'active-card' : ''}"
-           title="Nhấp để xem toàn bộ hồ sơ đã nộp">
+           title="Nhấp để xem toàn bộ hồ sơ">
             <div class="nq52-stat-header">
-                <div class="nq52-stat-label" style="color: #1e40af;">Tổng hồ sơ đã nộp</div>
+                <div class="nq52-stat-label" style="color: #1e40af;" th:text="${isAdmin ? 'Tổng hồ sơ tiếp nhận' : 'Tổng hồ sơ đã nộp'}">Tổng hồ sơ đã nộp</div>
             </div>
             <div class="nq52-stat-value" style="color: #2563eb;" th:text="${totalCount != null ? totalCount : 0}">0</div>
-            <div class="nq52-stat-desc">Toàn bộ hồ sơ giáo viên đã gửi về cấp Tổ</div>
+            <div class="nq52-stat-desc" th:text="${isAdmin ? 'Toàn bộ hồ sơ đã qua thẩm định cấp Tổ' : 'Toàn bộ hồ sơ giáo viên đã gửi về cấp Tổ'}">Toàn bộ hồ sơ giáo viên đã gửi về cấp Tổ</div>
         </a>
     </div>
 
     <!-- Quick Navigation Tabs & Draft Note -->
     <div class="nq52-tabs-row">
         <div class="nq52-tabs" role="tablist">
-            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='SUBMITTED', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
-               class="nq52-tab" th:classappend="${selectedStatus == 'SUBMITTED' ? 'active' : ''}">
+            <!-- Tab 1: Cần duyệt -->
+            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'REVIEWED' : 'SUBMITTED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+               class="nq52-tab" th:classappend="${(isAdmin and selectedStatus == 'REVIEWED') or (!isAdmin and selectedStatus == 'SUBMITTED') ? 'active' : ''}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
-                <span>Cần duyệt</span>
+                <span th:text="${isAdmin ? 'Cần BGH duyệt (Tổ đã duyệt)' : 'Cần duyệt cấp Tổ'}">Cần duyệt</span>
                 <span class="nq52-tab-cnt cnt-warning" th:text="${pendingCount != null ? pendingCount : 0}">0</span>
             </a>
-            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='REVIEWED', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
-               class="nq52-tab" th:classappend="${selectedStatus == 'REVIEWED' ? 'active' : ''}">
+            <!-- Tab 2: Đã đánh giá -->
+            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'COUNCIL_REVIEWED' : 'REVIEWED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+               class="nq52-tab" th:classappend="${(isAdmin and selectedStatus == 'COUNCIL_REVIEWED') or (!isAdmin and selectedStatus == 'REVIEWED') ? 'active' : ''}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
-                <span>Đã đánh giá</span>
+                <span th:text="${isAdmin ? 'BGH đã duyệt' : 'Tổ đã đánh giá'}">Đã đánh giá</span>
                 <span class="nq52-tab-cnt cnt-success" th:text="${completedCount != null ? completedCount : 0}">0</span>
             </a>
+            <!-- Tab 3: Tất cả -->
             <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='ALL', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
                class="nq52-tab" th:classappend="${selectedStatus == 'ALL' ? 'active' : ''}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
-                <span>Tất cả hồ sơ đã nộp</span>
+                <span>Tất cả hồ sơ</span>
                 <span class="nq52-tab-cnt" th:text="${totalCount != null ? totalCount : 0}">0</span>
             </a>
         </div>
@@ -541,12 +547,23 @@
                 </select>
             </div>
 
-            <div style="flex: 1 1 170px; min-width: 160px;">
+            <div style="flex: 1 1 190px; min-width: 170px;">
                 <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary, #475569);">Trạng thái hiển thị:</label>
                 <select name="status" class="form-control" style="font-size: 13.5px; height: 38px;">
-                    <option value="SUBMITTED" th:selected="${selectedStatus == 'SUBMITTED'}">Chờ duyệt (Cần duyệt)</option>
-                    <option value="REVIEWED" th:selected="${selectedStatus == 'REVIEWED'}">Đã đánh giá xong</option>
-                    <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả hồ sơ đã nộp</option>
+                    <!-- Dành cho Ban Giám Hiệu -->
+                    <th:block th:if="${isAdmin}">
+                        <option value="REVIEWED" th:selected="${selectedStatus == 'REVIEWED'}">Chờ BGH duyệt (Tổ đã duyệt)</option>
+                        <option value="COUNCIL_REVIEWED" th:selected="${selectedStatus == 'COUNCIL_REVIEWED'}">BGH đã duyệt chính thức</option>
+                        <option value="SUBMITTED" th:selected="${selectedStatus == 'SUBMITTED'}">Chờ Tổ trưởng duyệt</option>
+                        <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
+                    </th:block>
+                    <!-- Dành cho Tổ trưởng -->
+                    <th:block th:unless="${isAdmin}">
+                        <option value="SUBMITTED" th:selected="${selectedStatus == 'SUBMITTED'}">Chờ Tổ trưởng duyệt</option>
+                        <option value="REVIEWED" th:selected="${selectedStatus == 'REVIEWED'}">Tổ đã đánh giá xong</option>
+                        <option value="COUNCIL_REVIEWED" th:selected="${selectedStatus == 'COUNCIL_REVIEWED'}">Hội đồng TĐ-KT đã duyệt</option>
+                        <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
+                    </th:block>
                 </select>
             </div>
 
@@ -601,22 +618,22 @@
                         <!-- Empty State -->
                         <tr th:if="${evaluations == null or evaluations.isEmpty()}">
                             <td colspan="8" style="text-align: center; padding: 50px 16px; color: var(--text-muted, #64748b);">
-                                <div th:if="${selectedStatus == 'SUBMITTED'}">
+                                <div th:if="${(isAdmin and selectedStatus == 'REVIEWED') or (!isAdmin and selectedStatus == 'SUBMITTED')}">
                                     <div style="display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; background: #dcfce7; color: #15803d; margin-bottom: 12px;">
                                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                                             <polyline points="20 6 9 17 4 12"></polyline>
                                         </svg>
                                     </div>
                                     <div style="font-size: 16px; font-weight: 700; color: #15803d; margin-bottom: 4px;">Tuyệt vời! Hiện không có hồ sơ nào đang chờ duyệt</div>
-                                    <p style="font-size: 13.5px; color: #64748b; margin: 0;">Tất cả phiếu đánh giá giáo viên đã nộp trong tổ đều đã được chấm điểm hoàn tất.</p>
+                                    <p style="font-size: 13.5px; color: #64748b; margin: 0;" th:text="${isAdmin ? 'Tất cả phiếu đánh giá đã qua thẩm định của Tổ trưởng đều đã được Ban Giám Hiệu kết luận &amp; ban hành hoàn tất.' : 'Tất cả phiếu đánh giá giáo viên đã nộp trong tổ đều đã được chấm điểm hoàn tất.'}"></p>
                                 </div>
-                                <div th:if="${selectedStatus != 'SUBMITTED'}">
+                                <div th:if="${(isAdmin and selectedStatus != 'REVIEWED') or (!isAdmin and selectedStatus != 'SUBMITTED')}">
                                     <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.45;">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
                                     </svg>
                                     <div style="font-size: 15px; font-weight: 600; color: var(--dark, #0f172a); margin-bottom: 4px;">Không có hồ sơ nào phù hợp</div>
-                                    <p style="font-size: 13px; margin: 0;">Vui lòng thử chọn lại điều kiện lọc tổ hoặc kỳ đánh giá.</p>
+                                    <p style="font-size: 13px; margin: 0;">Vui lòng thử chọn lại điều kiện lọc hoặc kỳ đánh giá.</p>
                                 </div>
                             </td>
                         </tr>
@@ -665,16 +682,33 @@
                             <!-- 3. Thao tác -->
                             <td style="text-align: center;">
                                 <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: center;">
-                                    <a th:href="@{'/nq52/evaluations/' + ${eval.id}}" class="btn btn-primary btn-sm" 
-                                       th:if="${eval.status.name() == 'SUBMITTED'}" style="font-size: 12.5px; font-weight: 600; padding: 5px 12px; box-shadow: 0 1px 2px rgba(37,99,235,0.2);" title="Tiến hành chấm điểm phiếu">
+                                    <!-- Nút BGH Duyệt: khi người xem là Ban Giám Hiệu và phiếu đã được Tổ trưởng duyệt (REVIEWED) -->
+                                    <a th:if="${isAdmin and eval.status.name() == 'REVIEWED'}"
+                                       th:href="@{'/nq52/evaluations/' + ${eval.id}}" 
+                                       class="btn btn-sm" 
+                                       style="background: #b91c1c; color: #ffffff; border: 1px solid #991b1b; font-size: 12.5px; font-weight: 700; padding: 5px 12px; box-shadow: 0 1px 3px rgba(185,28,28,0.3); display: inline-flex; align-items: center; gap: 4px;"
+                                       title="Tổ trưởng đã duyệt xong. Ban Giám Hiệu tiến hành kết luận xếp loại và ký số ban hành">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                        BGH Duyệt
+                                    </a>
+                                    <!-- Nút Chấm điểm: khi người xem là Tổ trưởng và phiếu mới nộp (SUBMITTED) -->
+                                    <a th:if="${!isAdmin and eval.status.name() == 'SUBMITTED'}"
+                                       th:href="@{'/nq52/evaluations/' + ${eval.id}}" 
+                                       class="btn btn-primary btn-sm" 
+                                       style="font-size: 12.5px; font-weight: 600; padding: 5px 12px; box-shadow: 0 1px 2px rgba(37,99,235,0.2);" 
+                                       title="Tiến hành chấm điểm phiếu">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 3px;">
                                             <path d="M12 20h9"></path>
                                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                         </svg>
                                         Chấm điểm
                                     </a>
-                                    <a th:href="@{'/nq52/evaluations/' + ${eval.id}}" class="btn btn-outline btn-sm" 
-                                       th:if="${eval.status.name() != 'SUBMITTED'}" style="font-size: 12.5px; font-weight: 600; padding: 5px 12px;" title="Xem hoặc chỉnh sửa đánh giá">
+                                    <!-- Xem chi tiết cho các trường hợp còn lại -->
+                                    <a th:if="${(isAdmin and eval.status.name() != 'REVIEWED') or (!isAdmin and eval.status.name() != 'SUBMITTED')}"
+                                       th:href="@{'/nq52/evaluations/' + ${eval.id}}" 
+                                       class="btn btn-outline btn-sm" 
+                                       style="font-size: 12.5px; font-weight: 600; padding: 5px 12px;" 
+                                       title="Xem chi tiết đánh giá">
                                         Xem chi tiết
                                     </a>
                                     <!-- Nút Tải file đã lưu trong CSDL -->
@@ -712,8 +746,8 @@
                             <td>
                                 <div style="display: flex; flex-direction: column; gap: 3px;">
                                     <div style="display: inline-flex; align-items: center; gap: 8px;">
-                                        <span style="font-weight: 700; color: var(--dark, #0f172a); font-size: 13.5px;" th:text="${eval.teacherNameSnapshot}">Trần Đình Quân</span>
-                                        <span style="font-size: 12px; color: #64748b;" th:if="${eval.user != null}" th:text="'(' + ${eval.user.email} + ')'">email@school.edu.vn</span>
+                                        <span style="font-weight: 700; color: var(--dark, #0f172a); font-size: 13.5px;" th:text="${eval.teacherNameSnapshot}"></span>
+                                        <span style="font-size: 12px; color: #64748b;" th:if="${eval.user != null}" th:text="'(' + ${eval.user.email} + ')'"></span>
                                     </div>
                                     <div style="display: inline-flex; align-items: center; gap: 4px;">
                                         <span th:if="${eval.user != null and eval.user.campus != null}"

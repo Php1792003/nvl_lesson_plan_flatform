@@ -509,35 +509,38 @@
     <th:block th:if="${isReviewer and activeTab == 'review'}">
         <!-- 3 KPI Cards -->
         <div class="nq52-stats-grid">
-            <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, status='SUBMITTED', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+            <!-- Thẻ 1: Chờ duyệt -->
+            <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, status=${isAdmin ? 'REVIEWED' : 'SUBMITTED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
                class="nq52-stat-card card-pending"
-               title="Nhấp để xem hồ sơ đang chờ duyệt">
+               th:title="${isAdmin ? 'Nhấp để xem hồ sơ chờ Ban Giám Hiệu xét duyệt' : 'Nhấp để xem hồ sơ chờ Tổ trưởng xét duyệt'}">
                 <div class="nq52-stat-header">
-                    <div class="nq52-stat-label" style="color: #b45309;">Hồ sơ chờ xét duyệt</div>
+                    <div class="nq52-stat-label" style="color: #b45309;" th:text="${isAdmin ? 'Hồ sơ chờ BGH duyệt' : 'Hồ sơ chờ Tổ duyệt'}">Hồ sơ chờ duyệt</div>
                     <span class="nq52-pulse-dot" th:if="${pendingCount > 0}"></span>
                 </div>
                 <div class="nq52-stat-value" style="color: #d97706;" th:text="${pendingCount}">0</div>
-                <div class="nq52-stat-desc">Giáo viên đã nộp, cần kiểm tra & ký duyệt</div>
+                <div class="nq52-stat-desc" th:text="${isAdmin ? 'Tổ trưởng đã duyệt, chờ BGH xét duyệt & ký số' : 'Giáo viên đã nộp, cần kiểm tra & ký duyệt'}">Chờ xử lý</div>
             </a>
 
-            <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, status='REVIEWED', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+            <!-- Thẻ 2: Đã duyệt hoàn tất -->
+            <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, status=${isAdmin ? 'COUNCIL_REVIEWED' : 'REVIEWED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
                class="nq52-stat-card card-completed"
-               title="Nhấp để xem hồ sơ đã hoàn thành">
+               th:title="${isAdmin ? 'Nhấp để xem hồ sơ BGH đã duyệt chính thức' : 'Nhấp để xem hồ sơ Tổ đã thẩm định xong'}">
                 <div class="nq52-stat-header">
-                    <div class="nq52-stat-label" style="color: #15803d;">Đã ký duyệt xong</div>
+                    <div class="nq52-stat-label" style="color: #15803d;" th:text="${isAdmin ? 'BGH đã duyệt chính thức' : 'Tổ đã duyệt / Hoàn tất'}">Đã duyệt</div>
                 </div>
                 <div class="nq52-stat-value" style="color: #059669;" th:text="${completedCount}">0</div>
-                <div class="nq52-stat-desc">Đã được xác nhận hoàn tất chữ ký</div>
+                <div class="nq52-stat-desc" th:text="${isAdmin ? 'BGH đã ký số duyệt chính thức hoàn tất' : 'Đã được xác nhận hoàn tất chữ ký'}">Hoàn tất</div>
             </a>
 
+            <!-- Thẻ 3: Tổng hồ sơ -->
             <a th:href="@{/nq52/work-results(tab='review', campusId=${selectedCampusId}, status='ALL', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
                class="nq52-stat-card card-total"
-               title="Nhấp để xem toàn bộ hồ sơ đã nộp">
+               th:title="${isAdmin ? 'Nhấp để xem toàn bộ hồ sơ đã qua cấp Tổ' : 'Nhấp để xem toàn bộ hồ sơ giáo viên trong tổ'}">
                 <div class="nq52-stat-header">
-                    <div class="nq52-stat-label" style="color: #1e40af;">Tổng hồ sơ đã nộp</div>
+                    <div class="nq52-stat-label" style="color: #1e40af;" th:text="${isAdmin ? 'Tổng hồ sơ tiếp nhận' : 'Tổng hồ sơ trong tổ'}">Tổng hồ sơ</div>
                 </div>
                 <div class="nq52-stat-value" style="color: #2563eb;" th:text="${totalReviewCount}">0</div>
-                <div class="nq52-stat-desc">Toàn bộ hồ sơ kết quả giáo viên đã nộp</div>
+                <div class="nq52-stat-desc" th:text="${isAdmin ? 'Hồ sơ đã qua thẩm định cấp Tổ' : 'Toàn bộ hồ sơ kết quả giáo viên đã nộp'}">Tổng hồ sơ</div>
             </a>
         </div>
 
@@ -588,11 +591,20 @@
                         th:selected="${selectedYear == y}"></option>
             </select>
 
-            <!-- Trạng thái -->
+            <!-- Trạng thái (Phân tách theo vai trò BGH và Tổ trưởng) -->
             <select name="status" class="form-control nq52-compact-select" title="Trạng thái xử lý">
-                <option value="SUBMITTED" th:selected="${selectedStatus == 'SUBMITTED'}">Chờ duyệt (Đã nộp)</option>
-                <option value="REVIEWED" th:selected="${selectedStatus == 'REVIEWED'}">Đã ký duyệt xong</option>
-                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
+                <th:block th:if="${isAdmin}">
+                    <option value="REVIEWED" th:selected="${selectedStatus == 'REVIEWED'}">Chờ BGH duyệt (Tổ đã duyệt)</option>
+                    <option value="COUNCIL_REVIEWED" th:selected="${selectedStatus == 'COUNCIL_REVIEWED'}">BGH đã duyệt chính thức</option>
+                    <option value="SUBMITTED" th:selected="${selectedStatus == 'SUBMITTED'}">Chờ Tổ thẩm định</option>
+                    <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
+                </th:block>
+                <th:block th:unless="${isAdmin}">
+                    <option value="SUBMITTED" th:selected="${selectedStatus == 'SUBMITTED'}">Chờ Tổ duyệt (Đã nộp)</option>
+                    <option value="REVIEWED" th:selected="${selectedStatus == 'REVIEWED'}">Tổ đã duyệt xong</option>
+                    <option value="COUNCIL_REVIEWED" th:selected="${selectedStatus == 'COUNCIL_REVIEWED'}">BGH đã duyệt hoàn tất</option>
+                    <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả trạng thái</option>
+                </th:block>
             </select>
 
             <!-- Buttons -->
@@ -611,7 +623,7 @@
                     <thead>
                         <tr>
                             <th style="width: 135px; min-width: 135px; white-space: nowrap;">Kỳ đánh giá</th>
-                            <th style="width: 120px; min-width: 120px; text-align: center; white-space: nowrap;">Trạng thái</th>
+                            <th style="width: 130px; min-width: 130px; text-align: center; white-space: nowrap;">Trạng thái</th>
                             <th class="col-actions">Thao tác</th>
                             <th style="min-width: 180px; white-space: nowrap;">Giáo viên</th>
                             <th style="text-align: center; width: 95px; min-width: 95px; white-space: nowrap;" title="Cột (1): Số nhiệm vụ được giao">Được giao (1)</th>
@@ -642,34 +654,72 @@
                             <td style="text-align: center; white-space: nowrap;">
                                 <span th:if="${item.status.name() == 'SUBMITTED'}" class="badge"
                                       style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
-                                    Chờ duyệt
+                                    Chờ Tổ duyệt
                                 </span>
                                 <span th:if="${item.status.name() == 'REVIEWED'}" class="badge"
+                                      style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    Chờ BGH duyệt
+                                </span>
+                                <span th:if="${item.status.name() == 'COUNCIL_REVIEWED'}" class="badge"
                                       style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                    Đã duyệt
+                                    BGH đã duyệt
                                 </span>
                             </td>
 
                             <!-- 3. Thao tác (Không xuống dòng chữ) -->
-                            <td class="col-actions" style="text-align: center; width: 215px; min-width: 215px; white-space: nowrap !important;">
+                            <td class="col-actions" style="text-align: center; width: 225px; min-width: 225px; white-space: nowrap !important;">
                                 <div class="nq52-actions-group" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; flex-wrap: nowrap !important; white-space: nowrap !important;">
-                                    <a th:if="${item.status.name() == 'SUBMITTED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
-                                       class="btn btn-primary btn-sm" style="font-weight: 700; padding: 5px 12px; box-shadow: 0 1px 3px rgba(37,99,235,0.25); display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
-                                            <circle cx="11" cy="11" r="8"></circle>
-                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                        </svg>
-                                        <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Xét&nbsp;duyệt&nbsp;&amp;&nbsp;Ký</span>
-                                    </a>
-                                    <a th:if="${item.status.name() == 'REVIEWED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
-                                       class="btn btn-outline btn-sm" style="font-weight: 600; padding: 5px 12px; display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
-                                        <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Xem&nbsp;chi&nbsp;tiết</span>
-                                    </a>
+                                    <!-- Ban Giám Hiệu -->
+                                    <th:block th:if="${isAdmin}">
+                                        <a th:if="${item.status.name() == 'REVIEWED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                           class="btn btn-sm" style="background: #b91c1c; color: #ffffff; border: 1px solid #991b1b; font-weight: 700; padding: 5px 12px; box-shadow: 0 1px 3px rgba(185,28,28,0.25); display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                            </svg>
+                                            <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">BGH&nbsp;Duyệt&nbsp;&amp;&nbsp;Ký</span>
+                                        </a>
+                                        <a th:if="${item.status.name() == 'SUBMITTED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                           class="btn btn-outline btn-sm" style="color: #b45309; border-color: #fde68a; background: #fffbeb; font-weight: 600; padding: 5px 12px; display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                            </svg>
+                                            <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Xem&nbsp;(Chờ&nbsp;Tổ&nbsp;duyệt)</span>
+                                        </a>
+                                        <a th:if="${item.status.name() == 'COUNCIL_REVIEWED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                           class="btn btn-outline btn-sm" style="font-weight: 600; padding: 5px 12px; display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                            <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Xem&nbsp;chi&nbsp;tiết</span>
+                                        </a>
+                                    </th:block>
+
+                                    <!-- Tổ trưởng chuyên môn -->
+                                    <th:block th:unless="${isAdmin}">
+                                        <a th:if="${item.status.name() == 'SUBMITTED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                           class="btn btn-primary btn-sm" style="font-weight: 700; padding: 5px 12px; box-shadow: 0 1px 3px rgba(37,99,235,0.25); display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                                <circle cx="11" cy="11" r="8"></circle>
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            </svg>
+                                            <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Tổ&nbsp;duyệt&nbsp;&amp;&nbsp;Ký</span>
+                                        </a>
+                                        <a th:if="${item.status.name() != 'SUBMITTED'}" th:href="@{'/nq52/work-results/' + ${item.id}}"
+                                           class="btn btn-outline btn-sm" style="font-weight: 600; padding: 5px 12px; display: inline-flex !important; align-items: center !important; gap: 4px !important; white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                            <span style="white-space: nowrap !important; word-break: keep-all !important; display: inline-block;">Xem&nbsp;chi&nbsp;tiết</span>
+                                        </a>
+                                    </th:block>
+
                                     <!-- Nút In -->
                                     <a th:href="@{'/nq52/work-results/' + ${item.id} + '/print'}" target="_blank"
                                        class="btn btn-outline btn-sm" style="padding: 5px 8px; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; text-decoration: none;" title="In Mẫu 01TKNV">
@@ -684,9 +734,9 @@
 
                             <!-- 4. Thông tin Giáo viên -->
                             <td style="white-space: nowrap;">
-                                <div style="font-weight: 700; color: #0f172a;" th:text="${item.teacherNameSnapshot}">Nguyễn Văn An</div>
+                                <div style="font-weight: 700; color: #0f172a;" th:text="${item.teacherNameSnapshot}"></div>
                                 <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-                                    <span th:text="${item.user != null ? item.user.email : ''}">giaovien@school.edu.vn</span>
+                                    <span th:text="${item.user != null ? item.user.email : ''}"></span>
                                     <span style="margin: 0 4px;">•</span>
                                     <span style="font-weight: 600; color: #2563eb;" th:text="'Tổ ' + ${item.departmentNameSnapshot}">Tổ Toán học</span>
                                     <span style="margin: 0 4px;" th:if="${item.campusNameSnapshot != null}">•</span>
@@ -868,12 +918,17 @@
                                 </span>
                                 <span th:if="${item.status.name() == 'SUBMITTED'}" class="badge"
                                       style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap;">
-                                    Chờ duyệt
+                                    Chờ Tổ duyệt
                                 </span>
                                 <span th:if="${item.status.name() == 'REVIEWED'}" class="badge"
+                                      style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    Chờ BGH duyệt
+                                </span>
+                                <span th:if="${item.status.name() == 'COUNCIL_REVIEWED'}" class="badge"
                                       style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                    Đã duyệt
+                                    BGH đã duyệt
                                 </span>
                             </td>
 

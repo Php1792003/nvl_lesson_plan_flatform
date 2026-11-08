@@ -192,4 +192,58 @@ public class Nq52ExcelExportServiceTest {
             assertTrue(foundTeacher, "Teacher name should be present in Excel export");
         }
     }
+
+    @Test
+    public void testSigningDateNov04MatchesExactExecutionTime() throws Exception {
+        Nq52ExcelExportService service = new Nq52ExcelExportService();
+
+        Nq52WorkResult wr = new Nq52WorkResult();
+        wr.setId(11L);
+        wr.setEvaluationMonth(11);
+        wr.setEvaluationYear(2026);
+        wr.setTeacherNameSnapshot("Nguyễn Văn An");
+
+        Nq52WorkResultForm form = new Nq52WorkResultForm();
+        form.setId(11L);
+        form.setMonth(11);
+        form.setYear(2026);
+
+        // Giả lập giáo viên ký số vào ngày 04 tháng 11 năm 2026 lúc 07:00 sáng
+        Instant signedAtNov04 = Instant.parse("2026-11-04T00:00:00Z"); // 07:00 AM UTC+7
+
+        Nq52DigitalSignature sigTeacher = new Nq52DigitalSignature();
+        sigTeacher.setSigningRole(Nq52SigningRole.TEACHER);
+        sigTeacher.setSignerNameSnapshot("Nguyễn Văn An");
+        sigTeacher.setSignatureType(Nq52SignatureType.REMOTE_SIGNING);
+        sigTeacher.setCaProvider("VNPT_SMARTCA");
+        sigTeacher.setSignedAt(signedAtNov04);
+
+        byte[] bytes = service.generateWorkResultExcel(wr, form, List.of(sigTeacher));
+        assertNotNull(bytes);
+
+        try (Workbook wb = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
+            Sheet sheet = wb.getSheet("Mau_01TKNV");
+            assertNotNull(sheet);
+
+            // Kiểm tra Row 3 có đúng ngày 04 tháng 11 năm 2026
+            String row3Date = sheet.getRow(3).getCell(7).getStringCellValue();
+            assertTrue(row3Date.contains("ngày 04 tháng 11 năm 2026"),
+                    "Row 3 phải chứa ngày ký 'ngày 04 tháng 11 năm 2026', thực tế: " + row3Date);
+
+            // Kiểm tra hàng ngày ký phía trên chữ ký có chứa ngày 04 tháng 11 năm 2026 ở cột 13-17
+            boolean foundDateAboveTeacher = false;
+            for (int r = 16; r <= sheet.getLastRowNum(); r++) {
+                var row = sheet.getRow(r);
+                if (row == null) continue;
+                var cell = row.getCell(13);
+                if (cell != null && cell.getCellType() == org.apache.poi.ss.usermodel.CellType.STRING) {
+                    if (cell.getStringCellValue().contains("ngày 04 tháng 11 năm 2026")) {
+                        foundDateAboveTeacher = true;
+                        break;
+                    }
+                }
+            }
+            assertTrue(foundDateAboveTeacher, "Phía trên chữ ký cá nhân phải có dòng ngày ký 'ngày 04 tháng 11 năm 2026'");
+        }
+    }
 }

@@ -14,6 +14,7 @@ public class Nq52WorkResultForm {
     private String action = "SAVE"; // SAVE, SUBMIT, EXPORT
 
     private List<Nq52WorkResultTaskItem> tasks = new ArrayList<>();
+    private String tasksJson;
 
     // Bảng thống kê tổng hợp
     private int totalAssigned = 0;
@@ -33,6 +34,7 @@ public class Nq52WorkResultForm {
 
     private String summaryNotes;
     private String reviewerNotes;
+    private String bghNotes;
 
     public Nq52WorkResultForm() {}
 
@@ -59,6 +61,9 @@ public class Nq52WorkResultForm {
 
     public List<Nq52WorkResultTaskItem> getTasks() { return tasks; }
     public void setTasks(List<Nq52WorkResultTaskItem> tasks) { this.tasks = tasks; }
+
+    public String getTasksJson() { return tasksJson; }
+    public void setTasksJson(String tasksJson) { this.tasksJson = tasksJson; }
 
     public int getTotalAssigned() { return totalAssigned; }
     public void setTotalAssigned(int totalAssigned) { this.totalAssigned = totalAssigned; }
@@ -101,5 +106,8 @@ public class Nq52WorkResultForm {
 
     public String getReviewerNotes() { return reviewerNotes; }
     public void setReviewerNotes(String reviewerNotes) { this.reviewerNotes = reviewerNotes; }
+
+    public String getBghNotes() { return bghNotes; }
+    public void setBghNotes(String bghNotes) { this.bghNotes = bghNotes; }
 }
 

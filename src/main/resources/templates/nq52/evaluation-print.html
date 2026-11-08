@@ -171,7 +171,7 @@
     <!-- Teacher Info -->
     <div class="info-section">
         <div class="info-row">
-            1. Họ và tên: <strong th:text="${eval.teacherNameSnapshot}">Trần Đình Quân</strong>
+            1. Họ và tên: <strong th:text="${eval.teacherNameSnapshot}"></strong>
         </div>
         <div class="info-row">
             2. Chức danh nghề nghiệp / Chức vụ: <span th:text="${eval.positionTitle != null ? eval.positionTitle : 'Giáo viên'}">Giáo viên</span>
@@ -373,12 +373,13 @@
         </p>
     </div>
 
-    <!-- Council / BGH Comments -->
+    <!-- Competent Authority Conclusion (Ban Giám Hiệu) -->
     <div style="margin-top: 15px; border: 1px solid #000; padding: 10px 14px; font-size: 12pt;">
-        <strong>Ý kiến nhận xét, đánh giá của Hội đồng thi đua, khen thưởng (Ban Giám Hiệu):</strong>
-        <p style="margin: 6px 0 0 0; font-style: italic; min-height: 40px;" th:text="${eval.bghNotes != null and eval.bghNotes != '' ? eval.bghNotes : '(Hội đồng thi đua, khen thưởng chưa ghi ý kiến)'}">
-            Đồng chí hoàn thành tốt nhiệm vụ được giao trong tháng.
-        </p>
+        <div style="font-weight: bold; text-transform: uppercase; margin-bottom: 8px;">KẾT LUẬN CỦA CƠ QUAN CÓ THẨM QUYỀN</div>
+        <div style="font-size: 12pt;">
+            <strong>Xếp loại: </strong>
+            <span style="font-weight: bold;" th:text="${eval.bghClassification != null and eval.bghClassification != '' ? eval.bghClassification : '.....................................................................................'}">Hoàn thành xuất sắc nhiệm vụ</span>
+        </div>
     </div>
 
     <!-- Signature Block with Digital Stamps -->
@@ -391,14 +392,14 @@
                     <div style="font-weight: bold; color: #1d4ed8;">ĐÃ KÝ SỐ ĐIỆN TỬ</div>
                     <img th:if="${sigTeacher.signatureImageBase64 != null and !sigTeacher.signatureImageBase64.isBlank()}" 
                          th:src="${sigTeacher.signatureImageBase64}" alt="Chữ ký số" style="max-height: 50px; max-width: 160px; display: block; margin: 4px auto;">
-                    <div style="font-weight: bold; color: #1e3a8a;" th:text="${sigTeacher.signerName}">Nguyễn Văn An</div>
-                    <div>Dịch vụ: <span th:text="${sigTeacher.caProvider}">VNPT SmartCA</span></div>
-                    <div>Ngày ký: <span th:text="${sigTeacher.signedAtFormatted}">01/11/2026 10:15</span></div>
+                    <div style="font-weight: bold; color: #1e3a8a;" th:text="${sigTeacher.signerName}"></div>
+                    <div>Dịch vụ: <span th:text="${sigTeacher.caProvider}"></span></div>
+                    <div>Ngày ký: <span th:text="${sigTeacher.signedAtFormatted}"></span></div>
                     <div style="margin-top: 4px; font-weight: bold; color: #15803d; font-size: 8.5pt;">Xác thực Realtime: Hợp lệ &amp; Toàn vẹn</div>
                 </div>
                 <div th:unless="${sigTeacher != null}">
                     <div class="sign-space"></div>
-                    <strong th:text="${eval.teacherNameSnapshot}">Trần Đình Quân</strong>
+                    <strong th:text="${eval.teacherNameSnapshot}"></strong>
                 </div>
             </td>
             <td style="vertical-align: top; width: 33%;">

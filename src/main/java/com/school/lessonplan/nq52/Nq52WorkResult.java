@@ -95,7 +95,7 @@ public class Nq52WorkResult {
     @Column(name = "tasks_data_json", columnDefinition = "NVARCHAR(MAX)")
     private String tasksDataJson;
 
-    // === Đánh giá của Tổ trưởng / BGH ===
+    // === Đánh giá thẩm định của Tổ trưởng chuyên môn ===
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewer_id")
     private User reviewer;
@@ -111,6 +111,20 @@ public class Nq52WorkResult {
 
     @Column(name = "reviewed_at")
     private Instant reviewedAt;
+
+    // === Đánh giá, phê duyệt chính thức của Ban Giám Hiệu ===
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bgh_reviewer_id")
+    private User bghReviewer;
+
+    @Column(name = "bgh_reviewer_name_snapshot", length = 400)
+    private String bghReviewerNameSnapshot;
+
+    @Column(name = "bgh_notes", length = 2000)
+    private String bghNotes;
+
+    @Column(name = "bgh_reviewed_at")
+    private Instant bghReviewedAt;
 
     // === Thông tin file Excel lưu trữ ===
     @Column(name = "exported_file_name", length = 500)
@@ -244,6 +258,18 @@ public class Nq52WorkResult {
 
     public Instant getReviewedAt() { return reviewedAt; }
     public void setReviewedAt(Instant reviewedAt) { this.reviewedAt = reviewedAt; }
+
+    public User getBghReviewer() { return bghReviewer; }
+    public void setBghReviewer(User bghReviewer) { this.bghReviewer = bghReviewer; }
+
+    public String getBghReviewerNameSnapshot() { return bghReviewerNameSnapshot; }
+    public void setBghReviewerNameSnapshot(String bghReviewerNameSnapshot) { this.bghReviewerNameSnapshot = bghReviewerNameSnapshot; }
+
+    public String getBghNotes() { return bghNotes; }
+    public void setBghNotes(String bghNotes) { this.bghNotes = bghNotes; }
+
+    public Instant getBghReviewedAt() { return bghReviewedAt; }
+    public void setBghReviewedAt(Instant bghReviewedAt) { this.bghReviewedAt = bghReviewedAt; }
 
     public String getExportedFileName() { return exportedFileName; }
     public void setExportedFileName(String exportedFileName) { this.exportedFileName = exportedFileName; }

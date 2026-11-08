@@ -116,8 +116,9 @@ public class Nq52EvaluationController {
         // Cấp 2: Tổ trưởng đánh giá (Tổ trưởng phụ trách khi phiếu đã nộp SUBMITTED hoặc REVIEWED)
         boolean canReview = !isAdmin && evaluationService.canReview(user, eval) && eval.getStatus() != Nq52Status.DRAFT;
 
-        // Cấp 3: Ban Giám Hiệu đánh giá chính thức của Hội đồng thi đua, khen thưởng (CHỈ Ban Giám Hiệu)
-        boolean canBghReview = isAdmin && eval.getStatus() != Nq52Status.DRAFT;
+        // Cấp 3: Ban Giám Hiệu đánh giá chính thức của Hội đồng thi đua, khen thưởng
+        // Ban Giám Hiệu là cấp duyệt cuối cùng, chỉ duyệt khi Tổ trưởng đã hoàn tất thẩm định (REVIEWED hoặc COUNCIL_REVIEWED)
+        boolean canBghReview = isAdmin && (eval.getStatus() == Nq52Status.REVIEWED || eval.getStatus() == Nq52Status.COUNCIL_REVIEWED);
 
         Nq52EvaluationForm form = evaluationService.populateForm(eval);
 
@@ -291,8 +292,11 @@ public class Nq52EvaluationController {
             deptId = (user.getDepartment() != null) ? user.getDepartment().getId() : null;
         }
 
-        // Mặc định ở site duyệt phiếu chỉ hiển thị danh sách CẦN DUYỆT (SUBMITTED)
-        String selectedStatus = (statusStr != null && !statusStr.isBlank()) ? statusStr.toUpperCase() : "SUBMITTED";
+        // Mặc định ở site duyệt phiếu chỉ hiển thị danh sách CẦN DUYỆT:
+        // - Ban Giám Hiệu duyệt cuối cùng: chỉ hiển thị các đánh giá cần duyệt khi Tổ trưởng đã duyệt (REVIEWED)
+        // - Tổ trưởng: Cần duyệt là các phiếu giáo viên đã nộp (SUBMITTED)
+        String defaultStatus = isAdmin ? "REVIEWED" : "SUBMITTED";
+        String selectedStatus = (statusStr != null && !statusStr.isBlank()) ? statusStr.toUpperCase() : defaultStatus;
 
         Nq52Status filterStatus = null;
         if ("SUBMITTED".equals(selectedStatus)) {
@@ -313,11 +317,30 @@ public class Nq52EvaluationController {
         List<Campus> campuses = campusRepository.findAll();
 
         List<Nq52Evaluation> allDept = evaluationService.getDepartmentEvaluations(user, campusId, deptId, null, null, null);
-        long pendingReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.SUBMITTED).count();
-        long completedReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED || e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
         long councilReviewedCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
         long draftReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.DRAFT).count();
-        long totalSubmittedCount = pendingReviewCount + completedReviewCount;
+
+        long pendingReviewCount;
+        long completedReviewCount;
+        long totalSubmittedCount;
+
+        if (isAdmin) {
+            // Đối với Ban Giám Hiệu:
+            // - Cần duyệt: Các đánh giá Tổ trưởng đã duyệt xong (REVIEWED)
+            // - Đã đánh giá / Hoàn thành: Các đánh giá Ban Giám Hiệu đã duyệt chính thức (COUNCIL_REVIEWED)
+            // - Tổng hồ sơ tiếp nhận: Hồ sơ đã qua cấp Tổ (REVIEWED + COUNCIL_REVIEWED)
+            pendingReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED).count();
+            completedReviewCount = councilReviewedCount;
+            totalSubmittedCount = pendingReviewCount + completedReviewCount;
+        } else {
+            // Đối với Tổ trưởng:
+            // - Cần duyệt: Các phiếu giáo viên đã nộp chờ Tổ trưởng duyệt (SUBMITTED)
+            // - Đã đánh giá: Các phiếu Tổ trưởng đã hoàn tất (REVIEWED hoặc COUNCIL_REVIEWED)
+            // - Tổng hồ sơ: SUBMITTED + REVIEWED + COUNCIL_REVIEWED
+            pendingReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.SUBMITTED).count();
+            completedReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED || e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
+            totalSubmittedCount = pendingReviewCount + completedReviewCount;
+        }
 
         // Xác định Điểm trường / Phân hiệu đang xem
         Campus currentViewingCampus = null;
@@ -331,7 +354,7 @@ public class Nq52EvaluationController {
         int currentYear = LocalDate.now().getYear();
         List<Integer> years = List.of(currentYear + 1, currentYear, currentYear - 1, currentYear - 2);
 
-        model.addAttribute("pageTitle", "Duyệt phiếu đánh giá NQ 52 cấp Tổ");
+        model.addAttribute("pageTitle", isAdmin ? "Ban Giám Hiệu duyệt đánh giá NQ 52" : "Duyệt phiếu đánh giá NQ 52 cấp Tổ");
         model.addAttribute("evaluations", evaluations);
         model.addAttribute("departments", departments);
         model.addAttribute("campuses", campuses);

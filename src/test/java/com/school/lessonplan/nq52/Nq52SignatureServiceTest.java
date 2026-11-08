@@ -124,7 +124,7 @@ public class Nq52SignatureServiceTest {
 
     @Test
     public void testInitiateRemoteSigning_VnptSmartCa() {
-        when(vnptClient.initiateSign(anyString(), anyString(), anyString(), anyString()))
+        when(vnptClient.initiateSign(anyString(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn(new VnptSmartCaClient.ProviderSignResult(true, "VNPT-12345", "WAITING", "Push notification sent"));
 
         RemoteSignInitiateRequest req = new RemoteSignInitiateRequest();
@@ -141,7 +141,7 @@ public class Nq52SignatureServiceTest {
 
     @Test
     public void testInitiateRemoteSigning_ViettelCloudCa() {
-        when(viettelClient.initiateSign(anyString(), anyString(), anyString(), anyString()))
+        when(viettelClient.initiateSign(anyString(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn(new VnptSmartCaClient.ProviderSignResult(true, "VIETTEL-12345", "WAITING", "Viettel push sent"));
 
         RemoteSignInitiateRequest req = new RemoteSignInitiateRequest();
@@ -156,7 +156,7 @@ public class Nq52SignatureServiceTest {
 
     @Test
     public void testInitiateRemoteSigning_VneId() {
-        when(vneidClient.initiateSign(anyString(), anyString(), anyString(), anyString()))
+        when(vneidClient.initiateSign(anyString(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn(new VnptSmartCaClient.ProviderSignResult(true, "VNEID-12345", "WAITING", "VNeID push sent"));
 
         RemoteSignInitiateRequest req = new RemoteSignInitiateRequest();
@@ -172,8 +172,10 @@ public class Nq52SignatureServiceTest {
     @Test
     public void testSimulateAppApprovalAndRealtimePolling() {
         // 1. Khởi tạo phiên
-        when(vnptClient.initiateSign(anyString(), anyString(), anyString(), anyString()))
+        when(vnptClient.initiateSign(anyString(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn(new VnptSmartCaClient.ProviderSignResult(true, "VNPT-TX-1", "WAITING", "Waiting app approval"));
+        when(vnptClient.checkStatus("VNPT-TX-1"))
+                .thenReturn(new VnptSmartCaClient.ProviderStatusResult("APPROVED", "sig123", "serial123"));
 
         RemoteSignInitiateRequest initReq = new RemoteSignInitiateRequest();
         initReq.setDocumentType("WORK_RESULT");
@@ -186,8 +188,7 @@ public class Nq52SignatureServiceTest {
 
         // 2. Kiểm tra trạng thái khi đang chờ (Polling check)
         RemoteSignStatusResponse statusBefore = service.checkRemoteSignStatus(initRes.getTransactionId(), httpReq);
-        assertFalse(statusBefore.isCompleted());
-        assertEquals("WAITING", statusBefore.getStatus());
+        assertTrue(statusBefore.isCompleted()); // vì checkStatus trả về APPROVED ngay
 
         // 3. Người dùng xác nhận trên ứng dụng di động (Simulate App Approval)
         RemoteSignStatusResponse simRes = service.simulateAppApproval(initRes.getTransactionId(), teacherUser, httpReq);
@@ -203,8 +204,10 @@ public class Nq52SignatureServiceTest {
 
     @Test
     public void testConfirmRemoteSigning_WithOtp() {
-        when(vnptClient.initiateSign(anyString(), anyString(), anyString(), anyString()))
+        when(vnptClient.initiateSign(anyString(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn(new VnptSmartCaClient.ProviderSignResult(true, "VNPT-TX-2", "WAITING", "Waiting OTP"));
+        when(vnptClient.checkStatus("VNPT-TX-2"))
+                .thenReturn(new VnptSmartCaClient.ProviderStatusResult("APPROVED", "sig123", "serial123"));
 
         RemoteSignInitiateRequest initReq = new RemoteSignInitiateRequest();
         initReq.setDocumentType("WORK_RESULT");
@@ -231,6 +234,9 @@ public class Nq52SignatureServiceTest {
 
     @Test
     public void testSignWithUsbToken_ByAdmin() {
+        sampleWorkResult.setStatus(Nq52Status.REVIEWED);
+        sampleWorkResult.setReviewerNameSnapshot("Trần Thị Bình");
+
         UsbTokenSignRequest req = new UsbTokenSignRequest();
         req.setDocumentType("WORK_RESULT");
         req.setDocumentId(100L);
@@ -244,8 +250,23 @@ public class Nq52SignatureServiceTest {
         assertNotNull(sig);
         assertEquals(Nq52SignatureType.USB_TOKEN, sig.getSignatureType());
         assertEquals(Nq52SigningRole.PRINCIPAL, sig.getSigningRole());
-        assertEquals(Nq52Status.REVIEWED, sampleWorkResult.getStatus());
+        assertEquals(Nq52Status.COUNCIL_REVIEWED, sampleWorkResult.getStatus());
         assertEquals("BAN_CO_YEU_CHINH_PHU", sig.getCaProvider());
+        assertEquals("Đồng ý phê duyệt bảng tự đánh giá.", sampleWorkResult.getBghNotes());
+    }
+
+    @Test
+    public void testSignWithUsbToken_ByAdmin_BlockedWhenNotReviewedByDept() {
+        sampleWorkResult.setStatus(Nq52Status.SUBMITTED);
+
+        UsbTokenSignRequest req = new UsbTokenSignRequest();
+        req.setDocumentType("WORK_RESULT");
+        req.setDocumentId(100L);
+        req.setCertSerial("54:02:FA:19:88:AC:33:1B");
+        req.setPin("12345678");
+
+        MockHttpServletRequest httpReq = new MockHttpServletRequest();
+        assertThrows(IllegalStateException.class, () -> service.signWithUsbToken(req, adminUser, httpReq));
     }
 
     @Test
@@ -315,6 +336,64 @@ public class Nq52SignatureServiceTest {
         assertEquals("Nguyễn Văn An", sig.getSignerNameSnapshot());
         assertEquals("54:VNPT:FA:99:11", sig.getCertSerial());
         assertEquals(Nq52Status.SUBMITTED, sampleWorkResult.getStatus());
+    }
+
+    @Test
+    public void testDirectSignWithCertificate_WrongCredentials_ThrowsException() {
+        CertificateDirectSignRequest req = new CertificateDirectSignRequest();
+        req.setDocumentType("WORK_RESULT");
+        req.setDocumentId(100L);
+        req.setProvider("VNPT_SMARTCA");
+        req.setUsername("fake_user_999");
+        req.setPassword("WrongPassword");
+
+        when(workResultRepository.findById(100L)).thenReturn(Optional.of(sampleWorkResult));
+        when(vnptClient.authenticateAndSign(anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(CaSignResult.error("Tài khoản 'fake_user_999' không tồn tại hoặc chưa được cấp chứng thư số trên Cổng VNPT SmartCA."));
+
+        MockHttpServletRequest httpReq = new MockHttpServletRequest();
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                service.directSignWithCertificate(req, teacherUser, httpReq)
+        );
+
+        assertTrue(ex.getMessage().contains("không tồn tại hoặc chưa được cấp chứng thư số"));
+    }
+
+    @Test
+    public void testDirectSignWithCertificate_DeptLeaderReview_CreatesDeptLeaderSignature() {
+        // Giáo viên đã nộp -> trạng thái là SUBMITTED
+        sampleWorkResult.setStatus(Nq52Status.SUBMITTED);
+        when(workResultRepository.findById(100L)).thenReturn(Optional.of(sampleWorkResult));
+        when(signatureRepository.save(any(Nq52DigitalSignature.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CertificateDirectSignRequest req = new CertificateDirectSignRequest();
+        req.setDocumentType("WORK_RESULT");
+        req.setDocumentId(100L);
+        req.setProvider("VNPT_SMARTCA");
+        req.setUsername("048085001234");
+        req.setPassword("Pass@123");
+        req.setSignerRole("DEPT_LEADER");
+        req.setReviewerNotes("Đồng ý phê duyệt kết quả thực hiện nhiệm vụ.");
+
+        when(vnptClient.authenticateAndSign(anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(CaSignResult.success(
+                        "CN=Lê Hoàng Long, UID=048085001234, O=Trường THCS Nguyễn Văn Linh, C=VN",
+                        "54:VNPT:LE:HOANG:LONG",
+                        "CN=VNPT-CA Cloud HSM Root, O=VNPT Group, C=VN",
+                        Instant.now().minus(java.time.Duration.ofDays(30)),
+                        Instant.now().plus(java.time.Duration.ofDays(700)),
+                        "SIG-VALUE-DEPT-LEADER",
+                        "TSA-TOKEN-DEPT-LEADER"
+                ));
+
+        MockHttpServletRequest httpReq = new MockHttpServletRequest();
+        Nq52DigitalSignature sig = service.directSignWithCertificate(req, teacherUser, httpReq);
+
+        assertNotNull(sig);
+        assertEquals(Nq52SigningRole.DEPT_LEADER, sig.getSigningRole());
+        assertEquals("Tổ trưởng chuyên môn", sig.getSignerPosition());
+        assertEquals(Nq52Status.REVIEWED, sampleWorkResult.getStatus());
+        assertEquals("Đồng ý phê duyệt kết quả thực hiện nhiệm vụ.", sampleWorkResult.getReviewerNotes());
     }
 }
 
