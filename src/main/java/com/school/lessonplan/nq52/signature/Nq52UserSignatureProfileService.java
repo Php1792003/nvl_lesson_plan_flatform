@@ -57,10 +57,6 @@ public class Nq52UserSignatureProfileService {
         Optional<Nq52UserSignatureProfile> existing = profileRepository.findByUserId(user.getId());
         if (existing.isPresent()) {
             Nq52UserSignatureProfile p = existing.get();
-            // Nếu chưa liên kết tài khoản ký số thì tuyệt đối không hiển thị bất kỳ chữ ký mẫu nào
-            if (p.getCertSerial() == null || p.getCertSerial().isBlank()) {
-                p.setSignatureImageBase64("");
-            }
             if (p.getAutoAttachSignature() == null) {
                 p.setAutoAttachSignature(true);
             }

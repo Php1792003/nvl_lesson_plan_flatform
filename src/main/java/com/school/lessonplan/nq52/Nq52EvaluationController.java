@@ -5,6 +5,7 @@ import com.school.lessonplan.campus.CampusRepository;
 import com.school.lessonplan.department.Department;
 import com.school.lessonplan.department.DepartmentRepository;
 import com.school.lessonplan.nq52.dto.Nq52EvaluationForm;
+import com.school.lessonplan.nq52.dto.Nq52EvaluationSummaryDto;
 import com.school.lessonplan.security.CurrentUser;
 import com.school.lessonplan.user.User;
 import com.school.lessonplan.user.UserRepository;
@@ -32,17 +33,20 @@ public class Nq52EvaluationController {
     private final DepartmentRepository departmentRepository;
     private final CampusRepository campusRepository;
     private final com.school.lessonplan.nq52.signature.Nq52SignatureService signatureService;
+    private final Nq52ExcelExportService excelExportService;
 
     public Nq52EvaluationController(Nq52EvaluationService evaluationService,
                                     UserRepository userRepository,
                                     DepartmentRepository departmentRepository,
                                     CampusRepository campusRepository,
-                                    com.school.lessonplan.nq52.signature.Nq52SignatureService signatureService) {
+                                    com.school.lessonplan.nq52.signature.Nq52SignatureService signatureService,
+                                    Nq52ExcelExportService excelExportService) {
         this.evaluationService = evaluationService;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
         this.campusRepository = campusRepository;
         this.signatureService = signatureService;
+        this.excelExportService = excelExportService;
     }
 
     /**
@@ -402,6 +406,102 @@ public class Nq52EvaluationController {
         model.addAttribute("docId", id);
 
         return "nq52/evaluation-print";
+    }
+
+    /**
+     * Màn hình tổng hợp kết quả đánh giá, xếp loại NQ52 dành riêng cho Ban Giám Hiệu
+     */
+    @GetMapping("/summary")
+    public String evaluationSummary(@AuthenticationPrincipal CurrentUser currentUser,
+                                    @RequestParam(name = "month", required = false) Integer month,
+                                    @RequestParam(name = "year", required = false) Integer year,
+                                    @RequestParam(name = "campusId", required = false) Long campusId,
+                                    @RequestParam(name = "departmentId", required = false) Long departmentId,
+                                    Model model) {
+        User user = getUser(currentUser);
+        if (!evaluationService.isAdmin(user)) {
+            throw new AccessDeniedException("Chỉ Ban Giám Hiệu mới có quyền truy cập trang tổng hợp xếp loại NQ52.");
+        }
+
+        int targetMonth = (month != null && month >= 1 && month <= 12) ? month : LocalDate.now().getMonthValue();
+        int targetYear = (year != null && year >= 2020) ? year : LocalDate.now().getYear();
+
+        Nq52EvaluationSummaryDto summary = evaluationService.getSummaryReport(targetMonth, targetYear, campusId, departmentId, user);
+
+        model.addAttribute("summary", summary);
+        model.addAttribute("selectedMonth", targetMonth);
+        model.addAttribute("selectedYear", targetYear);
+        model.addAttribute("selectedCampusId", campusId);
+        model.addAttribute("selectedDepartmentId", departmentId);
+        model.addAttribute("departments", departmentRepository.findAll());
+        model.addAttribute("campuses", campusRepository.findAll());
+        model.addAttribute("isAdmin", true);
+        model.addAttribute("pageTitle", "Tổng hợp xếp loại NQ 52");
+
+        return "nq52/summary";
+    }
+
+    /**
+     * Xuất file Excel tổng hợp đánh giá xếp loại theo đúng định dạng mẫu
+     */
+    @GetMapping("/summary/export-excel")
+    public ResponseEntity<byte[]> exportSummaryExcel(@AuthenticationPrincipal CurrentUser currentUser,
+                                                     @RequestParam(name = "month", required = false) Integer month,
+                                                     @RequestParam(name = "year", required = false) Integer year,
+                                                     @RequestParam(name = "campusId", required = false) Long campusId,
+                                                     @RequestParam(name = "departmentId", required = false) Long departmentId) {
+        User user = getUser(currentUser);
+        if (!evaluationService.isAdmin(user)) {
+            throw new AccessDeniedException("Chỉ Ban Giám Hiệu mới có quyền xuất file tổng hợp xếp loại NQ52.");
+        }
+
+        int targetMonth = (month != null && month >= 1 && month <= 12) ? month : LocalDate.now().getMonthValue();
+        int targetYear = (year != null && year >= 2020) ? year : LocalDate.now().getYear();
+
+        Nq52EvaluationSummaryDto summary = evaluationService.getSummaryReport(targetMonth, targetYear, campusId, departmentId, user);
+        byte[] excelBytes = excelExportService.generateEvaluationSummaryExcel(summary);
+
+        StringBuilder filenameBuilder = new StringBuilder("Tong_hop_xep_loai_NQ52_Thang_")
+                .append(targetMonth).append("_").append(targetYear);
+        if (summary.getDepartmentName() != null && !summary.getDepartmentName().isBlank()) {
+            filenameBuilder.append("_").append(evaluationService.removeAccents(summary.getDepartmentName()).replaceAll("[^a-zA-Z0-9_]", "_"));
+        }
+        if (summary.getCampusName() != null && !summary.getCampusName().isBlank()) {
+            filenameBuilder.append("_").append(evaluationService.removeAccents(summary.getCampusName()).replaceAll("[^a-zA-Z0-9_]", "_"));
+        }
+        filenameBuilder.append(".xlsx");
+        String filename = filenameBuilder.toString();
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + encodedFilename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelBytes);
+    }
+
+    /**
+     * Xem bản in A4 tổng hợp đánh giá xếp loại NQ52
+     */
+    @GetMapping("/summary/print")
+    public String printSummary(@AuthenticationPrincipal CurrentUser currentUser,
+                               @RequestParam(name = "month", required = false) Integer month,
+                               @RequestParam(name = "year", required = false) Integer year,
+                               @RequestParam(name = "campusId", required = false) Long campusId,
+                               @RequestParam(name = "departmentId", required = false) Long departmentId,
+                               Model model) {
+        User user = getUser(currentUser);
+        if (!evaluationService.isAdmin(user)) {
+            throw new AccessDeniedException("Chỉ Ban Giám Hiệu mới có quyền in bảng tổng hợp xếp loại NQ52.");
+        }
+
+        int targetMonth = (month != null && month >= 1 && month <= 12) ? month : LocalDate.now().getMonthValue();
+        int targetYear = (year != null && year >= 2020) ? year : LocalDate.now().getYear();
+
+        Nq52EvaluationSummaryDto summary = evaluationService.getSummaryReport(targetMonth, targetYear, campusId, departmentId, user);
+        model.addAttribute("summary", summary);
+        model.addAttribute("pageTitle", "In Tổng hợp xếp loại NQ52");
+
+        return "nq52/summary-print";
     }
 
     private com.school.lessonplan.nq52.signature.dto.SignatureItemDto getSigByRole(

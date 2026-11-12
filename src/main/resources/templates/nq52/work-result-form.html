@@ -535,6 +535,11 @@
                                     th:onclick="'directSignWorkResult(' + ${wr.id} + ', \'PRINCIPAL\')'">
                                     <span>Ký SmartCA BGH</span>
                                 </button>
+                                <button type="button" class="btn btn-sm btn-link"
+                                    style="color: #dc2626; font-size: 11.5px; text-decoration: none; padding: 2px 6px; display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;"
+                                    onclick="submitBghReviewAction('REJECT')">
+                                    <i class="fas fa-undo"></i> Yêu cầu chỉnh sửa lại
+                                </button>
                             </div>
                             <div th:if="${sigPrincipal == null and isWaitingDeptReview}"
                                 style="margin-top: 24px; font-size: 12px; color: #b45309; font-weight: 600;">
@@ -715,78 +720,7 @@
                         </div>
                     </div>
 
-                    <!-- Card 2: Ban Giám Hiệu xét duyệt chính thức & ký số (khi hồ sơ ở trạng thái REVIEWED) -->
-                    <div th:if="${canBghReview and wr.status.name() == 'REVIEWED'}" class="card"
-                        style="margin-top: 24px; border: 2px solid #b91c1c; border-radius: var(--radius-md, 12px); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                        <div
-                            style="background: #991b1b; color: #ffffff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
-                            <div
-                                style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                </svg>
-                                <span>XÉT DUYỆT &amp; KÝ DUYỆT CHÍNH THỨC CỦA BAN GIÁM HIỆU</span>
-                            </div>
-                            <span class="badge"
-                                style="background: rgba(255,255,255,0.25); color: #ffffff; font-size: 12px; padding: 4px 10px; border-radius: 20px;">
-                                Cấp 3: Phê duyệt cuối cùng
-                            </span>
-                        </div>
-                        <div style="padding: 20px; background: #ffffff;">
-                            <!-- Ý kiến thẩm định trước đó của Tổ trưởng -->
-                            <div style="margin-bottom: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px;">
-                                <div style="font-weight: 700; font-size: 13px; color: #15803d; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                    <span>Tổ trưởng chuyên môn (<strong th:text="${wr.reviewerNameSnapshot}">Lê Hoàng Long</strong>) đã thẩm định:</span>
-                                    <span th:if="${wr.reviewedAt != null}" style="font-weight: 400; font-size: 12px; color: #64748b;" th:text="'(lúc ' + ${#temporals.format(wr.reviewedAt, 'dd/MM/yyyy HH:mm')} + ')'"></span>
-                                </div>
-                                <div style="font-size: 13px; color: #1e293b; font-style: italic;" th:text="${wr.reviewerNotes != null ? wr.reviewerNotes : 'Đã xác nhận hoàn thành tốt nhiệm vụ được giao.'}"></div>
-                            </div>
 
-                            <div class="form-group" style="margin-bottom: 16px;">
-                                <label style="font-size: 13.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
-                                    Ý kiến nhận xét, kết luận của Ban Giám Hiệu:
-                                </label>
-                                <textarea id="bghNotesField" class="form-control" rows="3"
-                                    style="font-size: 13.5px; border-radius: 8px;"
-                                    placeholder="Ban Giám Hiệu ghi nhận xét, kết luận đánh giá chính thức..."
-                                    th:text="${wr.bghNotes}"></textarea>
-                            </div>
-                            <div
-                                style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
-                                <button type="button" class="btn btn-outline"
-                                    style="color: #dc2626; border-color: #fca5a5; background: #fef2f2; font-weight: 600; padding: 8px 18px;"
-                                    onclick="submitBghReviewAction('REJECT')">
-                                    <i class="fas fa-undo"></i> Yêu cầu chỉnh sửa lại
-                                </button>
-
-                                <!-- Ký SmartCA BGH -->
-                                <button type="button" class="btn btn-outline"
-                                    style="font-weight: 600; padding: 8px 18px; color: #b91c1c; border-color: #fca5a5; background: #fff5f5; display: inline-flex; align-items: center; gap: 6px;"
-                                    th:onclick="'directSignWorkResult(' + ${wr.id} + ', \'PRINCIPAL\')'">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 20h9" />
-                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                                    </svg>
-                                    <span>Ký số BGH (SmartCA)</span>
-                                </button>
-
-                                <!-- Ký USB Token BGH -->
-                                <button type="button" class="btn"
-                                    style="background: #b91c1c; color: #ffffff; border: 1px solid #991b1b; font-weight: 700; padding: 8px 22px; box-shadow: 0 1px 3px rgba(185,28,28,0.25); display: inline-flex; align-items: center; gap: 6px;"
-                                    th:onclick="'openUsbTokenModal(\'WORK_RESULT\', ' + ${wr.id} + ')'">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                    </svg>
-                                    <span>Ký số USB Token BGH</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Card 3: Thông báo khi Tổ trưởng đã duyệt, chờ Ban Giám Hiệu phê duyệt chính thức -->
                     <div th:if="${wr.status.name() == 'REVIEWED' and !canBghReview}" class="alert"
@@ -1202,6 +1136,9 @@
                     if (!confirm('Xác nhận KÝ DUYỆT CHÍNH THỨC và dán chữ ký số Ban Giám Hiệu cho Bảng tự đánh giá của giáo viên?')) {
                         return;
                     }
+                    // Ban Giám Hiệu chỉ cần ký xác nhận ký số là xong, mở trực tiếp modal ký số
+                    openRemoteSigningModal('WORK_RESULT', docId, null, 'PRINCIPAL');
+                    return;
                 } else if (isDeptLeader) {
                     if (!confirm('Xác nhận KÝ DUYỆT và dán chữ ký số cấp Tổ cho Bảng tự đánh giá của giáo viên?')) {
                         return;
@@ -1336,12 +1273,14 @@
             }
 
             function submitBghReviewAction(action) {
+                let notes = '';
                 if (action === 'REJECT') {
-                    if (!confirm('Bạn có chắc chắn muốn Ban Giám Hiệu trả lại bảng tự đánh giá để giáo viên bổ sung, chỉnh sửa?')) return;
+                    const reason = prompt('Nhập lý do yêu cầu giáo viên chỉnh sửa lại (nếu có):', '');
+                    if (reason === null) return;
+                    notes = reason;
                 } else {
                     if (!confirm('Xác nhận Ban Giám Hiệu KÝ DUYỆT CHÍNH THỨC bảng tự đánh giá kết quả của giáo viên?')) return;
                 }
-                const notes = document.getElementById('bghNotesField') ? document.getElementById('bghNotesField').value : '';
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = window.location.pathname.replace(/\/$/, '') + '/review';

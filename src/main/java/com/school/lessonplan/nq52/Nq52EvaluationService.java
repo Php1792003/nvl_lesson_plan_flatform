@@ -2,13 +2,22 @@ package com.school.lessonplan.nq52;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.school.lessonplan.campus.CampusRepository;
 import com.school.lessonplan.config.AppProperties;
 import com.school.lessonplan.department.Department;
 import com.school.lessonplan.department.DepartmentRepository;
 import com.school.lessonplan.nq52.dto.Nq52EvaluationForm;
+import com.school.lessonplan.nq52.dto.Nq52EvaluationSummaryDto;
+import com.school.lessonplan.nq52.dto.Nq52EvaluationSummaryItemDto;
+import com.school.lessonplan.nq52.signature.Nq52DigitalSignature;
+import com.school.lessonplan.nq52.signature.Nq52DigitalSignatureRepository;
+import com.school.lessonplan.nq52.signature.Nq52SigningRole;
+import com.school.lessonplan.nq52.signature.Nq52UserSignatureProfile;
+import com.school.lessonplan.nq52.signature.Nq52UserSignatureProfileRepository;
 import com.school.lessonplan.role.Role;
 import com.school.lessonplan.user.User;
 import com.school.lessonplan.user.UserRepository;
+import com.school.lessonplan.user.UserStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,7 +31,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -38,26 +52,32 @@ public class Nq52EvaluationService {
 
     private final Nq52EvaluationRepository evaluationRepository;
     private final DepartmentRepository departmentRepository;
+    private final CampusRepository campusRepository;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private final Nq52DocxExportService docxExportService;
     private final AppProperties appProperties;
-    private final com.school.lessonplan.nq52.signature.Nq52DigitalSignatureRepository signatureRepository;
+    private final Nq52DigitalSignatureRepository signatureRepository;
+    private final Nq52UserSignatureProfileRepository profileRepository;
 
     public Nq52EvaluationService(Nq52EvaluationRepository evaluationRepository,
                                  DepartmentRepository departmentRepository,
+                                 CampusRepository campusRepository,
                                  UserRepository userRepository,
                                  ObjectMapper objectMapper,
                                  Nq52DocxExportService docxExportService,
                                  AppProperties appProperties,
-                                 com.school.lessonplan.nq52.signature.Nq52DigitalSignatureRepository signatureRepository) {
+                                 Nq52DigitalSignatureRepository signatureRepository,
+                                 Nq52UserSignatureProfileRepository profileRepository) {
         this.evaluationRepository = evaluationRepository;
         this.departmentRepository = departmentRepository;
+        this.campusRepository = campusRepository;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
         this.docxExportService = docxExportService;
         this.appProperties = appProperties;
         this.signatureRepository = signatureRepository;
+        this.profileRepository = profileRepository;
         initStorageDirectories();
     }
 
@@ -890,11 +910,214 @@ public class Nq52EvaluationService {
         return eval.getExportedFileData();
     }
 
-    private String removeAccents(String text) {
+    public String removeAccents(String text) {
         if (text == null) return "Giao_Vien";
         String normalized = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD);
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(normalized).replaceAll("").replace("đ", "d").replace("Đ", "D");
+    }
+
+    /**
+     * Báo cáo tổng hợp kết quả đánh giá, xếp loại chất lượng viên chức NQ52 dành riêng cho Ban Giám Hiệu
+     */
+    @Transactional(readOnly = true)
+    public Nq52EvaluationSummaryDto getSummaryReport(Integer month, Integer year, Long campusId, Long deptId, User currentUser) {
+        if (!isAdmin(currentUser)) {
+            throw new AccessDeniedException("Chỉ Ban Giám Hiệu mới có quyền truy cập Báo cáo tổng hợp xếp loại NQ52.");
+        }
+
+        int targetMonth = (month != null && month >= 1 && month <= 12) ? month : LocalDate.now().getMonthValue();
+        int targetYear = (year != null && year >= 2020) ? year : LocalDate.now().getYear();
+
+        Nq52EvaluationSummaryDto summary = new Nq52EvaluationSummaryDto();
+        summary.setMonth(targetMonth);
+        summary.setYear(targetYear);
+        summary.setCampusId(campusId);
+        summary.setDepartmentId(deptId);
+
+        if (deptId != null) {
+            departmentRepository.findById(deptId).ifPresent(d -> summary.setDepartmentName(d.getName()));
+        }
+        if (campusId != null) {
+            campusRepository.findById(campusId).ifPresent(c -> summary.setCampusName(c.getName()));
+        }
+
+        // 1. Lấy danh sách phiếu đánh giá NQ52 thực tế trong tháng/năm và phạm vi lọc đã chọn
+        List<Nq52Evaluation> evals = new ArrayList<>(
+                evaluationRepository.findDepartmentEvaluationsFiltered(campusId, deptId, null, targetMonth, targetYear));
+
+        // Sắp xếp danh sách phiếu: Ban Giám Hiệu trước, sau đó theo Tổ/Bộ môn, rồi theo Họ tên giáo viên
+        evals.sort((e1, e2) -> {
+            User u1 = e1.getUser();
+            User u2 = e2.getUser();
+            boolean u1Admin = u1 != null && isAdmin(u1);
+            boolean u2Admin = u2 != null && isAdmin(u2);
+            if (u1Admin != u2Admin) return u1Admin ? -1 : 1;
+
+            String dept1 = e1.getDepartment() != null ? e1.getDepartment().getName() : (u1 != null && u1.getDepartment() != null ? u1.getDepartment().getName() : "");
+            String dept2 = e2.getDepartment() != null ? e2.getDepartment().getName() : (u2 != null && u2.getDepartment() != null ? u2.getDepartment().getName() : "");
+            int deptCompare = dept1.compareToIgnoreCase(dept2);
+            if (deptCompare != 0) return deptCompare;
+
+            String name1 = e1.getTeacherNameSnapshot() != null ? e1.getTeacherNameSnapshot() : (u1 != null ? u1.getFullName() : "");
+            String name2 = e2.getTeacherNameSnapshot() != null ? e2.getTeacherNameSnapshot() : (u2 != null ? u2.getFullName() : "");
+            return name1.compareToIgnoreCase(name2);
+        });
+
+        // 2. Nạp danh sách năm sinh từ profile
+        Map<Long, String> birthYearByUserId = new HashMap<>();
+        if (profileRepository != null) {
+            List<Nq52UserSignatureProfile> profiles = profileRepository.findAll();
+            Pattern yearPattern = Pattern.compile("(19\\d{2}|20\\d{2})");
+            for (Nq52UserSignatureProfile prof : profiles) {
+                if (prof.getUser() != null && prof.getDob() != null) {
+                    Matcher m = yearPattern.matcher(prof.getDob());
+                    if (m.find()) {
+                        birthYearByUserId.put(prof.getUser().getId(), m.group(1));
+                    }
+                }
+            }
+        }
+
+        // 3. Duyệt danh sách các phiếu đánh giá thực tế và tính toán chỉ số
+        int stt = 1;
+        int countExcellent = 0;
+        int countGood = 0;
+        int countSatisfactory = 0;
+        int countUnsatisfactory = 0;
+        int reviewedCount = 0;
+        int bghSignedCount = 0;
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+        List<Nq52EvaluationSummaryItemDto> items = new ArrayList<>();
+
+        for (Nq52Evaluation eval : evals) {
+            User u = eval.getUser();
+            Nq52EvaluationSummaryItemDto item = new Nq52EvaluationSummaryItemDto();
+            item.setStt(stt++);
+
+            if (u != null) {
+                item.setUserId(u.getId());
+                item.setFullName(u.getFullName());
+                item.setBirthYear(birthYearByUserId.getOrDefault(u.getId(), ""));
+                if (u.getCampus() != null) {
+                    item.setCampusId(u.getCampus().getId());
+                    item.setCampusName(u.getCampus().getName());
+                }
+            } else {
+                item.setFullName(eval.getTeacherNameSnapshot() != null ? eval.getTeacherNameSnapshot() : "Giáo viên");
+                item.setBirthYear("");
+            }
+
+            if (eval.getDepartment() != null) {
+                item.setDepartmentId(eval.getDepartment().getId());
+                item.setDepartmentName(eval.getDepartment().getName());
+            } else if (u != null && u.getDepartment() != null) {
+                item.setDepartmentId(u.getDepartment().getId());
+                item.setDepartmentName(u.getDepartment().getName());
+            }
+
+            item.setEvaluationId(eval.getId());
+            item.setStatus(eval.getStatus());
+            item.setStatusDisplayName(eval.getStatus() != null ? eval.getStatus().getDisplayName() : "Đã nộp");
+            item.setPositionTitle(eval.getPositionTitle() != null && !eval.getPositionTitle().isBlank()
+                    ? eval.getPositionTitle()
+                    : (u != null ? resolveDefaultPositionTitle(u) : "Giáo viên"));
+
+            item.setSelfClassification(eval.getSelfClassification());
+            item.setReviewerClassification(eval.getReviewerClassification());
+
+            // 1. Điểm số chính thức (ưu tiên BGH -> Tổ trưởng -> Cá nhân)
+            BigDecimal finalScore = eval.getBghTotalScore();
+            if (finalScore == null || finalScore.compareTo(BigDecimal.ZERO) <= 0) {
+                finalScore = eval.getReviewerTotalScore();
+            }
+            if (finalScore == null || finalScore.compareTo(BigDecimal.ZERO) <= 0) {
+                finalScore = eval.getSelfTotalScore();
+            }
+            item.setBghTotalScore(finalScore);
+
+            // 2. Mức xếp loại chất lượng chính thức (BGH phê duyệt cuối cùng: ưu tiên BGH -> Tổ trưởng thẩm định -> Tự đánh giá -> Quy đổi từ điểm)
+            String finalClass = eval.getBghClassification();
+            if (finalClass == null || finalClass.isBlank()) {
+                if (eval.getBghTotalScore() != null && eval.getBghTotalScore().compareTo(BigDecimal.ZERO) > 0) {
+                    finalClass = Nq52CriteriaCatalog.determineClassification(eval.getBghTotalScore());
+                }
+            }
+            if (finalClass == null || finalClass.isBlank()) {
+                finalClass = eval.getReviewerClassification();
+            }
+            if (finalClass == null || finalClass.isBlank()) {
+                if (eval.getReviewerTotalScore() != null && eval.getReviewerTotalScore().compareTo(BigDecimal.ZERO) > 0) {
+                    finalClass = Nq52CriteriaCatalog.determineClassification(eval.getReviewerTotalScore());
+                }
+            }
+            if (finalClass == null || finalClass.isBlank()) {
+                finalClass = eval.getSelfClassification();
+            }
+            if (finalClass == null || finalClass.isBlank()) {
+                if (eval.getSelfTotalScore() != null && eval.getSelfTotalScore().compareTo(BigDecimal.ZERO) > 0) {
+                    finalClass = Nq52CriteriaCatalog.determineClassification(eval.getSelfTotalScore());
+                }
+            }
+            item.setBghClassification(finalClass);
+            item.setBghNotes(eval.getBghNotes() != null ? eval.getBghNotes() : eval.getReviewerNotes());
+
+            // 3. Kiểm tra chữ ký số BGH
+            List<Nq52DigitalSignature> sigs = signatureRepository.findActiveSignatures("EVALUATION", eval.getId());
+            for (Nq52DigitalSignature s : sigs) {
+                if (s.getSigningRole() == Nq52SigningRole.PRINCIPAL) {
+                    item.setBghSigned(true);
+                    item.setBghSignerName(s.getSignerNameSnapshot());
+                    item.setBghSignedAtFormatted(s.getSignedAt() != null ? dtf.format(s.getSignedAt()) : "");
+                    bghSignedCount++;
+                    break;
+                }
+            }
+
+            // 4. Số hồ sơ đã duyệt (COUNCIL_REVIEWED hoặc REVIEWED hoặc đã có kết quả xếp loại thẩm định)
+            if (eval.getStatus() == Nq52Status.COUNCIL_REVIEWED || eval.getStatus() == Nq52Status.REVIEWED
+                    || (finalClass != null && !finalClass.isBlank())) {
+                reviewedCount++;
+            }
+
+            // 5. Thống kê theo 4 mức xếp loại
+            String cat = item.getClassificationCategory();
+            switch (cat) {
+                case "EXCELLENT" -> countExcellent++;
+                case "GOOD" -> countGood++;
+                case "SATISFACTORY" -> countSatisfactory++;
+                case "UNSATISFACTORY" -> countUnsatisfactory++;
+            }
+
+            items.add(item);
+        }
+
+        summary.setItems(items);
+        summary.setTotalCount(items.size());
+        summary.setReviewedCount(reviewedCount);
+        summary.setUnreviewedCount(items.size() - reviewedCount);
+        summary.setExcellentCount(countExcellent);
+        summary.setGoodCount(countGood);
+        summary.setSatisfactoryCount(countSatisfactory);
+        summary.setUnsatisfactoryCount(countUnsatisfactory);
+        summary.setBghSignedCount(bghSignedCount);
+
+        return summary;
+    }
+
+    private String resolveDefaultPositionTitle(User u) {
+        if (isAdmin(u)) {
+            return "Hiệu trưởng";
+        }
+        if (u.getDepartment() != null && u.getDepartment().getName() != null) {
+            String dept = u.getDepartment().getName().trim();
+            if (dept.equalsIgnoreCase("Văn phòng") || dept.equalsIgnoreCase("Hành chính")) {
+                return "Nhân viên";
+            }
+            return "Giáo viên " + dept;
+        }
+        return "Giáo viên";
     }
 }
 

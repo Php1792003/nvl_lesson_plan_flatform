@@ -81,6 +81,8 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         // Admin routes
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // NQ52 module routes (chỉ mở cho ADMIN hoặc tài khoản có quyền NQ52_ACCESS)
+                        .requestMatchers("/nq52/**", "/api/nq52/**").hasAnyAuthority("ROLE_ADMIN", "NQ52_ACCESS")
                         // API endpoints
                         .requestMatchers("/api/dashboard/**").authenticated()
                         // Everything else requires authentication

@@ -395,5 +395,72 @@ public class Nq52SignatureServiceTest {
         assertEquals(Nq52Status.REVIEWED, sampleWorkResult.getStatus());
         assertEquals("Đồng ý phê duyệt kết quả thực hiện nhiệm vụ.", sampleWorkResult.getReviewerNotes());
     }
+
+    @Test
+    public void testSignWithUsbToken_WorkResult_BghSuccess() {
+        // Hồ sơ đã qua bước 2: Tổ trưởng đã thẩm định (REVIEWED)
+        sampleWorkResult.setStatus(Nq52Status.REVIEWED);
+        when(workResultRepository.findById(100L)).thenReturn(Optional.of(sampleWorkResult));
+        when(signatureRepository.save(any(Nq52DigitalSignature.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UsbTokenSignRequest req = new UsbTokenSignRequest();
+        req.setDocumentType("WORK_RESULT");
+        req.setDocumentId(100L);
+        req.setCertSerial("54:02:FA:19:88:AC:33:1B");
+        req.setCertSubject("TRƯỜNG THCS NGUYỄN VĂN LINH");
+        req.setCertIssuer("Ban Cơ yếu Chính phủ - Ban Chữ ký số Quốc gia");
+        req.setCaProvider("BAN_CO_YEU_CHINH_PHU");
+        req.setPin("123456");
+        req.setDataHashSha256("A1B2C3D4E5F678901234567890ABCDEF1234567890ABCDEF1234567890ABCDEF");
+        req.setSignatureValue("SIG_PKCS11_LOCAL_TOKEN_VALUE_ABC123");
+        req.setBghNotes("Đã thẩm định và thống nhất đánh giá của Tổ chuyên môn.");
+
+        MockHttpServletRequest httpReq = new MockHttpServletRequest();
+        Nq52DigitalSignature sig = service.signWithUsbToken(req, adminUser, httpReq);
+
+        assertNotNull(sig);
+        assertEquals(Nq52SigningRole.PRINCIPAL, sig.getSigningRole());
+        assertEquals(Nq52SignatureType.USB_TOKEN, sig.getSignatureType());
+        assertEquals("BAN_CO_YEU_CHINH_PHU", sig.getCaProvider());
+        assertEquals("54:02:FA:19:88:AC:33:1B", sig.getCertSerial());
+        assertEquals("SIG_PKCS11_LOCAL_TOKEN_VALUE_ABC123", sig.getSignatureValue());
+        assertEquals(Nq52Status.COUNCIL_REVIEWED, sampleWorkResult.getStatus());
+        assertNotNull(sampleWorkResult.getBghReviewedAt());
+        assertEquals("Đã thẩm định và thống nhất đánh giá của Tổ chuyên môn.", sampleWorkResult.getBghNotes());
+    }
+
+    @Test
+    public void testSignWithUsbToken_BeforeDeptLeaderReview_ThrowsIllegalStateException() {
+        // Hồ sơ mới ở mức SUBMITTED (chưa qua Tổ trưởng)
+        sampleWorkResult.setStatus(Nq52Status.SUBMITTED);
+        when(workResultRepository.findById(100L)).thenReturn(Optional.of(sampleWorkResult));
+
+        UsbTokenSignRequest req = new UsbTokenSignRequest();
+        req.setDocumentType("WORK_RESULT");
+        req.setDocumentId(100L);
+        req.setPin("123456");
+
+        MockHttpServletRequest httpReq = new MockHttpServletRequest();
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                service.signWithUsbToken(req, adminUser, httpReq)
+        );
+
+        assertTrue(ex.getMessage().contains("Tổ trưởng chuyên môn thẩm định"));
+    }
+
+    @Test
+    public void testSignWithUsbToken_InvalidPin_ThrowsIllegalArgumentException() {
+        UsbTokenSignRequest req = new UsbTokenSignRequest();
+        req.setDocumentType("WORK_RESULT");
+        req.setDocumentId(100L);
+        req.setPin("12"); // dưới 4 ký tự
+
+        MockHttpServletRequest httpReq = new MockHttpServletRequest();
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                service.signWithUsbToken(req, adminUser, httpReq)
+        );
+
+        assertTrue(ex.getMessage().contains("mã PIN"));
+    }
 }
 

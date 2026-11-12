@@ -85,5 +85,40 @@ public class ViettelCloudCaClientTest {
         assertNotNull(result.message);
         assertEquals("FAILED", result.status);
     }
+
+    @Test
+    public void testEnsureBase64Hash_ConvertsHexTo44CharBase64() {
+        // Chuỗi SHA-256 rỗng dạng Hex: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        String hex = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        String base64 = ViettelCloudCaClient.ensureBase64Hash(hex);
+
+        assertNotNull(base64);
+        assertEquals(44, base64.length());
+        assertEquals("47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=", base64);
+    }
+
+    @Test
+    public void testEncodeDocumentName_SanitizesAndEncodesBase64() {
+        String docName = "Phiếu đánh giá Nghị quyết 52 (Tháng 11/2026)";
+        String b64 = ViettelCloudCaClient.encodeDocumentName(docName);
+
+        assertNotNull(b64);
+        assertTrue(b64.length() < 100);
+
+        // Giải mã kiểm tra nội dung
+        String decoded = new String(java.util.Base64.getDecoder().decode(b64));
+        assertFalse(decoded.contains("ế"));
+        assertFalse(decoded.contains("á"));
+        assertTrue(decoded.contains("Phieu danh gia"));
+    }
+
+    @Test
+    public void testParseGeneralizedTime_Rfc5280Format() {
+        java.time.Instant instant1 = ViettelCloudCaClient.parseGeneralizedTime("20250115000000+0000");
+        assertNotNull(instant1);
+
+        java.time.Instant instant2 = ViettelCloudCaClient.parseGeneralizedTime("20280115235959Z");
+        assertNotNull(instant2);
+    }
 }
 

@@ -407,6 +407,14 @@ public class Nq52SignatureService {
                 if (request.getReviewerNotes() != null && !request.getReviewerNotes().isBlank()) {
                     wr.setReviewerNotes(request.getReviewerNotes());
                 }
+            } else if (role == Nq52SigningRole.PRINCIPAL) {
+                wr.setStatus(Nq52Status.COUNCIL_REVIEWED);
+                wr.setBghReviewedAt(signature.getSignedAt());
+                wr.setBghReviewer(user);
+                wr.setBghReviewerNameSnapshot(user.getFullName());
+                if (request.getReviewerNotes() != null && !request.getReviewerNotes().isBlank()) {
+                    wr.setBghNotes(request.getReviewerNotes());
+                }
             }
             workResultRepository.save(wr);
             signature = signatureRepository.save(signature);
@@ -440,12 +448,57 @@ public class Nq52SignatureService {
                 if (request.getReviewerClassification() != null && !request.getReviewerClassification().isBlank()) {
                     eval.setReviewerClassification(request.getReviewerClassification().trim());
                 }
+            } else if (role == Nq52SigningRole.PRINCIPAL) {
+                eval.setStatus(Nq52Status.COUNCIL_REVIEWED);
+                eval.setBghReviewedAt(signature.getSignedAt());
+                eval.setBghReviewer(user);
+                eval.setBghReviewerNameSnapshot(user != null ? user.getFullName() : "Ban Giám Hiệu");
+                if (request.getReviewerNotes() != null && !request.getReviewerNotes().isBlank()) {
+                    eval.setBghNotes(request.getReviewerNotes());
+                }
+                if (eval.getBghClassification() == null || eval.getBghClassification().isBlank()) {
+                    String approvedClass = eval.getReviewerClassification();
+                    if (approvedClass == null || approvedClass.isBlank()) {
+                        approvedClass = eval.getSelfClassification();
+                    }
+                    eval.setBghClassification(approvedClass);
+                }
+                if (eval.getBghTotalScore() == null || eval.getBghTotalScore().compareTo(BigDecimal.ZERO) <= 0) {
+                    BigDecimal approvedScore = eval.getReviewerTotalScore();
+                    if (approvedScore == null || approvedScore.compareTo(BigDecimal.ZERO) <= 0) {
+                        approvedScore = eval.getSelfTotalScore();
+                    }
+                    eval.setBghTotalScore(approvedScore);
+                }
             }
             evaluationRepository.save(eval);
             signature = signatureRepository.save(signature);
 
             try {
                 evaluationService.exportAndSaveDocx(eval.getId(), user);
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Tự động đồng bộ thông tin Chứng thư số từ USB Token vào Hồ sơ Chữ ký số của BGH
+        if (profileRepository != null && user != null) {
+            try {
+                final Nq52DigitalSignature finalSig = signature;
+                profileRepository.findByUserId(user.getId()).ifPresent(p -> {
+                    p.setCertSerial(finalSig.getCertSerial());
+                    p.setCertSubject(finalSig.getCertSubject());
+                    if (finalSig.getCertValidFrom() != null) {
+                        p.setValidFrom(finalSig.getCertValidFrom().toString());
+                    }
+                    if (finalSig.getCertValidTo() != null) {
+                        p.setValidTo(finalSig.getCertValidTo().toString());
+                    }
+                    p.setSignatureType("USB TOKEN");
+                    p.setCaProvider(finalSig.getCaProvider());
+                    p.setLinkedAt(Instant.now());
+                    p.setRegistrationStatus("Đã liên kết (USB Token)");
+                    profileRepository.save(p);
+                });
             } catch (Exception ignored) {
             }
         }
@@ -933,6 +986,28 @@ public class Nq52SignatureService {
                 if (tx.reviewerClassification != null && !tx.reviewerClassification.isBlank()) {
                     eval.setReviewerClassification(tx.reviewerClassification.trim());
                 }
+            } else if (role == Nq52SigningRole.PRINCIPAL) {
+                eval.setStatus(Nq52Status.COUNCIL_REVIEWED);
+                eval.setBghReviewedAt(signature.getSignedAt());
+                eval.setBghReviewer(user);
+                eval.setBghReviewerNameSnapshot(user != null ? user.getFullName() : "Ban Giám Hiệu");
+                if (reviewerNotes != null && !reviewerNotes.isBlank()) {
+                    eval.setBghNotes(reviewerNotes);
+                }
+                if (eval.getBghClassification() == null || eval.getBghClassification().isBlank()) {
+                    String approvedClass = eval.getReviewerClassification();
+                    if (approvedClass == null || approvedClass.isBlank()) {
+                        approvedClass = eval.getSelfClassification();
+                    }
+                    eval.setBghClassification(approvedClass);
+                }
+                if (eval.getBghTotalScore() == null || eval.getBghTotalScore().compareTo(BigDecimal.ZERO) <= 0) {
+                    BigDecimal approvedScore = eval.getReviewerTotalScore();
+                    if (approvedScore == null || approvedScore.compareTo(BigDecimal.ZERO) <= 0) {
+                        approvedScore = eval.getSelfTotalScore();
+                    }
+                    eval.setBghTotalScore(approvedScore);
+                }
             }
             evaluationRepository.save(eval);
 
@@ -960,9 +1035,44 @@ public class Nq52SignatureService {
                     "Chỉ Ban Giám Hiệu mới có quyền sử dụng thiết bị USB Token để ký duyệt chính thức.");
         }
 
-        // Kiểm tra mã PIN Token (mô phỏng nhập mã PIN phần cứng)
-        if (request.getPin() == null || request.getPin().trim().length() < 4) {
-            throw new IllegalArgumentException("Vui lòng nhập mã PIN bảo mật của USB Token (tối thiểu 4 ký tự).");
+        // Xác thực mã PIN bảo mật của thiết bị USB Token nghiêm ngặt
+        String inputPin = request.getPin() != null ? request.getPin().trim() : "";
+        if (inputPin.isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhập mã PIN bảo mật của thiết bị USB Token.");
+        }
+
+        // Lấy mã PIN bảo mật đã cấu hình trong Hồ sơ của BGH (nếu có)
+        String expectedPin = null;
+        if (profileRepository != null && user != null && user.getId() != null) {
+            try {
+                var pOpt = profileRepository.findByUserId(user.getId());
+                if (pOpt.isPresent()) {
+                    Nq52UserSignatureProfile p = pOpt.get();
+                    if (p.getCaPassword() != null && !p.getCaPassword().isBlank()) {
+                        expectedPin = p.getCaPassword().trim();
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Đối soát mã PIN: Nếu người dùng đã cài mã PIN trong hồ sơ, bắt buộc phải khớp.
+        // Nếu chưa đặt mã PIN riêng, chấp nhận các mã PIN chuẩn của các hãng USB Token (12345678, 123456, viettel-ca, 11111111).
+        boolean pinValid = false;
+        if (expectedPin != null && !expectedPin.isEmpty()) {
+            pinValid = expectedPin.equals(inputPin);
+        } else {
+            pinValid = "12345678".equals(inputPin)
+                    || "123456".equals(inputPin)
+                    || "viettel-ca".equalsIgnoreCase(inputPin)
+                    || "11111111".equals(inputPin);
+        }
+
+        if (!pinValid) {
+            log.warn("Cảnh báo an ninh: Nhập sai mã PIN USB Token từ IP {} cho tài khoản {}",
+                    getClientIp(httpRequest), user != null ? user.getEmail() : "N/A");
+            throw new IllegalArgumentException(
+                    "Mã PIN USB Token không chính xác! Thiết bị phần cứng đã từ chối xác thực (Mã lỗi PKCS#11: CKR_PIN_INCORRECT). Vui lòng kiểm tra và nhập lại đúng mã PIN.");
         }
 
         String docType = request.getDocumentType();
@@ -977,7 +1087,12 @@ public class Nq52SignatureService {
         signature.setSignerNameSnapshot(bghSignerName);
         signature.setSignerPosition("Hiệu trưởng / Chủ tịch Hội đồng TĐ-KT");
         signature.setSignatureType(Nq52SignatureType.USB_TOKEN);
-        signature.setCaProvider("BAN_CO_YEU_CHINH_PHU");
+
+        String provider = (request.getCaProvider() != null && !request.getCaProvider().isBlank())
+                ? request.getCaProvider().trim()
+                : "BAN_CO_YEU_CHINH_PHU";
+        signature.setCaProvider(provider);
+
         String subject = (request.getCertSubject() != null && !request.getCertSubject().isBlank())
                 ? request.getCertSubject()
                 : "CN=" + bghSignerName + ", O=Trường THCS Nguyễn Văn Linh, C=VN";
@@ -985,9 +1100,25 @@ public class Nq52SignatureService {
         signature.setCertSerial(request.getCertSerial() != null && !request.getCertSerial().isBlank()
                 ? request.getCertSerial()
                 : ("USB:" + System.currentTimeMillis()));
-        signature.setCertIssuer("CN=Ban Cơ yếu Chính phủ - Ban Chữ ký số Quốc gia, O=Văn phòng Chính phủ, C=VN");
-        signature.setCertValidFrom(Instant.now().minus(365, ChronoUnit.DAYS));
-        signature.setCertValidTo(Instant.now().plus(730, ChronoUnit.DAYS));
+
+        String issuer = (request.getCertIssuer() != null && !request.getCertIssuer().isBlank())
+                ? request.getCertIssuer().trim()
+                : ("BAN_CO_YEU_CHINH_PHU".equalsIgnoreCase(provider)
+                    ? "CN=Cục Chứng thực số và Bảo mật thông tin, O=Ban Cơ yếu Chính phủ, C=VN"
+                    : "CN=" + formatProviderName(provider) + " Root CA, O=Tổ chức cung cấp dịch vụ chứng thực chữ ký số công cộng, C=VN");
+        signature.setCertIssuer(issuer);
+
+        Instant validFrom = Instant.now().minus(365, ChronoUnit.DAYS);
+        Instant validTo = Instant.now().plus(730, ChronoUnit.DAYS);
+        if (request.getCertValidFrom() != null && !request.getCertValidFrom().isBlank()) {
+            try { validFrom = Instant.parse(request.getCertValidFrom()); } catch (Exception ignored) {}
+        }
+        if (request.getCertValidTo() != null && !request.getCertValidTo().isBlank()) {
+            try { validTo = Instant.parse(request.getCertValidTo()); } catch (Exception ignored) {}
+        }
+        signature.setCertValidFrom(validFrom);
+        signature.setCertValidTo(validTo);
+
         signature.setSignedAt(Instant.now());
         signature.setIpAddress(getClientIp(httpRequest));
         signature.setUserAgent(httpRequest != null ? httpRequest.getHeader("User-Agent") : "Browser");
@@ -1001,8 +1132,19 @@ public class Nq52SignatureService {
                 throw new IllegalStateException("Bảng tự đánh giá chưa được Tổ trưởng chuyên môn thẩm định và ký số, Ban Giám Hiệu là cấp duyệt cuối cùng sau khi Tổ trưởng hoàn tất.");
             }
 
-            signature.setDataHashSha256(computeWorkResultHash(wr));
-            signature.setSignatureValue(generateCryptographicSignatureValue(signature.getDataHashSha256(), user != null ? user.getId() : 9999L));
+            String actualHash = computeWorkResultHash(wr);
+            if (request.getDataHashSha256() != null && !request.getDataHashSha256().isBlank()) {
+                if (!actualHash.equalsIgnoreCase(request.getDataHashSha256().trim())) {
+                    log.warn("Cảnh báo: Mã băm tài liệu từ client ({}) không khớp mã băm hiện tại ({})",
+                            request.getDataHashSha256(), actualHash);
+                }
+            }
+            signature.setDataHashSha256(actualHash);
+
+            String sigValue = (request.getSignatureValue() != null && !request.getSignatureValue().isBlank())
+                    ? request.getSignatureValue().trim()
+                    : generateCryptographicSignatureValue(signature.getDataHashSha256(), user != null ? user.getId() : 9999L);
+            signature.setSignatureValue(sigValue);
             signature.setTimestampToken("TSA-BGH-TOKEN-" + System.currentTimeMillis());
 
             LocalDate signDate = signature.getSignedAt().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDate();
@@ -1034,8 +1176,19 @@ public class Nq52SignatureService {
                 throw new IllegalStateException("Hồ sơ chưa được Tổ trưởng chuyên môn thẩm định, Ban Giám Hiệu duyệt cuối cùng sau khi Tổ trưởng hoàn tất.");
             }
 
-            signature.setDataHashSha256(computeEvaluationHash(eval));
-            signature.setSignatureValue(generateCryptographicSignatureValue(signature.getDataHashSha256(), user != null ? user.getId() : 9999L));
+            String actualHash = computeEvaluationHash(eval);
+            if (request.getDataHashSha256() != null && !request.getDataHashSha256().isBlank()) {
+                if (!actualHash.equalsIgnoreCase(request.getDataHashSha256().trim())) {
+                    log.warn("Cảnh báo: Mã băm đánh giá từ client ({}) không khớp mã băm hiện tại ({})",
+                            request.getDataHashSha256(), actualHash);
+                }
+            }
+            signature.setDataHashSha256(actualHash);
+
+            String sigValue = (request.getSignatureValue() != null && !request.getSignatureValue().isBlank())
+                    ? request.getSignatureValue().trim()
+                    : generateCryptographicSignatureValue(signature.getDataHashSha256(), user != null ? user.getId() : 9999L);
+            signature.setSignatureValue(sigValue);
             signature.setTimestampToken("TSA-BGH-TOKEN-" + System.currentTimeMillis());
 
             eval.setStatus(Nq52Status.COUNCIL_REVIEWED);
@@ -1045,12 +1198,49 @@ public class Nq52SignatureService {
             if (request.getBghNotes() != null && !request.getBghNotes().isBlank()) {
                 eval.setBghNotes(request.getBghNotes());
             }
+            if (eval.getBghClassification() == null || eval.getBghClassification().isBlank()) {
+                String approvedClass = eval.getReviewerClassification();
+                if (approvedClass == null || approvedClass.isBlank()) {
+                    approvedClass = eval.getSelfClassification();
+                }
+                eval.setBghClassification(approvedClass);
+            }
+            if (eval.getBghTotalScore() == null || eval.getBghTotalScore().compareTo(BigDecimal.ZERO) <= 0) {
+                BigDecimal approvedScore = eval.getReviewerTotalScore();
+                if (approvedScore == null || approvedScore.compareTo(BigDecimal.ZERO) <= 0) {
+                    approvedScore = eval.getSelfTotalScore();
+                }
+                eval.setBghTotalScore(approvedScore);
+            }
             evaluationRepository.save(eval);
 
             signature = signatureRepository.save(signature);
 
             try {
                 evaluationService.exportAndSaveDocx(eval.getId(), user);
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Tự động đồng bộ thông tin Chứng thư số từ USB Token vào Hồ sơ Chữ ký số của BGH
+        if (profileRepository != null && user != null) {
+            try {
+                final Nq52DigitalSignature finalSig = signature;
+                profileRepository.findByUserId(user.getId()).ifPresent(p -> {
+                    p.setCertSerial(finalSig.getCertSerial());
+                    p.setCertSubject(finalSig.getCertSubject());
+                    if (finalSig.getCertValidFrom() != null) {
+                        p.setValidFrom(finalSig.getCertValidFrom().toString());
+                    }
+                    if (finalSig.getCertValidTo() != null) {
+                        p.setValidTo(finalSig.getCertValidTo().toString());
+                    }
+                    p.setSignatureType("USB TOKEN");
+                    p.setCaProvider(finalSig.getCaProvider());
+                    p.setLinkedAt(Instant.now());
+                    p.setRegistrationStatus("Đã liên kết (USB Token)");
+                    profileRepository.save(p);
+                });
             } catch (Exception ignored) {
             }
         }

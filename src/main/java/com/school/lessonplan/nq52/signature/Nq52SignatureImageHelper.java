@@ -57,7 +57,8 @@ public class Nq52SignatureImageHelper {
         // Sinh ảnh con dấu số điện tử PNG chất lượng cao
         String signerName = (sig.getSignerNameSnapshot() != null && !sig.getSignerNameSnapshot().isBlank())
                 ? sig.getSignerNameSnapshot() : (fallbackName != null ? fallbackName : "Giáo viên");
-        String ca = (sig.getCaProvider() != null && !sig.getCaProvider().isBlank()) ? sig.getCaProvider() : "VNPT SmartCA";
+        String caRaw = (sig.getCaProvider() != null && !sig.getCaProvider().isBlank()) ? sig.getCaProvider() : "Ban Cơ yếu CP";
+        String ca = isBgh ? "Ban Cơ yếu CP" : (caRaw.contains("BAN_CO_YEU") ? "Ban Cơ yếu CP" : caRaw);
         Instant signedAt = sig.getSignedAt() != null ? sig.getSignedAt() : Instant.now();
 
         return generateSignatureStampPng(signerName, roleTitle, ca, signedAt, isBgh, isDept);

@@ -2,6 +2,10 @@ package com.school.lessonplan.nq52;
 
 import com.school.lessonplan.nq52.signature.Nq52DigitalSignatureRepository;
 import com.school.lessonplan.nq52.signature.Nq52UserSignatureProfileRepository;
+import com.school.lessonplan.role.Permission;
+import com.school.lessonplan.role.PermissionRepository;
+import com.school.lessonplan.role.Role;
+import com.school.lessonplan.role.RoleRepository;
 import com.school.lessonplan.user.User;
 import com.school.lessonplan.user.UserRepository;
 import org.slf4j.Logger;
@@ -25,23 +29,60 @@ public class Nq52DataInitializer implements ApplicationRunner {
     private final Nq52WorkResultRepository workResultRepository;
     private final Nq52DigitalSignatureRepository digitalSignatureRepository;
     private final Nq52UserSignatureProfileRepository profileRepository;
+    private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
 
     public Nq52DataInitializer(UserRepository userRepository,
                                Nq52EvaluationRepository evaluationRepository,
                                Nq52WorkResultRepository workResultRepository,
                                Nq52DigitalSignatureRepository digitalSignatureRepository,
-                               Nq52UserSignatureProfileRepository profileRepository) {
+                               Nq52UserSignatureProfileRepository profileRepository,
+                               RoleRepository roleRepository,
+                               PermissionRepository permissionRepository) {
         this.userRepository = userRepository;
         this.evaluationRepository = evaluationRepository;
         this.workResultRepository = workResultRepository;
         this.digitalSignatureRepository = digitalSignatureRepository;
         this.profileRepository = profileRepository;
+        this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
     }
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        initPermissions();
         cleanupAllMockData();
+    }
+
+    private void initPermissions() {
+        try {
+            Permission accessPerm = permissionRepository.findByCode(Permission.NQ52_ACCESS)
+                    .orElseGet(() -> permissionRepository.save(new Permission(Permission.NQ52_ACCESS)));
+            Permission reviewPerm = permissionRepository.findByCode(Permission.NQ52_REVIEW)
+                    .orElseGet(() -> permissionRepository.save(new Permission(Permission.NQ52_REVIEW)));
+
+            roleRepository.findByCode("ADMIN").ifPresent(adminRole -> {
+                boolean changed = false;
+                if (adminRole.getPermissions() == null) {
+                    adminRole.setPermissions(new java.util.HashSet<>());
+                }
+                if (!adminRole.getPermissions().contains(accessPerm)) {
+                    adminRole.getPermissions().add(accessPerm);
+                    changed = true;
+                }
+                if (!adminRole.getPermissions().contains(reviewPerm)) {
+                    adminRole.getPermissions().add(reviewPerm);
+                    changed = true;
+                }
+                if (changed) {
+                    roleRepository.save(adminRole);
+                    log.info("Đã gán quyền NQ52_ACCESS và NQ52_REVIEW cho vai trò ADMIN.");
+                }
+            });
+        } catch (Exception ex) {
+            log.warn("Lỗi khi khởi tạo quyền NQ52: {}", ex.getMessage());
+        }
     }
 
     private void cleanupAllMockData() {

@@ -338,7 +338,15 @@
             </span>
             <span class="nq52-header-subtitle">Tiếp nhận, thẩm định và chấm điểm phiếu đánh giá Mẫu 03</span>
         </div>
-        <div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/nq52/summary}" class="btn btn-sm" style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background-color: #059669; color: #fff; border: 1px solid #047857; border-radius: 6px; text-decoration: none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                    <path d="M9 14l2 2 4-4"></path>
+                </svg>
+                <span>Tổng hợp xếp loại NQ52</span>
+            </a>
             <a th:href="@{/nq52/evaluations}" class="btn btn-outline btn-sm" style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>

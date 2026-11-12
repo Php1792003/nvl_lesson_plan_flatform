@@ -19,6 +19,8 @@ public class Permission {
     public static final String CAMPUS_MANAGE = "CAMPUS_MANAGE";
     public static final String AUDIT_VIEW = "AUDIT_VIEW";
     public static final String PLAN_FAVORITE_VIEW = "PLAN_FAVORITE_VIEW";
+    public static final String NQ52_ACCESS = "NQ52_ACCESS";
+    public static final String NQ52_REVIEW = "NQ52_REVIEW";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -69,6 +71,8 @@ public class Permission {
             case CAMPUS_MANAGE -> "Quản lý cơ sở / phân hiệu";
             case AUDIT_VIEW -> "Xem nhật ký hệ thống";
             case PLAN_FAVORITE_VIEW -> "Xem danh sách giáo án yêu thích";
+            case NQ52_ACCESS -> "Sử dụng tính năng Nghị quyết 52";
+            case NQ52_REVIEW -> "Duyệt & Thẩm định Nghị quyết 52";
             default -> code;
         };
     }

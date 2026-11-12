@@ -201,13 +201,23 @@
             <h4>Khu vực dành cho Tổ trưởng chuyên môn &amp; Ban Giám Hiệu</h4>
             <p>Bạn có thẩm quyền xem và đánh giá xếp loại các phiếu giáo viên trong tổ đã nộp.</p>
         </div>
-        <a th:href="@{/nq52/reviews}" class="btn btn-primary btn-sm" style="white-space: nowrap;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
-                <path d="M9 11l3 3L22 4"></path>
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-            </svg>
-            Duyệt phiếu cấp Tổ
-        </a>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/nq52/summary}" class="btn btn-sm" style="white-space: nowrap; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background-color: #059669; color: #fff; border: 1px solid #047857; border-radius: 6px; text-decoration: none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                    <path d="M9 14l2 2 4-4"></path>
+                </svg>
+                <span>Tổng hợp xếp loại NQ52</span>
+            </a>
+            <a th:href="@{/nq52/reviews}" class="btn btn-primary btn-sm" style="white-space: nowrap;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                Duyệt phiếu cấp Tổ
+            </a>
+        </div>
     </div>
 
     <!-- Page Header Title Banner -->

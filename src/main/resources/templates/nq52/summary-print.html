@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'In Tổng hợp xếp loại NQ52 - Tháng ' + ${summary.month} + '/' + ${summary.year}">In Tổng hợp xếp loại NQ52</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Times New Roman", Times, serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+            color: #000000;
+        }
+        .print-page {
+            background: #ffffff;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 25px 35px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .no-print-toolbar {
+            max-width: 1100px;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 13.5px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: #1e40af;
+            color: #ffffff;
+        }
+        .btn-outline {
+            background: #ffffff;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        /* Typography & Table */
+        .report-title {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .report-subtitle {
+            text-align: center;
+            font-size: 11pt;
+            font-style: italic;
+            margin-bottom: 18px;
+        }
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10pt;
+            margin-bottom: 20px;
+        }
+        .report-table th, .report-table td {
+            border: 1px solid #000000;
+            padding: 5px 6px;
+            vertical-align: middle;
+        }
+        .report-table th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-bold { font-weight: bold; }
+        .mark-x {
+            font-weight: bold;
+            font-size: 12pt;
+            text-align: center;
+            display: block;
+        }
+
+        /* Signatures block */
+        .sig-container {
+            width: 100%;
+            margin-top: 25px;
+            page-break-inside: avoid;
+        }
+        .sig-date {
+            text-align: right;
+            font-style: italic;
+            font-size: 10pt;
+            margin-bottom: 8px;
+            padding-right: 40px;
+        }
+        .sig-table {
+            width: 100%;
+            border: none;
+            text-align: center;
+        }
+        .sig-table td {
+            border: none;
+            width: 50%;
+            vertical-align: top;
+            padding: 5px 20px;
+        }
+        .sig-title {
+            font-weight: bold;
+            font-size: 11pt;
+            text-transform: uppercase;
+        }
+        .sig-sub {
+            font-style: italic;
+            font-size: 9.5pt;
+            margin-bottom: 50px;
+        }
+        .sig-stamp-box {
+            display: inline-block;
+            border: 2px solid #1e40af;
+            background-color: #eff6ff;
+            color: #1e3a8a;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 9pt;
+            margin-top: 5px;
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 8mm;
+            }
+            body {
+                background: none;
+                padding: 0;
+            }
+            .no-print-toolbar {
+                display: none !important;
+            }
+            .print-page {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .report-table th {
+                background-color: #f2f2f2 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .sig-stamp-box {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print-toolbar">
+        <div>
+            <strong>Bản xem trước khi in (Khổ A4 Nằm Ngang)</strong>
+            <span style="font-size: 13px; color: #64748b; margin-left: 10px;"
+                  th:text="'Tháng ' + ${summary.month} + '/' + ${summary.year} + ' - ' + ${summary.totalCount} + ' nhân sự'">
+            </span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.print()" class="btn btn-primary">
+                In báo cáo (Ctrl+P)
+            </button>
+            <button onclick="window.close()" class="btn btn-outline">
+                Đóng
+            </button>
+        </div>
+    </div>
+
+    <div class="print-page">
+        <!-- Tiêu đề báo cáo -->
+        <div class="report-title" th:text="'KẾT QUẢ ĐÁNH GIÁ, XẾP LOẠI CHẤT LƯỢNG VIÊN CHỨC THÁNG ' + ${summary.month} + '/' + ${summary.year}">
+            KẾT QUẢ ĐÁNH GIÁ, XẾP LOẠI CHẤT LƯỢNG VIÊN CHỨC THÁNG /2026
+        </div>
+        <div class="report-subtitle">
+            <span th:if="${summary.departmentName != null}" th:text="'Tổ chuyên môn: ' + ${summary.departmentName}"></span>
+            <span th:if="${summary.departmentName != null and summary.campusName != null}"> - </span>
+            <span th:if="${summary.campusName != null}" th:text="'Điểm trường: ' + ${summary.campusName}"></span>
+            <span th:if="${summary.departmentName == null and summary.campusName == null}">Đơn vị: Toàn trường</span>
+        </div>
+
+        <!-- Bảng 9 cột đúng mẫu docx -->
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 35px;">STT</th>
+                    <th rowspan="2" style="width: 180px;">Họ và tên</th>
+                    <th rowspan="2" style="width: 60px;">Năm sinh</th>
+                    <th rowspan="2" style="width: 190px;">
+                        Chức vụ, chức danh<br>
+                        <span style="font-size: 8.5pt; font-weight: normal;">(Ghi rõ chức vụ chuyên môn, đoàn thể, Giáo viên bộ môn)</span>
+                    </th>
+                    <th colspan="4">Mức độ xếp loại chất lượng</th>
+                    <th rowspan="2" style="width: 100px;">Ghi chú</th>
+                </tr>
+                <tr>
+                    <th style="width: 95px;">Hoàn thành<br>Xuất sắc<br>nhiệm vụ</th>
+                    <th style="width: 95px;">Hoàn thành<br>tốt<br>nhiệm vụ</th>
+                    <th style="width: 95px;">Hoàn thành<br>nhiệm vụ</th>
+                    <th style="width: 95px;">Không hoàn<br>thành<br>nhiệm vụ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(summary.items)}">
+                    <td colspan="9" class="text-center" style="padding: 25px; color: #64748b; font-style: italic;">
+                        Không tìm thấy viên chức nào theo tiêu chí lọc đã chọn.
+                    </td>
+                </tr>
+                <tr th:each="item : ${summary.items}">
+                    <td class="text-center" th:text="${item.stt}">1</td>
+                    <td class="text-left" th:text="${item.fullName}">Nguyễn Văn A</td>
+                    <td class="text-center" th:text="${item.birthYear != null and !item.birthYear.isEmpty() ? item.birthYear : ''}">1985</td>
+                    <td class="text-left" th:text="${item.positionTitle}">Giáo viên Toán – Tin</td>
+
+                    <td class="text-center">
+                        <span th:if="${item.isExcellent()}" class="mark-x">x</span>
+                    </td>
+                    <td class="text-center">
+                        <span th:if="${item.isGood()}" class="mark-x">x</span>
+                    </td>
+                    <td class="text-center">
+                        <span th:if="${item.isSatisfactory()}" class="mark-x">x</span>
+                    </td>
+                    <td class="text-center">
+                        <span th:if="${item.isUnsatisfactory()}" class="mark-x">x</span>
+                    </td>
+
+                    <td class="text-left" style="font-size: 9pt;" th:text="${item.bghNotes != null ? item.bghNotes : ''}"></td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; background-color: #f9f9f9;">
+                    <td colspan="4" class="text-center text-bold">TỔNG CỘNG</td>
+                    <td class="text-center" th:text="${summary.excellentCount > 0 ? summary.excellentCount : 0}">0</td>
+                    <td class="text-center" th:text="${summary.goodCount > 0 ? summary.goodCount : 0}">0</td>
+                    <td class="text-center" th:text="${summary.satisfactoryCount > 0 ? summary.satisfactoryCount : 0}">0</td>
+                    <td class="text-center" th:text="${summary.unsatisfactoryCount > 0 ? summary.unsatisfactoryCount : 0}">0</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Chữ ký & Ngày tháng -->
+        <div class="sig-container">
+            <div class="sig-date" th:text="'......, ngày ..... tháng ..... năm ' + ${summary.year}">
+                ......, ngày ..... tháng ..... năm 2026
+            </div>
+            <table class="sig-table">
+                <tr>
+                    <td>
+                        <div class="sig-title">NGƯỜI LẬP BIỂU</div>
+                        <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+                    </td>
+                    <td>
+                        <div class="sig-title">HIỆU TRƯỞNG</div>
+                        <div class="sig-sub">(Ký số, đóng dấu, ghi rõ họ tên)</div>
+
+                        <!-- Con dấu nếu BGH đã ký số -->
+                        <div th:if="${summary.bghSignedCount > 0}" class="sig-stamp-box">
+                            <strong style="color: #1e3a8a;">ĐÃ KÝ SỐ ĐIỆN TỬ BAN GIÁM HIỆU</strong><br>
+                            <span th:text="'Người ký: ' + (${summary.bghSignerName != null ? summary.bghSignerName : 'Ban Giám Hiệu'})"></span><br>
+                            <span style="font-size: 8pt; color: #475569;" th:text="${summary.bghSignedAtFormatted != null ? 'Thời gian: ' + summary.bghSignedAtFormatted : ''}"></span><br>
+                            <span style="font-size: 8pt; color: #166534; font-weight: bold;">Hợp lệ & Toàn vẹn</span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
+

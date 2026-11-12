@@ -1,5 +1,7 @@
 package com.school.lessonplan.nq52;
 
+import com.school.lessonplan.nq52.dto.Nq52EvaluationSummaryDto;
+import com.school.lessonplan.nq52.dto.Nq52EvaluationSummaryItemDto;
 import com.school.lessonplan.nq52.dto.Nq52WorkResultForm;
 import com.school.lessonplan.nq52.dto.Nq52WorkResultTaskItem;
 import com.school.lessonplan.nq52.signature.Nq52DigitalSignature;
@@ -39,49 +41,88 @@ public class Nq52ExcelExportService {
             Sheet sheet = workbook.createSheet("Mau_01TKNV");
             sheet.setDisplayGridlines(true);
 
-            // Set 18 Column Widths (A - R)
-            sheet.setColumnWidth(0, (int) (5.5 * 256));   // A: TT
-            sheet.setColumnWidth(1, (int) (42.0 * 256));  // B: Nội dung công việc
-            sheet.setColumnWidth(2, (int) (8.0 * 256));   // C: Bình thường / (1) Được giao
-            sheet.setColumnWidth(3, (int) (8.0 * 256));   // D: Phức tạp / (2) Hoàn thành
-            sheet.setColumnWidth(4, (int) (9.0 * 256));   // E: Rất phức tạp / (3) Chưa hoàn thành
-            sheet.setColumnWidth(5, (int) (11.0 * 256));  // F: Chủ trì / (4) Tỷ lệ HT
-            sheet.setColumnWidth(6, (int) (9.0 * 256));   // G: Phối hợp / (5) Sớm hạn
-            sheet.setColumnWidth(7, (int) (10.0 * 256));  // H: Đã HT / (6) Đúng hạn
-            sheet.setColumnWidth(8, (int) (10.0 * 256));  // I: Chưa HT / (7) Trễ hạn
-            sheet.setColumnWidth(9, (int) (12.0 * 256));  // J: TG yêu cầu / (8) Tỷ lệ đúng hạn part 1
-            sheet.setColumnWidth(10, (int) (8.5 * 256));  // K: Sớm hạn / (8) Tỷ lệ đúng hạn part 2
-            sheet.setColumnWidth(11, (int) (9.0 * 256));  // L: Đúng hạn / (9) Đảm bảo
-            sheet.setColumnWidth(12, (int) (9.0 * 256));  // M: Trễ hạn / (10) Vượt mức part 1
-            sheet.setColumnWidth(13, (int) (11.0 * 256)); // N: Chưa đảm bảo / (10) Vượt mức part 2
-            sheet.setColumnWidth(14, (int) (11.0 * 256)); // O: Đảm bảo / (11) Chưa đảm bảo
-            sheet.setColumnWidth(15, (int) (11.0 * 256)); // P: Vượt mức / (12) Tỷ lệ chất lượng part 1
-            sheet.setColumnWidth(16, (int) (12.0 * 256)); // Q: Kiến nghị / (12) Tỷ lệ chất lượng part 2
-            sheet.setColumnWidth(17, (int) (16.0 * 256)); // R: Giải trình / (13) Ghi chú
+            // Cấu hình 18 cột (A - R) tối ưu tỷ lệ hiển thị trên khổ giấy A4 nằm ngang
+            sheet.setColumnWidth(0, (int) (4.5 * 256));   // A: TT
+            sheet.setColumnWidth(1, (int) (35.0 * 256));  // B: Nội dung công việc
+            sheet.setColumnWidth(2, (int) (6.5 * 256));   // C: Bình thường / (1) Được giao
+            sheet.setColumnWidth(3, (int) (6.5 * 256));   // D: Phức tạp / (2) Hoàn thành
+            sheet.setColumnWidth(4, (int) (7.0 * 256));   // E: Rất phức tạp / (3) Chưa hoàn thành
+            sheet.setColumnWidth(5, (int) (7.5 * 256));   // F: Chủ trì / (4) Tỷ lệ HT
+            sheet.setColumnWidth(6, (int) (7.0 * 256));   // G: Phối hợp / (5) Sớm hạn
+            sheet.setColumnWidth(7, (int) (7.0 * 256));   // H: Đã HT / (6) Đúng hạn
+            sheet.setColumnWidth(8, (int) (7.0 * 256));   // I: Chưa HT / (7) Trễ hạn
+            sheet.setColumnWidth(9, (int) (9.0 * 256));   // J: TG yêu cầu / (8) Tỷ lệ đúng hạn part 1
+            sheet.setColumnWidth(10, (int) (6.5 * 256));  // K: Sớm hạn / (8) Tỷ lệ đúng hạn part 2
+            sheet.setColumnWidth(11, (int) (6.5 * 256));  // L: Đúng hạn / (9) Đảm bảo
+            sheet.setColumnWidth(12, (int) (6.5 * 256));  // M: Trễ hạn / (10) Vượt mức part 1
+            sheet.setColumnWidth(13, (int) (7.5 * 256));  // N: Chưa đảm bảo / (10) Vượt mức part 2
+            sheet.setColumnWidth(14, (int) (7.5 * 256));  // O: Đảm bảo / (11) Chưa đảm bảo
+            sheet.setColumnWidth(15, (int) (7.5 * 256));  // P: Vượt mức / (12) Tỷ lệ chất lượng part 1
+            sheet.setColumnWidth(16, (int) (9.5 * 256));  // Q: Kiến nghị / (12) Tỷ lệ chất lượng part 2
+            sheet.setColumnWidth(17, (int) (12.0 * 256)); // R: Giải trình / (13) Ghi chú
 
-            // Fonts
+            // =========================================================================
+            // CẤU HÌNH TRANG IN (PAGE SETUP): KHỔ A4 NẰM NGANG, FIT GỌN VÀO 1 TRANG DUY NHẤT
+            // =========================================================================
+            PrintSetup printSetup = sheet.getPrintSetup();
+            printSetup.setPaperSize(PrintSetup.A4_PAPERSIZE);
+            printSetup.setLandscape(true);
+            sheet.setAutobreaks(true);
+            sheet.setFitToPage(true);
+            printSetup.setFitWidth((short) 1);
+            printSetup.setFitHeight((short) 1);
+
+            // Căn lề chuẩn trang in (margins) để vừa vặn tuyệt đối trên khổ A4 ngang
+            sheet.setMargin(Sheet.LeftMargin, 0.35);   // ~8.9 mm
+            sheet.setMargin(Sheet.RightMargin, 0.35);  // ~8.9 mm
+            sheet.setMargin(Sheet.TopMargin, 0.35);    // ~8.9 mm
+            sheet.setMargin(Sheet.BottomMargin, 0.35); // ~8.9 mm
+            sheet.setMargin(Sheet.HeaderMargin, 0.15);
+            sheet.setMargin(Sheet.FooterMargin, 0.15);
+
+            // Căn giữa trang theo chiều ngang khi in
+            sheet.setHorizontallyCenter(true);
+
+            // =========================================================================
+            // PHÔNG CHỮ: 100% PHÔNG TIMES NEW ROMAN CHO TOÀN BỘ WORKBOOK VÀ CELL STYLES
+            // =========================================================================
+            Font defaultFont = workbook.getFontAt(0);
+            if (defaultFont != null) {
+                defaultFont.setFontName("Times New Roman");
+            }
+
             Font fontRegular = workbook.createFont();
             fontRegular.setFontName("Times New Roman");
-            fontRegular.setFontHeightInPoints((short) 11);
+            fontRegular.setFontHeightInPoints((short) 10);
 
             Font fontBold = workbook.createFont();
             fontBold.setFontName("Times New Roman");
-            fontBold.setFontHeightInPoints((short) 11);
+            fontBold.setFontHeightInPoints((short) 10);
             fontBold.setBold(true);
 
             Font fontItalic = workbook.createFont();
             fontItalic.setFontName("Times New Roman");
-            fontItalic.setFontHeightInPoints((short) 11);
+            fontItalic.setFontHeightInPoints((short) 10);
             fontItalic.setItalic(true);
+
+            Font fontSmallItalic = workbook.createFont();
+            fontSmallItalic.setFontName("Times New Roman");
+            fontSmallItalic.setFontHeightInPoints((short) 9);
+            fontSmallItalic.setItalic(true);
 
             Font fontTitle = workbook.createFont();
             fontTitle.setFontName("Times New Roman");
-            fontTitle.setFontHeightInPoints((short) 13);
+            fontTitle.setFontHeightInPoints((short) 12);
             fontTitle.setBold(true);
+
+            Font fontHeader = workbook.createFont();
+            fontHeader.setFontName("Times New Roman");
+            fontHeader.setFontHeightInPoints((short) 9);
+            fontHeader.setBold(true);
 
             // Cell Styles
             CellStyle tableHeaderStyle = workbook.createCellStyle();
-            tableHeaderStyle.setFont(fontBold);
+            tableHeaderStyle.setFont(fontHeader);
             tableHeaderStyle.setAlignment(HorizontalAlignment.CENTER);
             tableHeaderStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             tableHeaderStyle.setWrapText(true);
@@ -137,6 +178,11 @@ public class Nq52ExcelExportService {
             metaCenterItalic.setFont(fontItalic);
             metaCenterItalic.setAlignment(HorizontalAlignment.CENTER);
             metaCenterItalic.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            CellStyle metaCenterSmallItalic = workbook.createCellStyle();
+            metaCenterSmallItalic.setFont(fontSmallItalic);
+            metaCenterSmallItalic.setAlignment(HorizontalAlignment.CENTER);
+            metaCenterSmallItalic.setVerticalAlignment(VerticalAlignment.CENTER);
 
             CellStyle titleStyle = workbook.createCellStyle();
             titleStyle.setFont(fontTitle);
@@ -214,7 +260,8 @@ public class Nq52ExcelExportService {
             c3.setCellStyle(metaCenterItalic);
             sheet.addMergedRegion(new CellRangeAddress(3, 3, 7, 17));
 
-            rowIdx++; // Blank row
+            Row rBlank1 = sheet.createRow(rowIdx++);
+            rBlank1.setHeightInPoints(6f);
 
             // Row 5: Title
             Row rTitle = sheet.createRow(rowIdx++);
@@ -234,10 +281,11 @@ public class Nq52ExcelExportService {
             Row rNote = sheet.createRow(rowIdx++);
             Cell cNote = rNote.createCell(0);
             cNote.setCellValue("(Kèm theo Phiếu đánh giá, xếp loại chất lượng hàng tháng của cá nhân)");
-            cNote.setCellStyle(metaCenterItalic);
+            cNote.setCellStyle(metaCenterSmallItalic);
             sheet.addMergedRegion(new CellRangeAddress(7, 7, 0, 17));
 
-            rowIdx++; // Blank row
+            Row rBlank2 = sheet.createRow(rowIdx++);
+            rBlank2.setHeightInPoints(6f);
 
             // Teacher Metadata
             Row rMeta1 = sheet.createRow(rowIdx++);
@@ -256,7 +304,8 @@ public class Nq52ExcelExportService {
             cm2.setCellStyle(metaLabelBold);
             sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 0, 17));
 
-            rowIdx++; // Blank row
+            Row rBlank3 = sheet.createRow(rowIdx++);
+            rBlank3.setHeightInPoints(6f);
 
             // ==========================================
             // Main Table Header Rows (Multi-level 3 rows)
@@ -265,6 +314,9 @@ public class Nq52ExcelExportService {
             Row h1 = createStyledRow(sheet, rowIdx++, 18, tableHeaderStyle);
             Row h2 = createStyledRow(sheet, rowIdx++, 18, tableHeaderStyle);
             Row h3 = createStyledRow(sheet, rowIdx++, 18, tableHeaderStyle);
+            h1.setHeightInPoints(24f);
+            h2.setHeightInPoints(24f);
+            h3.setHeightInPoints(18f);
 
             // Col 0: TT (Span 3 rows)
             h1.getCell(0).setCellValue("TT");
@@ -405,12 +457,14 @@ public class Nq52ExcelExportService {
                 } else {
                     // Để 1 dòng trống cho phần này
                     Row rEmpty = createStyledRow(sheet, rowIdx++, 18, cellStyleCenter);
+                    rEmpty.setHeightInPoints(18f);
                     rEmpty.getCell(0).setCellValue(1);
                     rEmpty.getCell(1).setCellValue("");
                 }
             }
 
-            rowIdx++; // Blank row
+            Row rBlank4 = sheet.createRow(rowIdx++);
+            rBlank4.setHeightInPoints(6f);
 
             // ==========================================
             // Summary Statistics Section (Khớp 100% Mẫu chuẩn)
@@ -426,6 +480,10 @@ public class Nq52ExcelExportService {
             Row sh2 = createStyledRow(sheet, rowIdx++, 18, tableHeaderStyle);
             Row sh3 = createStyledRow(sheet, rowIdx++, 18, tableHeaderStyle);
             Row sVal = createStyledRow(sheet, rowIdx++, 18, cellStyleCenterBold);
+            sh1.setHeightInPoints(20f);
+            sh2.setHeightInPoints(20f);
+            sh3.setHeightInPoints(16f);
+            sVal.setHeightInPoints(18f);
             sVal.getCell(17).setCellStyle(cellStyleLeft); // Ghi chú căn lề trái
 
             // Col 0-1 (A:B): Để trống khớp với phần nội dung
@@ -507,13 +565,15 @@ public class Nq52ExcelExportService {
             sh3.getCell(17).setCellValue("(13)");
             sVal.getCell(17).setCellValue(form.getSummaryNotes() != null ? form.getSummaryNotes() : "");
 
-            rowIdx += 2; // Blank rows
+            Row rBlankSig = sheet.createRow(rowIdx++);
+            rBlankSig.setHeightInPoints(8f);
 
             // ==========================================
             // Signature Section with Digital Signature Stamps
             // ==========================================
             // Hàng ngày tháng phía trên chức danh ký
             Row rSigDate = sheet.createRow(rowIdx++);
+            rSigDate.setHeightInPoints(16f);
 
             // Cột 13-17: CÁ NHÂN TỰ ĐÁNH GIÁ (ngày ký của giáo viên)
             Cell cDateTeacher = rSigDate.createCell(13);
@@ -550,6 +610,7 @@ public class Nq52ExcelExportService {
             }
 
             Row rSigTitle = sheet.createRow(rowIdx++);
+            rSigTitle.setHeightInPoints(18f);
             Cell sig1 = rSigTitle.createCell(1);
             sig1.setCellValue("PHÓ HIỆU TRƯỞNG PHỤ TRÁCH");
             sig1.setCellStyle(metaCenterBold);
@@ -566,26 +627,27 @@ public class Nq52ExcelExportService {
             sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 13, 17));
 
             Row rSigNote = sheet.createRow(rowIdx++);
+            rSigNote.setHeightInPoints(15f);
             Cell sn1 = rSigNote.createCell(1);
             sn1.setCellValue("(Ký và ghi rõ họ tên)");
-            sn1.setCellStyle(metaCenterItalic);
+            sn1.setCellStyle(metaCenterSmallItalic);
             sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 1, 4));
 
             Cell sn2 = rSigNote.createCell(6);
             sn2.setCellValue("(Ký và ghi rõ họ tên)");
-            sn2.setCellStyle(metaCenterItalic);
+            sn2.setCellStyle(metaCenterSmallItalic);
             sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 6, 10));
 
             Cell sn3 = rSigNote.createCell(13);
             sn3.setCellValue("(Ký và ghi rõ họ tên)");
-            sn3.setCellStyle(metaCenterItalic);
+            sn3.setCellStyle(metaCenterSmallItalic);
             sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 13, 17));
 
             // Khu vực dán chữ ký: chừa 4 dòng trống để dán hình ảnh chữ ký / con dấu số
             int sigImgRowStart = rowIdx;
             for (int i = 0; i < 4; i++) {
                 Row rBlank = sheet.createRow(rowIdx++);
-                rBlank.setHeightInPoints(18f);
+                rBlank.setHeightInPoints(16f);
             }
             int sigImgRowEnd = rowIdx;
 
@@ -705,7 +767,7 @@ public class Nq52ExcelExportService {
             }
 
             // Tính căn giữa theo chiều dọc trong khu vực các dòng ký
-            float totalRowHeightPt = numRows * 18f;
+            float totalRowHeightPt = numRows * 16f;
             long totalRowHeightEmu = (long) (totalRowHeightPt * 12700L);
             long imgHeightEmu = (long) dim.height * 12700L;
             long topOffsetEmu = Math.max(0, (totalRowHeightEmu - imgHeightEmu) / 2);
@@ -754,5 +816,426 @@ public class Nq52ExcelExportService {
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
+    }
+
+    /**
+     * Xuất Bảng tổng hợp đánh giá xếp loại chất lượng viên chức NQ52 theo đúng định dạng mẫu
+     * - Khổ giấy A4 nằm ngang, fit gọn 1 trang in
+     * - 100% phông Times New Roman
+     * - 9 cột dữ liệu (A-I) kèm đánh dấu x theo xếp loại của Ban Giám Hiệu
+     */
+    public byte[] generateEvaluationSummaryExcel(Nq52EvaluationSummaryDto summary) {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Tong_hop_xep_loai_NQ52");
+            sheet.setDisplayGridlines(true);
+
+            // Cấu hình 9 cột (A - I) tối ưu hiển thị trên khổ giấy A4 nằm ngang
+            sheet.setColumnWidth(0, (int) (6.0 * 256));   // A: STT
+            sheet.setColumnWidth(1, (int) (27.0 * 256));  // B: Họ và tên
+            sheet.setColumnWidth(2, (int) (11.0 * 256));  // C: Năm sinh
+            sheet.setColumnWidth(3, (int) (32.0 * 256));  // D: Chức vụ, chức danh
+            sheet.setColumnWidth(4, (int) (16.0 * 256));  // E: Hoàn thành Xuất sắc nhiệm vụ
+            sheet.setColumnWidth(5, (int) (15.0 * 256));  // F: Hoàn thành tốt nhiệm vụ
+            sheet.setColumnWidth(6, (int) (15.0 * 256));  // G: Hoàn thành nhiệm vụ
+            sheet.setColumnWidth(7, (int) (16.0 * 256));  // H: Không hoàn thành nhiệm vụ
+            sheet.setColumnWidth(8, (int) (18.0 * 256));  // I: Ghi chú
+
+            // =========================================================================
+            // CẤU HÌNH TRANG IN (PAGE SETUP): KHỔ A4 NẰM NGANG, FIT GỌN VÀO 1 TRANG
+            // =========================================================================
+            PrintSetup printSetup = sheet.getPrintSetup();
+            printSetup.setPaperSize(PrintSetup.A4_PAPERSIZE);
+            printSetup.setLandscape(true);
+            sheet.setAutobreaks(true);
+            sheet.setFitToPage(true);
+            printSetup.setFitWidth((short) 1);
+            printSetup.setFitHeight((short) 1);
+
+            // Căn lề chuẩn trang in
+            sheet.setMargin(Sheet.LeftMargin, 0.35);
+            sheet.setMargin(Sheet.RightMargin, 0.35);
+            sheet.setMargin(Sheet.TopMargin, 0.35);
+            sheet.setMargin(Sheet.BottomMargin, 0.35);
+            sheet.setMargin(Sheet.HeaderMargin, 0.15);
+            sheet.setMargin(Sheet.FooterMargin, 0.15);
+            sheet.setHorizontallyCenter(true);
+
+            // =========================================================================
+            // PHÔNG CHỮ: 100% PHÔNG TIMES NEW ROMAN
+            // =========================================================================
+            Font defaultFont = workbook.getFontAt(0);
+            if (defaultFont != null) {
+                defaultFont.setFontName("Times New Roman");
+            }
+
+            Font fontTitle = workbook.createFont();
+            fontTitle.setFontName("Times New Roman");
+            fontTitle.setFontHeightInPoints((short) 14);
+            fontTitle.setBold(true);
+
+            Font fontSubtitle = workbook.createFont();
+            fontSubtitle.setFontName("Times New Roman");
+            fontSubtitle.setFontHeightInPoints((short) 11);
+            fontSubtitle.setItalic(true);
+
+            Font fontHeader = workbook.createFont();
+            fontHeader.setFontName("Times New Roman");
+            fontHeader.setFontHeightInPoints((short) 10);
+            fontHeader.setBold(true);
+
+            Font fontRegular = workbook.createFont();
+            fontRegular.setFontName("Times New Roman");
+            fontRegular.setFontHeightInPoints((short) 10);
+
+            Font fontBold = workbook.createFont();
+            fontBold.setFontName("Times New Roman");
+            fontBold.setFontHeightInPoints((short) 10);
+            fontBold.setBold(true);
+
+            Font fontMarkX = workbook.createFont();
+            fontMarkX.setFontName("Times New Roman");
+            fontMarkX.setFontHeightInPoints((short) 12);
+            fontMarkX.setBold(true);
+
+            Font fontItalic = workbook.createFont();
+            fontItalic.setFontName("Times New Roman");
+            fontItalic.setFontHeightInPoints((short) 10);
+            fontItalic.setItalic(true);
+
+            Font fontStampTitle = workbook.createFont();
+            fontStampTitle.setFontName("Times New Roman");
+            fontStampTitle.setFontHeightInPoints((short) 9);
+            fontStampTitle.setBold(true);
+            fontStampTitle.setColor(IndexedColors.DARK_BLUE.getIndex());
+
+            Font fontStampBody = workbook.createFont();
+            fontStampBody.setFontName("Times New Roman");
+            fontStampBody.setFontHeightInPoints((short) 8);
+
+            // Cell Styles
+            CellStyle titleStyle = workbook.createCellStyle();
+            titleStyle.setFont(fontTitle);
+            titleStyle.setAlignment(HorizontalAlignment.CENTER);
+            titleStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            CellStyle subtitleStyle = workbook.createCellStyle();
+            subtitleStyle.setFont(fontSubtitle);
+            subtitleStyle.setAlignment(HorizontalAlignment.CENTER);
+            subtitleStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFont(fontHeader);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            headerStyle.setWrapText(true);
+            setBorders(headerStyle);
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            CellStyle cellLeft = workbook.createCellStyle();
+            cellLeft.setFont(fontRegular);
+            cellLeft.setAlignment(HorizontalAlignment.LEFT);
+            cellLeft.setVerticalAlignment(VerticalAlignment.CENTER);
+            cellLeft.setWrapText(true);
+            setBorders(cellLeft);
+
+            CellStyle cellCenter = workbook.createCellStyle();
+            cellCenter.setFont(fontRegular);
+            cellCenter.setAlignment(HorizontalAlignment.CENTER);
+            cellCenter.setVerticalAlignment(VerticalAlignment.CENTER);
+            cellCenter.setWrapText(true);
+            setBorders(cellCenter);
+
+            CellStyle cellMarkX = workbook.createCellStyle();
+            cellMarkX.setFont(fontMarkX);
+            cellMarkX.setAlignment(HorizontalAlignment.CENTER);
+            cellMarkX.setVerticalAlignment(VerticalAlignment.CENTER);
+            setBorders(cellMarkX);
+
+            CellStyle cellTotalLabel = workbook.createCellStyle();
+            cellTotalLabel.setFont(fontBold);
+            cellTotalLabel.setAlignment(HorizontalAlignment.CENTER);
+            cellTotalLabel.setVerticalAlignment(VerticalAlignment.CENTER);
+            setBorders(cellTotalLabel);
+
+            CellStyle cellTotalCount = workbook.createCellStyle();
+            cellTotalCount.setFont(fontBold);
+            cellTotalCount.setAlignment(HorizontalAlignment.CENTER);
+            cellTotalCount.setVerticalAlignment(VerticalAlignment.CENTER);
+            setBorders(cellTotalCount);
+
+            // =========================================================================
+            // DÒNG TIÊU ĐỀ
+            // =========================================================================
+            int rowIdx = 0;
+            Row rTitle = sheet.createRow(rowIdx++);
+            rTitle.setHeightInPoints(28);
+            Cell cTitle = rTitle.createCell(0);
+            cTitle.setCellValue("KẾT QUẢ ĐÁNH GIÁ, XẾP LOẠI CHẤT LƯỢNG VIÊN CHỨC THÁNG " + summary.getMonth() + "/" + summary.getYear());
+            cTitle.setCellStyle(titleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
+
+            String subtitleText = "";
+            if (summary.getDepartmentName() != null && !summary.getDepartmentName().isBlank()) {
+                subtitleText = "Tổ chuyên môn: " + summary.getDepartmentName();
+            }
+            if (summary.getCampusName() != null && !summary.getCampusName().isBlank()) {
+                subtitleText += (subtitleText.isEmpty() ? "" : " - ") + "Điểm trường: " + summary.getCampusName();
+            }
+            if (!subtitleText.isEmpty()) {
+                Row rSub = sheet.createRow(rowIdx++);
+                rSub.setHeightInPoints(20);
+                Cell cSub = rSub.createCell(0);
+                cSub.setCellValue(subtitleText);
+                cSub.setCellStyle(subtitleStyle);
+                sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 8));
+            }
+
+            rowIdx++; // Cách 1 dòng trống
+
+            // =========================================================================
+            // TIÊU ĐỀ BẢNG (2 TẦNG HEADER)
+            // =========================================================================
+            int headerRow1Idx = rowIdx++;
+            int headerRow2Idx = rowIdx++;
+
+            Row hRow1 = sheet.createRow(headerRow1Idx);
+            hRow1.setHeightInPoints(30);
+            Row hRow2 = sheet.createRow(headerRow2Idx);
+            hRow2.setHeightInPoints(40);
+
+            for (int c = 0; c <= 8; c++) {
+                Cell c1 = hRow1.createCell(c);
+                c1.setCellStyle(headerStyle);
+                Cell c2 = hRow2.createCell(c);
+                c2.setCellStyle(headerStyle);
+            }
+
+            // Cột 0: STT (Row1-Row2)
+            hRow1.getCell(0).setCellValue("STT");
+            sheet.addMergedRegion(new CellRangeAddress(headerRow1Idx, headerRow2Idx, 0, 0));
+
+            // Cột 1: Họ và tên (Row1-Row2)
+            hRow1.getCell(1).setCellValue("Họ và tên");
+            sheet.addMergedRegion(new CellRangeAddress(headerRow1Idx, headerRow2Idx, 1, 1));
+
+            // Cột 2: Năm sinh (Row1-Row2)
+            hRow1.getCell(2).setCellValue("Năm sinh");
+            sheet.addMergedRegion(new CellRangeAddress(headerRow1Idx, headerRow2Idx, 2, 2));
+
+            // Cột 3: Chức vụ, chức danh (Row1-Row2)
+            hRow1.getCell(3).setCellValue("Chức vụ, chức danh\n(Ghi rõ chức vụ chuyên môn, đoàn thể,\nGiáo viên bộ môn)");
+            sheet.addMergedRegion(new CellRangeAddress(headerRow1Idx, headerRow2Idx, 3, 3));
+
+            // Cột 4-7: Mức độ xếp loại chất lượng (Row1, Col 4->7)
+            hRow1.getCell(4).setCellValue("Mức độ xếp loại chất lượng");
+            sheet.addMergedRegion(new CellRangeAddress(headerRow1Idx, headerRow1Idx, 4, 7));
+
+            // Row2: 4 cột con
+            hRow2.getCell(4).setCellValue("Hoàn thành\nXuất sắc\nnhiệm vụ");
+            hRow2.getCell(5).setCellValue("Hoàn thành\ntốt\nnhiệm vụ");
+            hRow2.getCell(6).setCellValue("Hoàn thành\nnhiệm vụ");
+            hRow2.getCell(7).setCellValue("Không hoàn thành\nnhiệm vụ");
+
+            // Cột 8: Ghi chú (Row1-Row2)
+            hRow1.getCell(8).setCellValue("Ghi chú");
+            sheet.addMergedRegion(new CellRangeAddress(headerRow1Idx, headerRow2Idx, 8, 8));
+
+            // =========================================================================
+            // DỮ LIỆU CÁC DÒNG NHÂN SỰ
+            // =========================================================================
+            int countExcellent = 0;
+            int countGood = 0;
+            int countSatisfactory = 0;
+            int countUnsatisfactory = 0;
+
+            List<Nq52EvaluationSummaryItemDto> items = summary.getItems();
+            if (items != null) {
+                for (Nq52EvaluationSummaryItemDto item : items) {
+                    Row dRow = sheet.createRow(rowIdx++);
+                    dRow.setHeightInPoints(24);
+
+                    Cell cellStt = dRow.createCell(0);
+                    cellStt.setCellValue(item.getStt());
+                    cellStt.setCellStyle(cellCenter);
+
+                    Cell cellName = dRow.createCell(1);
+                    cellName.setCellValue(item.getFullName() != null ? item.getFullName() : "");
+                    cellName.setCellStyle(cellLeft);
+
+                    Cell cellDob = dRow.createCell(2);
+                    cellDob.setCellValue(item.getBirthYear() != null ? item.getBirthYear() : "");
+                    cellDob.setCellStyle(cellCenter);
+
+                    Cell cellPos = dRow.createCell(3);
+                    cellPos.setCellValue(item.getPositionTitle() != null ? item.getPositionTitle() : "");
+                    cellPos.setCellStyle(cellLeft);
+
+                    Cell cellExc = dRow.createCell(4);
+                    Cell cellGd = dRow.createCell(5);
+                    Cell cellSat = dRow.createCell(6);
+                    Cell cellUnsat = dRow.createCell(7);
+
+                    cellExc.setCellStyle(cellMarkX);
+                    cellGd.setCellStyle(cellMarkX);
+                    cellSat.setCellStyle(cellMarkX);
+                    cellUnsat.setCellStyle(cellMarkX);
+
+                    if (item.isExcellent()) {
+                        cellExc.setCellValue("x");
+                        countExcellent++;
+                    } else if (item.isGood()) {
+                        cellGd.setCellValue("x");
+                        countGood++;
+                    } else if (item.isSatisfactory()) {
+                        cellSat.setCellValue("x");
+                        countSatisfactory++;
+                    } else if (item.isUnsatisfactory()) {
+                        cellUnsat.setCellValue("x");
+                        countUnsatisfactory++;
+                    }
+
+                    Cell cellNotes = dRow.createCell(8);
+                    cellNotes.setCellValue(item.getBghNotes() != null ? item.getBghNotes() : "");
+                    cellNotes.setCellStyle(cellLeft);
+                }
+            }
+
+            // =========================================================================
+            // DÒNG TỔNG CỘNG
+            // =========================================================================
+            int summaryRowIdx = rowIdx++;
+            Row sRow = sheet.createRow(summaryRowIdx);
+            sRow.setHeightInPoints(24);
+
+            for (int c = 0; c <= 8; c++) {
+                Cell cCell = sRow.createCell(c);
+                cCell.setCellStyle(cellTotalLabel);
+            }
+
+            sRow.getCell(0).setCellValue("TỔNG CỘNG");
+            sheet.addMergedRegion(new CellRangeAddress(summaryRowIdx, summaryRowIdx, 0, 3));
+
+            sRow.getCell(4).setCellValue(countExcellent > 0 ? String.valueOf(countExcellent) : "0");
+            sRow.getCell(4).setCellStyle(cellTotalCount);
+
+            sRow.getCell(5).setCellValue(countGood > 0 ? String.valueOf(countGood) : "0");
+            sRow.getCell(5).setCellStyle(cellTotalCount);
+
+            sRow.getCell(6).setCellValue(countSatisfactory > 0 ? String.valueOf(countSatisfactory) : "0");
+            sRow.getCell(6).setCellStyle(cellTotalCount);
+
+            sRow.getCell(7).setCellValue(countUnsatisfactory > 0 ? String.valueOf(countUnsatisfactory) : "0");
+            sRow.getCell(7).setCellStyle(cellTotalCount);
+
+            sRow.getCell(8).setCellValue("");
+
+            // =========================================================================
+            // CHỮ KÝ VÀ NGÀY THÁNG
+            // =========================================================================
+            rowIdx++;
+            int dateRowIdx = rowIdx++;
+            Row dtRow = sheet.createRow(dateRowIdx);
+            Cell cDate = dtRow.createCell(5);
+            cDate.setCellValue("......, ngày ..... tháng ..... năm " + summary.getYear());
+            CellStyle italicRightStyle = workbook.createCellStyle();
+            italicRightStyle.setFont(fontItalic);
+            italicRightStyle.setAlignment(HorizontalAlignment.CENTER);
+            cDate.setCellStyle(italicRightStyle);
+            sheet.addMergedRegion(new CellRangeAddress(dateRowIdx, dateRowIdx, 5, 8));
+
+            int signTitleIdx = rowIdx++;
+            Row stRow = sheet.createRow(signTitleIdx);
+            stRow.setHeightInPoints(22);
+
+            CellStyle sigTitleStyle = workbook.createCellStyle();
+            sigTitleStyle.setFont(fontBold);
+            sigTitleStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            Cell cSignLeft = stRow.createCell(1);
+            cSignLeft.setCellValue("NGƯỜI LẬP BIỂU");
+            cSignLeft.setCellStyle(sigTitleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(signTitleIdx, signTitleIdx, 1, 2));
+
+            Cell cSignRight = stRow.createCell(5);
+            cSignRight.setCellValue("HIỆU TRƯỞNG");
+            cSignRight.setCellStyle(sigTitleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(signTitleIdx, signTitleIdx, 5, 8));
+
+            int signSubIdx = rowIdx++;
+            Row subRow = sheet.createRow(signSubIdx);
+            CellStyle sigSubStyle = workbook.createCellStyle();
+            sigSubStyle.setFont(fontItalic);
+            sigSubStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            Cell cSubLeft = subRow.createCell(1);
+            cSubLeft.setCellValue("(Ký, ghi rõ họ tên)");
+            cSubLeft.setCellStyle(sigSubStyle);
+            sheet.addMergedRegion(new CellRangeAddress(signSubIdx, signSubIdx, 1, 2));
+
+            Cell cSubRight = subRow.createCell(5);
+            cSubRight.setCellValue("(Ký số, đóng dấu, ghi rõ họ tên)");
+            cSubRight.setCellStyle(sigSubStyle);
+            sheet.addMergedRegion(new CellRangeAddress(signSubIdx, signSubIdx, 5, 8));
+
+            // Nếu Ban Giám Hiệu đã ký số, vẽ con dấu xác thực chữ ký số bên dưới
+            if (summary.getBghSignedCount() > 0) {
+                rowIdx++;
+                int stampStart = rowIdx;
+                int stampEnd = rowIdx + 3;
+
+                CellStyle stampBoxStyle = workbook.createCellStyle();
+                stampBoxStyle.setFont(fontStampBody);
+                stampBoxStyle.setAlignment(HorizontalAlignment.CENTER);
+                stampBoxStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+                stampBoxStyle.setWrapText(true);
+                stampBoxStyle.setBorderTop(BorderStyle.MEDIUM);
+                stampBoxStyle.setBorderBottom(BorderStyle.MEDIUM);
+                stampBoxStyle.setBorderLeft(BorderStyle.MEDIUM);
+                stampBoxStyle.setBorderRight(BorderStyle.MEDIUM);
+                stampBoxStyle.setTopBorderColor(IndexedColors.DARK_BLUE.getIndex());
+                stampBoxStyle.setBottomBorderColor(IndexedColors.DARK_BLUE.getIndex());
+                stampBoxStyle.setLeftBorderColor(IndexedColors.DARK_BLUE.getIndex());
+                stampBoxStyle.setRightBorderColor(IndexedColors.DARK_BLUE.getIndex());
+                stampBoxStyle.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+                stampBoxStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+                for (int r = stampStart; r <= stampEnd; r++) {
+                    Row stampRow = sheet.createRow(r);
+                    for (int c = 5; c <= 8; c++) {
+                        Cell cBox = stampRow.createCell(c);
+                        cBox.setCellStyle(stampBoxStyle);
+                    }
+                }
+
+                Row r1 = sheet.getRow(stampStart);
+                r1.getCell(5).setCellValue("ĐÃ KÝ SỐ ĐIỆN TỬ BAN GIÁM HIỆU");
+                CellStyle r1Style = workbook.createCellStyle();
+                r1Style.cloneStyleFrom(stampBoxStyle);
+                r1Style.setFont(fontStampTitle);
+                r1.getCell(5).setCellStyle(r1Style);
+
+                Row r2 = sheet.getRow(stampStart + 1);
+                String signer = summary.getBghSignerName() != null ? summary.getBghSignerName() : "Ban Giám Hiệu";
+                r2.getCell(5).setCellValue("Người ký: " + signer);
+
+                Row r3 = sheet.getRow(stampStart + 2);
+                String signedAt = summary.getBghSignedAtFormatted() != null ? summary.getBghSignedAtFormatted() : "";
+                r3.getCell(5).setCellValue(signedAt.isEmpty() ? "Hợp lệ & Toàn vẹn" : "Thời gian ký: " + signedAt);
+
+                Row r4 = sheet.getRow(stampStart + 3);
+                r4.getCell(5).setCellValue("Chứng thư số: Hợp lệ & Toàn vẹn");
+
+                for (int r = stampStart; r <= stampEnd; r++) {
+                    sheet.addMergedRegion(new CellRangeAddress(r, r, 5, 8));
+                }
+            }
+
+            workbook.write(bos);
+            return bos.toByteArray();
+        } catch (IOException e) {
+            log.error("Lỗi xuất file Excel tổng hợp đánh giá NQ52: {}", e.getMessage(), e);
+            throw new RuntimeException("Không thể tạo file Excel tổng hợp NQ52: " + e.getMessage(), e);
+        }
     }
 }

@@ -496,6 +496,20 @@
                         trên màn hình, hoặc Sử dụng mẫu con dấu điện tử chuẩn Bộ GD&amp;ĐT theo Nghị định 30/2020/NĐ-CP.
                     </p>
 
+                    <!-- Hướng dẫn cho BGH & người dùng USB Token -->
+                    <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; display: flex; gap: 12px; align-items: flex-start;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        <div style="font-size: 13px; color: #1e3a8a; line-height: 1.5;">
+                            <strong>Dành cho Ban Giám Hiệu &amp; Thiết bị USB Token:</strong>
+                            Thiết bị phần cứng USB Token chỉ lưu trữ chứng thư số mật mã (Khóa riêng bí mật) để đảm bảo giá trị pháp lý và chống làm giả, <em>không chứa sẵn file hình ảnh con dấu/chữ ký</em>. 
+                            Quý Thầy/Cô thiết lập hình ảnh con dấu tròn đỏ hoặc chữ ký tay trực tiếp tại mục này (tải file ảnh PNG, vẽ tay hoặc tạo mẫu). Khi cắm USB Token để ký duyệt, hệ thống sẽ tự động ghép ảnh con dấu này vào đúng vị trí trên văn bản PDF, Word, Excel và phiếu đánh giá NQ52.
+                        </div>
+                    </div>
+
                     <!-- 3 Tabs lựa chọn phương thức tạo chữ ký -->
                     <div class="sig-img-tabs">
                         <button type="button" class="sig-img-tab-btn active" id="tabBtnUpload"
@@ -611,13 +625,13 @@
                             <div
                                 style="border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; padding: 8px; display: inline-flex; align-items: center; justify-content: center; min-width: 220px; min-height: 90px;">
                                 <img id="currentSignaturePreview"
-                                    th:src="${(profile.certSerial != null and !profile.certSerial.isBlank() and profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()) ? profile.signatureImageBase64 : ''}"
+                                    th:src="${(profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()) ? profile.signatureImageBase64 : ''}"
                                     alt="Chữ ký số" style="max-height: 85px; max-width: 260px; object-fit: contain;"
-                                    th:styleappend="${profile.certSerial == null or profile.certSerial.isBlank() or profile.signatureImageBase64 == null or profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
+                                    th:styleappend="${profile.signatureImageBase64 == null or profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
                                 <span id="noSignaturePlaceholder"
                                     style="font-size: 12px; color: #94a3b8; font-style: italic;"
-                                    th:styleappend="${profile.certSerial != null and !profile.certSerial.isBlank() and profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: inline;'">
-                                    Chưa liên kết tài khoản chữ ký số (Chưa có chữ ký hoặc con dấu)
+                                    th:styleappend="${profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: inline;'">
+                                    Chưa có hình ảnh chữ ký hoặc con dấu (Vui lòng tải ảnh lên, vẽ tay hoặc tạo con dấu ở trên)
                                 </span>
                             </div>
                         </div>
@@ -687,14 +701,14 @@
                                     <div
                                         style="min-height: 85px; display: flex; align-items: center; justify-content: center; margin: 4px 0;">
                                         <img id="docPreviewStampTeacher"
-                                            th:src="${(profile.certSerial != null and !profile.certSerial.isBlank() and profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()) ? profile.signatureImageBase64 : ''}"
+                                            th:src="${(profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()) ? profile.signatureImageBase64 : ''}"
                                             alt="Chữ ký đã dán"
                                             style="max-height: 75px; max-width: 220px; object-fit: contain;"
-                                            th:styleappend="${profile.certSerial == null or profile.certSerial.isBlank() or profile.signatureImageBase64 == null or profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
+                                            th:styleappend="${profile.signatureImageBase64 == null or profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
                                         <div id="docPreviewPlaceholderTeacher"
                                             style="font-size: 11px; color: #94a3b8; font-style: italic;"
-                                            th:styleappend="${profile.certSerial != null and !profile.certSerial.isBlank() and profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
-                                            [Chưa liên kết tài khoản ký số]
+                                            th:styleappend="${profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
+                                            [Chưa có hình ảnh chữ ký / con dấu]
                                         </div>
                                     </div>
 
@@ -1040,7 +1054,7 @@
                 alert('Đã tạo con dấu chữ ký số điện tử chuẩn cơ quan thành công!');
             }
 
-            // Cập nhật xem trước chữ ký
+            // Cập nhật xem trước chữ ký & tự động lưu hình ảnh
             function updateSignaturePreview(dataUrl) {
                 const inputHidden = document.getElementById('signatureImageBase64');
                 const previewImg = document.getElementById('currentSignaturePreview');
@@ -1060,6 +1074,21 @@
                     docStampImg.style.display = 'block';
                 }
                 if (docStampPlaceholder) docStampPlaceholder.style.display = 'none';
+
+                // Tự động lưu hình ảnh vào hệ thống ngay lập tức
+                if (dataUrl && dataUrl.startsWith('data:image/')) {
+                    fetch('/portal/api/nq52/signature-profile/upload-image', {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({ signatureImageBase64: dataUrl })
+                    }).then(r => r.json()).then(res => {
+                        if (res && res.success) {
+                            console.log('Hình ảnh chữ ký/con dấu đã được tự động lưu thành công.');
+                        }
+                    }).catch(err => {
+                        console.warn('Lỗi khi tự động lưu ảnh chữ ký:', err);
+                    });
+                }
             }
 
             // Cập nhật tên trên live preview khi gõ Họ tên
