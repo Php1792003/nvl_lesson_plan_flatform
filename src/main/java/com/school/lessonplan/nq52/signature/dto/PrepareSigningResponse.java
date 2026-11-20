@@ -12,6 +12,7 @@ public class PrepareSigningResponse {
     private String signerIdentifier;
     private String recommendedSignatureType; // 'REMOTE_SIGNING' or 'USB_TOKEN'
     private boolean hasConfiguredProfile;
+    private boolean hasSignatureImage;
     private String profileProvider;
     private String profileCertSerial;
     private String profileSubject;
@@ -22,6 +23,9 @@ public class PrepareSigningResponse {
 
     public boolean isHasConfiguredProfile() { return hasConfiguredProfile; }
     public void setHasConfiguredProfile(boolean hasConfiguredProfile) { this.hasConfiguredProfile = hasConfiguredProfile; }
+
+    public boolean isHasSignatureImage() { return hasSignatureImage; }
+    public void setHasSignatureImage(boolean hasSignatureImage) { this.hasSignatureImage = hasSignatureImage; }
 
     public String getProfileProvider() { return profileProvider; }
     public void setProfileProvider(String profileProvider) { this.profileProvider = profileProvider; }

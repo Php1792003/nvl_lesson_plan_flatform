@@ -184,6 +184,28 @@ public class Nq52SignatureProfileController {
         }
     }
 
+    /**
+     * API Xóa hình ảnh chữ ký / con dấu số
+     */
+    @PostMapping("/api/nq52/signature-profile/remove-image")
+    @ResponseBody
+    public ResponseEntity<?> removeSignatureImage(@AuthenticationPrincipal CurrentUser currentUser) {
+        try {
+            User user = resolveUser(currentUser);
+            profileService.removeSignatureImage(user);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Đã xóa hình ảnh chữ ký thành công!"
+            ));
+        } catch (Exception e) {
+            log.error("Lỗi khi xóa ảnh chữ ký:", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Lỗi khi xóa ảnh chữ ký: " + e.getMessage()
+            ));
+        }
+    }
+
     private User resolveUser(CurrentUser currentUser) {
         if (currentUser == null) {
             throw new org.springframework.security.access.AccessDeniedException("Người dùng chưa đăng nhập");

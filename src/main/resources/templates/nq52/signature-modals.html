@@ -38,6 +38,24 @@
                     </div>
                 </div>
 
+                <!-- 0. TH CHƯA CẤU HÌNH HÌNH ẢNH CHỮ KÝ SỐ (BẮT BUỘC TRƯỚC TIÊN) -->
+                <div id="rsSectionNoSignatureImage" style="display: none; text-align: center; padding: 18px 10px;">
+                    <div style="width: 54px; height: 54px; margin: 0 auto 12px auto; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; color: #dc2626;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    </div>
+                    <h4 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 800; color: #991b1b;">Chưa cấu hình hình ảnh chữ ký số</h4>
+                    <p style="font-size: 13px; color: #475569; line-height: 1.5; margin: 0 0 18px 0;">
+                        Bạn chưa tải lên hoặc thiết lập hình ảnh chữ ký cá nhân. Theo quy định đánh giá Nghị quyết 52, việc ký số biểu mẫu (Mẫu 01TKNV &amp; Mẫu 03) bắt buộc phải gắn kèm ảnh chữ ký để lưu trữ và xuất bản in. Vui lòng cấu hình hình ảnh chữ ký trước tiên!
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button type="button" class="btn btn-outline" onclick="closeRemoteSignModal()" style="font-size: 13px; padding: 8px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff;">Đóng</button>
+                        <a href="/portal/nq52/digital-signature" class="btn btn-primary" style="font-size: 13px; font-weight: 700; padding: 8px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #dc2626; color: #fff; box-shadow: 0 2px 4px rgba(220,38,38,0.25);">
+                            <span>Cấu hình chữ ký số ngay</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- 1. TH CHƯA LIÊN KẾT TÀI KHOẢN KÝ SỐ -->
                 <div id="rsSectionNotLinked" style="display: none; text-align: center; padding: 14px 6px;">
                     <div style="width: 52px; height: 52px; margin: 0 auto 12px auto; border-radius: 50%; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: #d97706;">
@@ -282,6 +300,24 @@
                     <div style="flex: 1;">
                         <div id="usbAgentText" style="font-size: 12.5px; font-weight: 700; color: #15803d;">Đã kết nối USB Token Ban Cơ yếu Chính phủ</div>
                         <div id="usbAgentDetail" style="font-size: 11px; color: #475569;">Local Signing Agent (127.0.0.1:8989) • ePass2003 / SafeNet / Bit4id Ban Cơ yếu CP sẵn sàng</div>
+                    </div>
+                </div>
+
+                <!-- 0. TH CHƯA CẤU HÌNH HÌNH ẢNH CON DẤU / CHỮ KÝ SỐ BGH -->
+                <div id="usbSectionNoSignatureImage" style="display: none; text-align: center; padding: 18px 10px;">
+                    <div style="width: 54px; height: 54px; margin: 0 auto 12px auto; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; color: #dc2626;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <h4 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 800; color: #991b1b;">Chưa cấu hình hình ảnh con dấu / chữ ký số</h4>
+                    <p style="font-size: 13px; color: #475569; line-height: 1.5; margin: 0 0 18px 0;">
+                        Ban Giám Hiệu chưa tải lên hình ảnh con dấu cơ quan hoặc chữ ký số. Theo quy định, văn bản phê duyệt và ban hành Nghị quyết 52 bắt buộc phải dán con dấu điện tử hợp lệ. Vui lòng cấu hình hình ảnh con dấu trước khi ký số!
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button type="button" class="btn btn-outline" onclick="closeUsbTokenModal()" style="font-size: 13px; padding: 8px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff;">Đóng</button>
+                        <a href="/portal/nq52/digital-signature" class="btn" style="font-size: 13px; font-weight: 700; padding: 8px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #991b1b; color: #fff; box-shadow: 0 2px 4px rgba(153,27,27,0.25);">
+                            <span>Cấu hình con dấu ngay</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
                     </div>
                 </div>
 
@@ -646,6 +682,8 @@
             if (footerButtons) footerButtons.style.display = 'flex';
             const errAlert = document.getElementById('rsErrorAlert');
             if (errAlert) errAlert.style.display = 'none';
+            const noSigSec = document.getElementById('rsSectionNoSignatureImage');
+            if (noSigSec) noSigSec.style.display = 'none';
             const notLinkedSec = document.getElementById('rsSectionNotLinked');
             if (notLinkedSec) notLinkedSec.style.display = 'none';
             const gwBox = document.getElementById('rsGatewayBox');
@@ -679,9 +717,21 @@
                         if (userInput) userInput.value = data.signerIdentifier;
                     }
 
+                    if (!data.hasSignatureImage) {
+                        // Người dùng CHƯA cấu hình hình ảnh chữ ký số -> Bắt buộc cấu hình trước tiên!
+                        if (noSigSec) noSigSec.style.display = 'block';
+                        if (waitingBox) waitingBox.style.display = 'none';
+                        if (otpSection) otpSection.style.display = 'none';
+                        if (footerButtons) footerButtons.style.display = 'none';
+                        return;
+                    }
+
                     if (!data.hasConfiguredProfile) {
                         // Người dùng CHƯA liên kết tài khoản chứng thư số
                         if (notLinkedSec) notLinkedSec.style.display = 'block';
+                        if (waitingBox) waitingBox.style.display = 'none';
+                        if (otpSection) otpSection.style.display = 'none';
+                        if (footerButtons) footerButtons.style.display = 'none';
                     } else {
                         // Người dùng ĐÃ liên kết tài khoản chứng thư số -> Chuyển sang flow xác thực di động
                         if (appSec) appSec.style.display = 'block';
@@ -1257,6 +1307,10 @@
             if (progressBox) progressBox.style.display = 'none';
             const formSec = document.getElementById('usbSigningFormSection');
             if (formSec) formSec.style.display = 'block';
+            const usbNoSigSec = document.getElementById('usbSectionNoSignatureImage');
+            if (usbNoSigSec) usbNoSigSec.style.display = 'none';
+            const agentCard = document.getElementById('usbAgentCard');
+            if (agentCard) agentCard.style.display = 'flex';
             const btn = document.getElementById('btnConfirmUsbSign');
             if (btn) btn.disabled = false;
             const spinner = document.getElementById('usbSpinner');
@@ -1274,6 +1328,12 @@
             fetch('/portal/api/nq52/signatures/prepare?docType=' + encodeURIComponent(currentSignDocType) + '&docId=' + currentSignDocId)
                 .then(r => r.json())
                 .then(data => {
+                    if (!data.hasSignatureImage) {
+                        if (usbNoSigSec) usbNoSigSec.style.display = 'block';
+                        if (formSec) formSec.style.display = 'none';
+                        if (agentCard) agentCard.style.display = 'none';
+                        return;
+                    }
                     currentUsbDocHash = data.dataHashSha256 || '';
                     currentUsbDocTitle = data.documentTitle || 'Tài liệu Nghị quyết 52';
                     if (titleEl) titleEl.textContent = currentUsbDocTitle;

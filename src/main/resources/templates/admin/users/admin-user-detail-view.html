@@ -385,14 +385,14 @@
                             <div class="form-grid">
                                 <div class="form-group"
                                     th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
-                                    <label class="form-label" for="departmentId">Tổ bộ môn <span class="req"
+                                    <label class="form-label" for="departmentId">Tổ Chuyên Môn <span class="req"
                                             aria-hidden="true">*</span></label>
                                     <div class="select-wrapper">
                                         <select id="departmentId" th:field="*{departmentId}"
                                             class="form-select custom-select" required
-                                            data-msg-required="Vui lòng chọn môn học."
+                                            data-msg-required="Vui lòng chọn tổ chuyên môn."
                                             th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby='departmentId-error'">
-                                            <option value="">-- Chọn môn học --</option>
+                                            <option value="">-- Chọn tổ chuyên môn --</option>
                                             <option th:each="dept : ${departments}" th:value="${dept.id}"
                                                 th:text="${dept.name}"
                                                 th:selected="${user.department != null && dept.id == user.department.id}">

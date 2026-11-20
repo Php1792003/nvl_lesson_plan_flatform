@@ -275,6 +275,12 @@ public class Nq52EvaluationController {
      * - BGH: Có toàn quyền xem và chuyển đổi giữa 3 Điểm trường / Phân hiệu (hoặc xem toàn trường).
      * - Tổ trưởng: Cố định phạm vi xét duyệt tại đúng Điểm trường / Phân hiệu và Tổ môn được phân công.
      */
+    /**
+     * Danh sách phiếu cần duyệt dành cho Tổ trưởng chuyên môn & Ban Giám Hiệu
+     * - BGH: Có toàn quyền xem và chuyển đổi giữa 3 Điểm trường / Phân hiệu (hoặc xem toàn trường).
+     * - Tổ trưởng: Cố định phạm vi xét duyệt tại đúng Điểm trường / Phân hiệu và Tổ môn được phân công.
+     * - Mặc định hiển thị phiếu ở tháng hiện tại theo thời gian thực, có thanh lọc linh hoạt để xem các tháng khác.
+     */
     @GetMapping("/reviews")
     public String reviewQueue(@AuthenticationPrincipal CurrentUser currentUser,
                               @RequestParam(name = "campusId", required = false) Long campusId,
@@ -282,6 +288,7 @@ public class Nq52EvaluationController {
                               @RequestParam(name = "status", required = false) String statusStr,
                               @RequestParam(name = "month", required = false) Integer month,
                               @RequestParam(name = "year", required = false) Integer year,
+                              @RequestParam(name = "allMonths", required = false) Boolean allMonths,
                               Model model) {
         User user = getUser(currentUser);
         if (!evaluationService.isReviewer(user)) {
@@ -294,6 +301,30 @@ public class Nq52EvaluationController {
         if (!isAdmin) {
             campusId = (user.getCampus() != null) ? user.getCampus().getId() : null;
             deptId = (user.getDepartment() != null) ? user.getDepartment().getId() : null;
+        }
+
+        // Xác định tháng và năm hiện tại theo thời gian thực
+        LocalDate today = LocalDate.now();
+        int currentRealTimeMonth = today.getMonthValue();
+        int currentRealTimeYear = today.getYear();
+
+        // Xử lý logic lọc tháng:
+        // - Nếu allMonths = true hoặc month == 0: Xem tất cả các tháng
+        // - Nếu không truyền month và year (truy cập ban đầu): Tự động hiển thị tháng hiện tại theo thời gian thực
+        // - Nếu người dùng chọn tháng/năm cụ thể: lọc theo tháng/năm được chọn
+        boolean isAllMonths = Boolean.TRUE.equals(allMonths) || (month != null && month == 0);
+        Integer filterMonth;
+        Integer filterYear;
+
+        if (isAllMonths) {
+            filterMonth = null;
+            filterYear = (year != null && year > 0) ? year : null;
+        } else if (month == null && year == null) {
+            filterMonth = currentRealTimeMonth;
+            filterYear = currentRealTimeYear;
+        } else {
+            filterMonth = month;
+            filterYear = (year != null && year > 0) ? year : currentRealTimeYear;
         }
 
         // Mặc định ở site duyệt phiếu chỉ hiển thị danh sách CẦN DUYỆT:
@@ -311,7 +342,7 @@ public class Nq52EvaluationController {
             filterStatus = Nq52Status.COUNCIL_REVIEWED;
         }
 
-        List<Nq52Evaluation> evaluations = evaluationService.getDepartmentEvaluations(user, campusId, deptId, filterStatus, month, year);
+        List<Nq52Evaluation> evaluations = evaluationService.getDepartmentEvaluations(user, campusId, deptId, filterStatus, filterMonth, filterYear);
         // Khu vực duyệt phiếu chỉ quản lý hồ sơ đã nộp, loại bỏ hoàn toàn DRAFT
         evaluations = evaluations.stream()
                 .filter(e -> e.getStatus() != Nq52Status.DRAFT)
@@ -320,9 +351,10 @@ public class Nq52EvaluationController {
         List<Department> departments = departmentRepository.findAll();
         List<Campus> campuses = campusRepository.findAll();
 
-        List<Nq52Evaluation> allDept = evaluationService.getDepartmentEvaluations(user, campusId, deptId, null, null, null);
-        long councilReviewedCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
-        long draftReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.DRAFT).count();
+        // 1. Số liệu thống kê cho kỳ đánh giá đang lọc (Tháng/Năm đang chọn hoặc tất cả)
+        List<Nq52Evaluation> periodDept = evaluationService.getDepartmentEvaluations(user, campusId, deptId, null, filterMonth, filterYear);
+        long councilReviewedCount = periodDept.stream().filter(e -> e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
+        long draftReviewCount = periodDept.stream().filter(e -> e.getStatus() == Nq52Status.DRAFT).count();
 
         long pendingReviewCount;
         long completedReviewCount;
@@ -333,7 +365,7 @@ public class Nq52EvaluationController {
             // - Cần duyệt: Các đánh giá Tổ trưởng đã duyệt xong (REVIEWED)
             // - Đã đánh giá / Hoàn thành: Các đánh giá Ban Giám Hiệu đã duyệt chính thức (COUNCIL_REVIEWED)
             // - Tổng hồ sơ tiếp nhận: Hồ sơ đã qua cấp Tổ (REVIEWED + COUNCIL_REVIEWED)
-            pendingReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED).count();
+            pendingReviewCount = periodDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED).count();
             completedReviewCount = councilReviewedCount;
             totalSubmittedCount = pendingReviewCount + completedReviewCount;
         } else {
@@ -341,9 +373,18 @@ public class Nq52EvaluationController {
             // - Cần duyệt: Các phiếu giáo viên đã nộp chờ Tổ trưởng duyệt (SUBMITTED)
             // - Đã đánh giá: Các phiếu Tổ trưởng đã hoàn tất (REVIEWED hoặc COUNCIL_REVIEWED)
             // - Tổng hồ sơ: SUBMITTED + REVIEWED + COUNCIL_REVIEWED
-            pendingReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.SUBMITTED).count();
-            completedReviewCount = allDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED || e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
+            pendingReviewCount = periodDept.stream().filter(e -> e.getStatus() == Nq52Status.SUBMITTED).count();
+            completedReviewCount = periodDept.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED || e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
             totalSubmittedCount = pendingReviewCount + completedReviewCount;
+        }
+
+        // 2. Số liệu tổng thể toàn bộ các tháng (để phát hiện và thông báo nếu có hồ sơ tồn đọng ở tháng khác)
+        long allTimePendingCount = 0;
+        if (filterMonth != null) {
+            List<Nq52Evaluation> allDeptAllTime = evaluationService.getDepartmentEvaluations(user, campusId, deptId, null, null, null);
+            allTimePendingCount = isAdmin
+                    ? allDeptAllTime.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED).count()
+                    : allDeptAllTime.stream().filter(e -> e.getStatus() == Nq52Status.SUBMITTED).count();
         }
 
         // Xác định Điểm trường / Phân hiệu đang xem
@@ -355,8 +396,17 @@ public class Nq52EvaluationController {
             currentViewingCampus = user.getCampus();
         }
 
-        int currentYear = LocalDate.now().getYear();
-        List<Integer> years = List.of(currentYear + 1, currentYear, currentYear - 1, currentYear - 2);
+        List<Integer> years = List.of(currentRealTimeYear + 1, currentRealTimeYear, currentRealTimeYear - 1, currentRealTimeYear - 2);
+
+        // Tính tháng trước / tháng sau cho thanh điều hướng nhanh
+        int targetNavYear = (filterYear != null) ? filterYear : currentRealTimeYear;
+        int targetNavMonth = (filterMonth != null) ? filterMonth : currentRealTimeMonth;
+        int prevNavMonth = (targetNavMonth == 1) ? 12 : targetNavMonth - 1;
+        int prevNavYear = (targetNavMonth == 1) ? targetNavYear - 1 : targetNavYear;
+        int nextNavMonth = (targetNavMonth == 12) ? 1 : targetNavMonth + 1;
+        int nextNavYear = (targetNavMonth == 12) ? targetNavYear + 1 : targetNavYear;
+
+        boolean isViewingCurrentMonth = (filterMonth != null && filterMonth == currentRealTimeMonth && filterYear != null && filterYear == currentRealTimeYear);
 
         model.addAttribute("pageTitle", isAdmin ? "Ban Giám Hiệu duyệt đánh giá NQ 52" : "Duyệt phiếu đánh giá NQ 52 cấp Tổ");
         model.addAttribute("evaluations", evaluations);
@@ -366,11 +416,22 @@ public class Nq52EvaluationController {
         model.addAttribute("selectedDeptId", deptId);
         model.addAttribute("currentViewingCampus", currentViewingCampus);
         model.addAttribute("selectedStatus", selectedStatus);
-        model.addAttribute("selectedMonth", month);
-        model.addAttribute("selectedYear", year);
-        model.addAttribute("currentMonth", LocalDate.now().getMonthValue());
-        model.addAttribute("currentYear", currentYear);
+
+        model.addAttribute("selectedMonth", filterMonth);
+        model.addAttribute("selectedYear", filterYear);
+        model.addAttribute("isAllMonths", isAllMonths);
+        model.addAttribute("isCurrentMonth", isViewingCurrentMonth);
+        model.addAttribute("currentRealTimeMonth", currentRealTimeMonth);
+        model.addAttribute("currentRealTimeYear", currentRealTimeYear);
+        model.addAttribute("currentMonth", currentRealTimeMonth);
+        model.addAttribute("currentYear", currentRealTimeYear);
         model.addAttribute("availableYears", years);
+
+        model.addAttribute("prevNavMonth", prevNavMonth);
+        model.addAttribute("prevNavYear", prevNavYear);
+        model.addAttribute("nextNavMonth", nextNavMonth);
+        model.addAttribute("nextNavYear", nextNavYear);
+
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("userDept", user.getDepartment());
         model.addAttribute("userCampus", user.getCampus());
@@ -379,6 +440,7 @@ public class Nq52EvaluationController {
         model.addAttribute("completedCount", completedReviewCount);
         model.addAttribute("councilReviewedCount", councilReviewedCount);
         model.addAttribute("draftCount", draftReviewCount);
+        model.addAttribute("allTimePendingCount", allTimePendingCount);
 
         return "nq52/review-list";
     }

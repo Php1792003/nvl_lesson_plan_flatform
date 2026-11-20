@@ -60,6 +60,10 @@ public class Nq52UserSignatureProfileService {
             if (p.getAutoAttachSignature() == null) {
                 p.setAutoAttachSignature(true);
             }
+            // Tự động dọn dẹp các hình ảnh con dấu SVG giả lập / mock cũ để người dùng tự truyền ảnh thật
+            if (p.getSignatureImageBase64() != null && p.getSignatureImageBase64().contains("data:image/svg+xml")) {
+                p.setSignatureImageBase64("");
+            }
             // Không tự động điền email/tài khoản hệ thống vào caUsername nếu chưa liên kết chứng thư số
             if ((p.getCertSerial() == null || p.getCertSerial().isBlank())
                     && p.getCaUsername() != null && user.getEmail() != null && p.getCaUsername().equalsIgnoreCase(user.getEmail())) {
@@ -293,11 +297,7 @@ public class Nq52UserSignatureProfileService {
         p.setLinkedAt(Instant.now());
         p.setWarningMessage(caResult.getWarningMessage());
 
-        // Khi liên kết thành công với Cổng CA, tự động tạo con dấu chuẩn tương ứng với CA nếu chưa có
-        if (p.getSignatureImageBase64() == null || p.getSignatureImageBase64().isBlank()) {
-            String deptName = (user.getDepartment() != null) ? user.getDepartment().getName() : "Trường THCS Nguyễn Văn Linh";
-            p.setSignatureImageBase64(generateDefaultStampSvgBase64(p.getFullName(), deptName, providerDisplayName));
-        }
+        // Tuyệt đối không tự động tạo con dấu mock/giả; để người dùng tự tải lên hình ảnh chữ ký thật
 
         log.info("Đã xác thực và kết nối thành công tài khoản CA cho user id={}, provider={}", user.getId(), prov);
         return profileRepository.save(p);
@@ -343,6 +343,15 @@ public class Nq52UserSignatureProfileService {
         }
         Nq52UserSignatureProfile p = getOrCreateProfile(user);
         p.setSignatureImageBase64(base64Image.trim());
+        return profileRepository.save(p);
+    }
+
+    /**
+     * Xóa hình ảnh chữ ký / con dấu số do người dùng tải lên
+     */
+    public Nq52UserSignatureProfile removeSignatureImage(User user) {
+        Nq52UserSignatureProfile p = getOrCreateProfile(user);
+        p.setSignatureImageBase64("");
         return profileRepository.save(p);
     }
 

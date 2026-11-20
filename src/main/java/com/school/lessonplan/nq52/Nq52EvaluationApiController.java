@@ -127,5 +127,45 @@ public class Nq52EvaluationApiController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    /**
+     * API kiểm tra số liệu thời gian thực cho site duyệt phiếu cấp Tổ & Ban Giám Hiệu
+     */
+    @GetMapping("/reviews/realtime-stats")
+    public ResponseEntity<Map<String, Object>> getReviewRealtimeStats(
+            @RequestParam(name = "campusId", required = false) Long campusId,
+            @RequestParam(name = "deptId", required = false) Long deptId,
+            @RequestParam(name = "month", required = false) Integer month,
+            @RequestParam(name = "year", required = false) Integer year,
+            @AuthenticationPrincipal CurrentUser currentUser) {
+        User user = getUser(currentUser);
+        boolean isAdmin = evaluationService.isAdmin(user);
+        if (!isAdmin) {
+            campusId = (user.getCampus() != null) ? user.getCampus().getId() : null;
+            deptId = (user.getDepartment() != null) ? user.getDepartment().getId() : null;
+        }
+
+        if (month != null && month == 0) {
+            month = null;
+        }
+
+        java.util.List<Nq52Evaluation> evals = evaluationService.getDepartmentEvaluations(user, campusId, deptId, null, month, year);
+        long councilReviewed = evals.stream().filter(e -> e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
+        long pendingCount = isAdmin
+                ? evals.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED).count()
+                : evals.stream().filter(e -> e.getStatus() == Nq52Status.SUBMITTED).count();
+        long completedCount = isAdmin
+                ? councilReviewed
+                : evals.stream().filter(e -> e.getStatus() == Nq52Status.REVIEWED || e.getStatus() == Nq52Status.COUNCIL_REVIEWED).count();
+        long totalCount = pendingCount + completedCount;
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("pendingCount", pendingCount);
+        res.put("completedCount", completedCount);
+        res.put("totalCount", totalCount);
+        res.put("timestamp", System.currentTimeMillis());
+        return ResponseEntity.ok(res);
+    }
 }
 

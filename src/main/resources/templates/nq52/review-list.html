@@ -310,6 +310,243 @@
             font-size: 11px;
             margin-left: 4px;
         }
+
+        /* Real-time Status Badge & Live Clock */
+        .nq52-realtime-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: #15803d;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .live-dot-green {
+            width: 8px;
+            height: 8px;
+            background-color: #16a34a;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
+            animation: pulse-green 1.8s infinite;
+        }
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+        }
+
+        /* Sleek Month Navigator Bar */
+        .nq52-month-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+            background: #ffffff;
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: var(--radius-md, 12px);
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .month-nav-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-month-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 13px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .btn-month-nav:hover {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #93c5fd;
+            text-decoration: none;
+        }
+        .current-period-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: #f1f5f9;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            color: #0f172a;
+        }
+        .current-period-display.is-live-month {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: #14532d;
+        }
+        .badge-live-now {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11.5px;
+            font-weight: 700;
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .btn-back-current-month {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #93c5fd;
+            padding: 3px 9px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .btn-back-current-month:hover {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+            text-decoration: none;
+        }
+        .month-pills-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .month-pills-label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .month-pills-scroll {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .month-pill-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 30px;
+            padding: 0 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .month-pill-btn:hover {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #93c5fd;
+            text-decoration: none;
+        }
+        .month-pill-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+        }
+        .month-pill-btn.is-today-month:not(.active) {
+            border-color: #16a34a;
+            color: #15803d;
+            background: #f0fdf4;
+            font-weight: 700;
+        }
+        .today-marker {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: #16a34a;
+        }
+        .month-pill-btn.active .today-marker {
+            background-color: #ffffff;
+        }
+        .month-pill-btn.all-pill {
+            padding: 0 10px;
+            font-weight: 600;
+        }
+
+        /* Pending other months alert banner */
+        .nq52-pending-alert-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: var(--radius-md, 12px);
+            padding: 10px 16px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            color: #92400e;
+        }
+        .btn-view-all-pending {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #b45309;
+            text-decoration: underline;
+            padding: 3px 8px;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+        }
+        .btn-view-all-pending:hover {
+            background: #fef3c7;
+            text-decoration: none;
+        }
+
+        /* Floating realtime toast notification */
+        .realtime-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 9999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .realtime-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
     </style>
 
     <!-- Flash message -->
@@ -320,7 +557,7 @@
         <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
     </div>
 
-    <!-- Header bar: Bỏ tiêu đề H1 trùng lặp với topbar, hiển thị vai trò & phạm vi phụ trách -->
+    <!-- Header bar: Bỏ tiêu đề H1 trùng lặp với topbar, hiển thị vai trò & phạm vi phụ trách + Đồng hồ thời gian thực -->
     <div class="nq52-header-bar">
         <div class="nq52-header-left">
             <span th:if="${isAdmin}" class="nq52-role-tag admin-tag" title="Tài khoản Ban Giám Hiệu có thẩm quyền toàn trường tại cả 3 điểm trường">
@@ -339,6 +576,19 @@
             <span class="nq52-header-subtitle">Tiếp nhận, thẩm định và chấm điểm phiếu đánh giá Mẫu 03</span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <!-- Real-time Status Badge & Live Clock -->
+            <div class="nq52-realtime-badge" title="Hệ thống theo dõi thời gian thực">
+                <span class="live-dot-green"></span>
+                <span>Trực tiếp:</span>
+                <span id="liveClockText" style="font-family: inherit; font-size: 12px; font-weight: 700;">Đang đồng bộ...</span>
+            </div>
+
+            <!-- Instant Refresh Button -->
+            <button type="button" onclick="refreshReviewData()" class="btn btn-outline btn-sm" style="font-weight: 600; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px;" title="Làm mới dữ liệu tức thì">
+                <svg id="refreshIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                <span>Làm mới</span>
+            </button>
+
             <a sec:authorize="hasRole('ADMIN')" th:href="@{/nq52/summary}" class="btn btn-sm" style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background-color: #059669; color: #fff; border: 1px solid #047857; border-radius: 6px; text-decoration: none;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
@@ -376,13 +626,13 @@
             </div>
             <div class="nq52-campus-nav">
                 <span style="font-size: 12px; font-weight: 600; color: #64748b; margin-right: 4px;">Xem nhanh:</span>
-                <a th:href="@{/nq52/reviews(status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+                <a th:href="@{/nq52/reviews(status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear}, allMonths=${isAllMonths ? 'true' : null})}"
                    class="nq52-campus-btn" th:classappend="${selectedCampusId == null ? 'active' : ''}"
                    title="Xem tất cả hồ sơ toàn trường">
                     Tất cả điểm trường
                 </a>
                 <a th:each="c : ${campuses}"
-                   th:href="@{/nq52/reviews(campusId=${c.id}, status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+                   th:href="@{/nq52/reviews(campusId=${c.id}, status=${selectedStatus}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear}, allMonths=${isAllMonths ? 'true' : null})}"
                    class="nq52-campus-btn" th:classappend="${selectedCampusId == c.id ? 'active' : ''}"
                    th:title="'Lọc hồ sơ tại: ' + ${c.name}">
                     <span th:text="${c.name}">Điểm trường chính</span>
@@ -411,10 +661,88 @@
         </th:block>
     </div>
 
+    <!-- Thanh chuyển tháng nhanh & hiển thị kỳ đánh giá thời gian thực -->
+    <div class="nq52-month-nav-bar">
+        <div class="month-nav-left">
+            <!-- Nút Tháng trước -->
+            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, deptId=${selectedDeptId}, status=${selectedStatus}, month=${prevNavMonth}, year=${prevNavYear})}"
+               class="btn-month-nav" title="Xem kỳ đánh giá tháng trước">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <span th:text="'Tháng ' + ${prevNavMonth} + '/' + ${prevNavYear}">Tháng trước</span>
+            </a>
+
+            <!-- Thẻ Kỳ đánh giá trung tâm -->
+            <div class="current-period-display" th:classappend="${isCurrentMonth ? 'is-live-month' : ''}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span th:if="${isAllMonths}" style="font-weight: 800; font-size: 14.5px;">Tất cả các tháng</span>
+                <span th:unless="${isAllMonths}" style="font-weight: 800; font-size: 14.5px;"
+                      th:text="'Tháng ' + ${selectedMonth} + '/' + ${selectedYear}">Tháng 11/2026</span>
+
+                <span th:if="${isCurrentMonth}" class="badge-live-now" title="Đang xem đúng tháng hiện tại theo thời gian thực">
+                    <span class="live-dot-green"></span> Tháng hiện tại
+                </span>
+                <a th:if="${!isCurrentMonth}" 
+                   th:href="@{/nq52/reviews(campusId=${selectedCampusId}, deptId=${selectedDeptId}, status=${selectedStatus})}"
+                   class="btn-back-current-month" title="Nhấp để quay lại kỳ tháng hiện tại ngay lập tức">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Về tháng hiện tại (<span th:text="'T' + ${currentRealTimeMonth} + '/' + ${currentRealTimeYear}">T11/2026</span>)
+                </a>
+            </div>
+
+            <!-- Nút Tháng sau -->
+            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, deptId=${selectedDeptId}, status=${selectedStatus}, month=${nextNavMonth}, year=${nextNavYear})}"
+               class="btn-month-nav" title="Xem kỳ đánh giá tháng tiếp theo">
+                <span th:text="'Tháng ' + ${nextNavMonth} + '/' + ${nextNavYear}">Tháng sau</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+        </div>
+
+        <!-- Dải chọn tháng nhanh 1..12 + Tất cả -->
+        <div class="month-pills-container">
+            <span class="month-pills-label">Chọn nhanh:</span>
+            <div class="month-pills-scroll">
+                <a th:each="m : ${#numbers.sequence(1, 12)}"
+                   th:href="@{/nq52/reviews(campusId=${selectedCampusId}, deptId=${selectedDeptId}, status=${selectedStatus}, month=${m}, year=${selectedYear != null ? selectedYear : currentRealTimeYear})}"
+                   class="month-pill-btn"
+                   th:classappend="${selectedMonth == m and !isAllMonths ? 'active' : (m == currentRealTimeMonth ? 'is-today-month' : '')}"
+                   th:title="${m == currentRealTimeMonth ? 'Tháng ' + m + ' (Tháng hiện tại)' : 'Xem Tháng ' + m}">
+                    <span th:text="'T' + ${m}">T1</span>
+                    <span th:if="${m == currentRealTimeMonth}" class="today-marker" title="Tháng hiện tại"></span>
+                </a>
+                <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, deptId=${selectedDeptId}, status=${selectedStatus}, allMonths=true, year=${selectedYear != null ? selectedYear : currentRealTimeYear})}"
+                   class="month-pill-btn all-pill"
+                   th:classappend="${isAllMonths ? 'active' : ''}"
+                   title="Xem tất cả các tháng">
+                    Tất cả
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cảnh báo nếu có hồ sơ chờ duyệt tồn đọng ở các tháng khác -->
+    <div th:if="${allTimePendingCount > pendingCount}" class="nq52-pending-alert-banner">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>
+                Đang xem <strong>Tháng <span th:text="${selectedMonth}">11</span>/<span th:text="${selectedYear}">2026</span></strong> (có <strong th:text="${pendingCount}">0</strong> hồ sơ cần duyệt). 
+                Ngoài ra còn <strong style="color: #b45309;" th:text="${allTimePendingCount - pendingCount}">0</strong> hồ sơ cần duyệt ở các tháng khác!
+            </span>
+        </div>
+        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, deptId=${selectedDeptId}, status=${isAdmin ? 'REVIEWED' : 'SUBMITTED'}, allMonths=true, year=${selectedYear})}" 
+           class="btn-view-all-pending">
+            Xem tất cả hồ sơ chờ duyệt &rarr;
+        </a>
+    </div>
+
     <!-- 3 KPI Stat Cards - Tối ưu tập trung cho việc duyệt hồ sơ -->
     <div class="nq52-stats-grid">
         <!-- Card 1: Cần duyệt -->
-        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'REVIEWED' : 'SUBMITTED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'REVIEWED' : 'SUBMITTED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear}, allMonths=${isAllMonths ? 'true' : null})}" 
            class="nq52-stat-card card-pending" 
            th:classappend="${(isAdmin and selectedStatus == 'REVIEWED') or (!isAdmin and selectedStatus == 'SUBMITTED') ? 'active-card' : ''}"
            th:title="${isAdmin ? 'Nhấp để xem danh sách hồ sơ Tổ trưởng đã duyệt, chờ Ban Giám Hiệu kết luận & ban hành' : 'Nhấp để xem danh sách hồ sơ đang chờ Tổ trưởng duyệt'}">
@@ -422,31 +750,31 @@
                 <div class="nq52-stat-label" style="color: #b45309;" th:text="${isAdmin ? 'Hồ sơ chờ BGH duyệt' : 'Hồ sơ cần duyệt ngay'}">Hồ sơ cần duyệt ngay</div>
                 <span class="nq52-pulse-dot" th:if="${pendingCount > 0}"></span>
             </div>
-            <div class="nq52-stat-value" style="color: #d97706;" th:text="${pendingCount != null ? pendingCount : 0}">0</div>
+            <div class="nq52-stat-value" id="statPendingCount" style="color: #d97706;" th:text="${pendingCount != null ? pendingCount : 0}">0</div>
             <div class="nq52-stat-desc" th:text="${isAdmin ? 'Tổ trưởng đã duyệt xong, chờ BGH kết luận xếp loại &amp; ký số' : 'Giáo viên đã nộp, cần Tổ trưởng chấm điểm xếp loại'}">Giáo viên đã nộp, cần chấm điểm xếp loại</div>
         </a>
 
         <!-- Card 2: Đã hoàn thành đánh giá -->
-        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'COUNCIL_REVIEWED' : 'REVIEWED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'COUNCIL_REVIEWED' : 'REVIEWED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear}, allMonths=${isAllMonths ? 'true' : null})}" 
            class="nq52-stat-card card-completed"
            th:classappend="${(isAdmin and selectedStatus == 'COUNCIL_REVIEWED') or (!isAdmin and selectedStatus == 'REVIEWED') ? 'active-card' : ''}"
            th:title="${isAdmin ? 'Nhấp để xem danh sách hồ sơ Ban Giám Hiệu đã hoàn tất đánh giá &amp; ban hành' : 'Nhấp để xem danh sách hồ sơ Tổ trưởng đã đánh giá xong'}">
             <div class="nq52-stat-header">
                 <div class="nq52-stat-label" style="color: #15803d;" th:text="${isAdmin ? 'BGH đã duyệt chính thức' : 'Đã hoàn thành đánh giá'}">Đã hoàn thành đánh giá</div>
             </div>
-            <div class="nq52-stat-value" style="color: #059669;" th:text="${completedCount != null ? completedCount : 0}">0</div>
+            <div class="nq52-stat-value" id="statCompletedCount" style="color: #059669;" th:text="${completedCount != null ? completedCount : 0}">0</div>
             <div class="nq52-stat-desc" th:text="${isAdmin ? 'Ban Giám Hiệu đã hoàn tất kết luận &amp; ký số ban hành' : 'Đã có kết quả điểm số và xếp loại của Tổ'}">Đã có kết quả điểm số và xếp loại chính thức</div>
         </a>
 
         <!-- Card 3: Tổng hồ sơ -->
-        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='ALL', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}" 
+        <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='ALL', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear}, allMonths=${isAllMonths ? 'true' : null})}" 
            class="nq52-stat-card card-total"
            th:classappend="${selectedStatus == 'ALL' ? 'active-card' : ''}"
            title="Nhấp để xem toàn bộ hồ sơ">
             <div class="nq52-stat-header">
                 <div class="nq52-stat-label" style="color: #1e40af;" th:text="${isAdmin ? 'Tổng hồ sơ tiếp nhận' : 'Tổng hồ sơ đã nộp'}">Tổng hồ sơ đã nộp</div>
             </div>
-            <div class="nq52-stat-value" style="color: #2563eb;" th:text="${totalCount != null ? totalCount : 0}">0</div>
+            <div class="nq52-stat-value" id="statTotalCount" style="color: #2563eb;" th:text="${totalCount != null ? totalCount : 0}">0</div>
             <div class="nq52-stat-desc" th:text="${isAdmin ? 'Toàn bộ hồ sơ đã qua thẩm định cấp Tổ' : 'Toàn bộ hồ sơ giáo viên đã gửi về cấp Tổ'}">Toàn bộ hồ sơ giáo viên đã gửi về cấp Tổ</div>
         </a>
     </div>
@@ -455,34 +783,34 @@
     <div class="nq52-tabs-row">
         <div class="nq52-tabs" role="tablist">
             <!-- Tab 1: Cần duyệt -->
-            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'REVIEWED' : 'SUBMITTED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'REVIEWED' : 'SUBMITTED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear}, allMonths=${isAllMonths ? 'true' : null})}"
                class="nq52-tab" th:classappend="${(isAdmin and selectedStatus == 'REVIEWED') or (!isAdmin and selectedStatus == 'SUBMITTED') ? 'active' : ''}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
                 <span th:text="${isAdmin ? 'Cần BGH duyệt (Tổ đã duyệt)' : 'Cần duyệt cấp Tổ'}">Cần duyệt</span>
-                <span class="nq52-tab-cnt cnt-warning" th:text="${pendingCount != null ? pendingCount : 0}">0</span>
+                <span class="nq52-tab-cnt cnt-warning" id="tabPendingCount" th:text="${pendingCount != null ? pendingCount : 0}">0</span>
             </a>
             <!-- Tab 2: Đã đánh giá -->
-            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'COUNCIL_REVIEWED' : 'REVIEWED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status=${isAdmin ? 'COUNCIL_REVIEWED' : 'REVIEWED'}, deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear}, allMonths=${isAllMonths ? 'true' : null})}"
                class="nq52-tab" th:classappend="${(isAdmin and selectedStatus == 'COUNCIL_REVIEWED') or (!isAdmin and selectedStatus == 'REVIEWED') ? 'active' : ''}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
                 <span th:text="${isAdmin ? 'BGH đã duyệt' : 'Tổ đã đánh giá'}">Đã đánh giá</span>
-                <span class="nq52-tab-cnt cnt-success" th:text="${completedCount != null ? completedCount : 0}">0</span>
+                <span class="nq52-tab-cnt cnt-success" id="tabCompletedCount" th:text="${completedCount != null ? completedCount : 0}">0</span>
             </a>
             <!-- Tab 3: Tất cả -->
-            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='ALL', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear})}"
+            <a th:href="@{/nq52/reviews(campusId=${selectedCampusId}, status='ALL', deptId=${selectedDeptId}, month=${selectedMonth}, year=${selectedYear}, allMonths=${isAllMonths ? 'true' : null})}"
                class="nq52-tab" th:classappend="${selectedStatus == 'ALL' ? 'active' : ''}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
                 <span>Tất cả hồ sơ</span>
-                <span class="nq52-tab-cnt" th:text="${totalCount != null ? totalCount : 0}">0</span>
+                <span class="nq52-tab-cnt" id="tabTotalCount" th:text="${totalCount != null ? totalCount : 0}">0</span>
             </a>
         </div>
         <div th:if="${draftCount != null and draftCount > 0}" style="font-size: 12.5px; color: #64748b; display: inline-flex; align-items: center; gap: 5px;">
@@ -502,13 +830,14 @@
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
             </svg>
             <span>Bộ lọc danh sách</span>
+            <span style="font-size: 11.5px; font-weight: normal; color: #64748b; margin-left: auto;">(Chọn điều kiện để tự động cập nhật ngay)</span>
         </div>
-        <form th:action="@{/nq52/reviews}" method="get" style="display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap;">
+        <form th:action="@{/nq52/reviews}" method="get" id="nq52ReviewFilterForm" style="display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap;">
             
             <!-- Bộ lọc Điểm trường: Ban Giám Hiệu chọn tự do, Tổ trưởng cố định phân hiệu của mình -->
             <div th:if="${isAdmin}" style="flex: 1 1 190px; min-width: 180px;">
                 <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary, #475569);">Điểm trường / Phân hiệu:</label>
-                <select name="campusId" class="form-control" style="font-size: 13.5px; height: 38px;">
+                <select name="campusId" class="form-control" onchange="this.form.submit()" style="font-size: 13.5px; height: 38px;">
                     <option value="">-- Tất cả 3 điểm trường --</option>
                     <option th:each="c : ${campuses}"
                             th:value="${c.id}"
@@ -524,7 +853,7 @@
 
             <div th:if="${isAdmin}" style="flex: 1 1 180px; min-width: 170px;">
                 <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary, #475569);">Tổ chuyên môn:</label>
-                <select name="deptId" class="form-control" style="font-size: 13.5px; height: 38px;">
+                <select name="deptId" class="form-control" onchange="this.form.submit()" style="font-size: 13.5px; height: 38px;">
                     <option value="">-- Tất cả tổ chuyên môn --</option>
                     <option th:each="dept : ${departments}"
                             th:value="${dept.id}"
@@ -533,31 +862,31 @@
                 </select>
             </div>
 
-            <div style="flex: 1 1 150px; min-width: 140px;">
+            <div style="flex: 1 1 160px; min-width: 150px;">
                 <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary, #475569);">Tháng đánh giá:</label>
-                <select name="month" class="form-control" style="font-size: 13.5px; height: 38px;">
-                    <option value="">-- Tất cả các tháng --</option>
+                <select name="month" class="form-control" onchange="this.form.submit()" style="font-size: 13.5px; height: 38px;">
+                    <option value="0" th:selected="${isAllMonths}">-- Tất cả các tháng --</option>
                     <option th:each="m : ${#numbers.sequence(1, 12)}"
                             th:value="${m}"
-                            th:text="'Tháng ' + ${m}"
-                            th:selected="${selectedMonth != null and selectedMonth == m}"></option>
+                            th:text="${m == currentRealTimeMonth ? 'Tháng ' + m + ' (Hiện tại)' : 'Tháng ' + m}"
+                            th:selected="${selectedMonth != null and !isAllMonths and selectedMonth == m}"></option>
                 </select>
             </div>
 
-            <div style="flex: 1 1 140px; min-width: 130px;">
+            <div style="flex: 1 1 150px; min-width: 140px;">
                 <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary, #475569);">Năm đánh giá:</label>
-                <select name="year" class="form-control" style="font-size: 13.5px; height: 38px;">
-                    <option value="">-- Tất cả các năm --</option>
+                <select name="year" class="form-control" onchange="this.form.submit()" style="font-size: 13.5px; height: 38px;">
+                    <option value="" th:selected="${selectedYear == null and isAllMonths}">-- Tất cả các năm --</option>
                     <option th:each="y : ${availableYears}"
                             th:value="${y}"
-                            th:text="'Năm ' + ${y}"
+                            th:text="${y == currentRealTimeYear ? 'Năm ' + y + ' (Hiện tại)' : 'Năm ' + y}"
                             th:selected="${selectedYear != null and selectedYear == y}"></option>
                 </select>
             </div>
 
             <div style="flex: 1 1 190px; min-width: 170px;">
                 <label style="display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary, #475569);">Trạng thái hiển thị:</label>
-                <select name="status" class="form-control" style="font-size: 13.5px; height: 38px;">
+                <select name="status" class="form-control" onchange="this.form.submit()" style="font-size: 13.5px; height: 38px;">
                     <!-- Dành cho Ban Giám Hiệu -->
                     <th:block th:if="${isAdmin}">
                         <option value="REVIEWED" th:selected="${selectedStatus == 'REVIEWED'}">Chờ BGH duyệt (Tổ đã duyệt)</option>
@@ -583,7 +912,7 @@
                     </svg>
                     <span>Lọc dữ liệu</span>
                 </button>
-                <a th:href="@{/nq52/reviews}" class="btn btn-outline" style="height: 38px; padding: 0 14px; font-size: 13.5px;" title="Xóa bộ lọc và quay về danh sách cần duyệt">
+                <a th:href="@{/nq52/reviews}" class="btn btn-outline" style="height: 38px; padding: 0 14px; font-size: 13.5px;" title="Xóa bộ lọc và quay về tháng hiện tại">
                     Đặt lại
                 </a>
             </div>
@@ -889,8 +1218,109 @@
 
             rows.forEach(function(r) { tbody.appendChild(r); });
         }
+
+        // Real-time Clock
+        function updateRealtimeClock() {
+            var now = new Date();
+            var days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            var dayName = days[now.getDay()];
+            var dd = String(now.getDate()).padStart(2, '0');
+            var mm = String(now.getMonth() + 1).padStart(2, '0');
+            var yyyy = now.getFullYear();
+            var hh = String(now.getHours()).padStart(2, '0');
+            var mi = String(now.getMinutes()).padStart(2, '0');
+            var ss = String(now.getSeconds()).padStart(2, '0');
+            var clockEl = document.getElementById('liveClockText');
+            if (clockEl) {
+                clockEl.textContent = dayName + ', ' + dd + '/' + mm + '/' + yyyy + ' • ' + hh + ':' + mi + ':' + ss;
+            }
+        }
+        setInterval(updateRealtimeClock, 1000);
+        updateRealtimeClock();
+
+        // Refresh Data with Spin Animation
+        function refreshReviewData() {
+            var icon = document.getElementById('refreshIcon');
+            if (icon) {
+                icon.style.transition = 'transform 0.6s ease';
+                icon.style.transform = 'rotate(360deg)';
+            }
+            setTimeout(function() {
+                location.reload();
+            }, 250);
+        }
+
+        // Background Real-time Polling (Mỗi 30 giây)
+        var initialPending = /*[[${pendingCount != null ? pendingCount : 0}]]*/ 0;
+        var initialTotal = /*[[${totalCount != null ? totalCount : 0}]]*/ 0;
+        var curMonth = /*[[${selectedMonth}]]*/ null;
+        var curYear = /*[[${selectedYear}]]*/ null;
+        var curCampus = /*[[${selectedCampusId}]]*/ null;
+        var curDept = /*[[${selectedDeptId}]]*/ null;
+
+        function checkRealtimeUpdates() {
+            var params = [];
+            if (curMonth !== null) params.push('month=' + curMonth);
+            if (curYear !== null) params.push('year=' + curYear);
+            if (curCampus !== null) params.push('campusId=' + curCampus);
+            if (curDept !== null) params.push('deptId=' + curDept);
+
+            var queryUrl = '/portal/api/nq52/evaluations/reviews/realtime-stats' + (params.length ? '?' + params.join('&') : '');
+
+            fetch(queryUrl, { headers: { 'Accept': 'application/json' } })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('Status ' + res.status);
+                    return res.json();
+                })
+                .then(function(data) {
+                    if (data && data.success) {
+                        var newPending = data.pendingCount;
+                        var newTotal = data.totalCount;
+
+                        var elStatPending = document.getElementById('statPendingCount');
+                        var elTabPending = document.getElementById('tabPendingCount');
+                        if (elStatPending && newPending !== undefined) elStatPending.textContent = newPending;
+                        if (elTabPending && newPending !== undefined) elTabPending.textContent = newPending;
+
+                        var elStatCompleted = document.getElementById('statCompletedCount');
+                        var elTabCompleted = document.getElementById('tabCompletedCount');
+                        if (elStatCompleted && data.completedCount !== undefined) elStatCompleted.textContent = data.completedCount;
+                        if (elTabCompleted && data.completedCount !== undefined) elTabCompleted.textContent = data.completedCount;
+
+                        var elStatTotal = document.getElementById('statTotalCount');
+                        var elTabTotal = document.getElementById('tabTotalCount');
+                        if (elStatTotal && newTotal !== undefined) elStatTotal.textContent = newTotal;
+                        if (elTabTotal && newTotal !== undefined) elTabTotal.textContent = newTotal;
+
+                        if (newPending !== initialPending || newTotal !== initialTotal) {
+                            var toast = document.getElementById('realtimeToast');
+                            var toastMsg = document.getElementById('realtimeToastMsg');
+                            if (toast && toastMsg) {
+                                toastMsg.textContent = 'Phát hiện có hồ sơ vừa cập nhật trạng thái mới!';
+                                toast.classList.add('show');
+                            }
+                        }
+                    }
+                })
+                .catch(function(err) {
+                    // Im lặng nếu mất mạng tạm thời
+                });
+        }
+        setInterval(checkRealtimeUpdates, 30000);
         /*]]>*/
     </script>
+
+    <!-- Floating Real-time Toast Notification -->
+    <div id="realtimeToast" class="realtime-toast">
+        <span class="live-dot-green"></span>
+        <span id="realtimeToastMsg">Có cập nhật hồ sơ mới!</span>
+        <button type="button" onclick="location.reload()" class="btn btn-sm" style="background: #2563eb; color: #ffffff; padding: 4px 12px; font-size: 12px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+            Tải lại ngay
+        </button>
+        <button type="button" onclick="document.getElementById('realtimeToast').classList.remove('show')" style="background: transparent; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; padding: 0 4px;" title="Đóng thông báo">
+            &times;
+        </button>
+    </div>
 </div>
 </body>
 </html>

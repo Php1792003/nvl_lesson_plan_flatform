@@ -63,9 +63,9 @@
                         </div>
 
                         <div class="us-field">
-                            <label class="us-label" for="fDept">Môn học</label>
+                            <label class="us-label" for="fDept">Tổ chuyên môn</label>
                             <select id="fDept" name="departmentId" class="us-control">
-                                <option value="">Tất cả môn học</option>
+                                <option value="">Tất cả tổ chuyên môn</option>
                                 <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
                                     th:selected="${dept.id == departmentId}"></option>
                             </select>
@@ -124,7 +124,7 @@
                             <thead>
                                 <tr>
                                     <th>Họ và tên</th>
-                                    <th>Môn học</th>
+                                    <th>Tổ chuyên môn</th>
                                     <th>Điểm trường</th>
                                     <th>Vai trò</th>
                                     <th>Trạng thái</th>
@@ -144,7 +144,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td data-label="Môn học">
+                                    <td data-label="Tổ chuyên môn">
                                         <span th:if="${u.department != null}" th:text="${u.department.name}">Toán</span>
                                         <span th:if="${u.department == null}" class="us-muted">Chưa phân</span>
                                     </td>

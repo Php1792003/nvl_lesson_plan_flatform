@@ -492,8 +492,7 @@
                 </div>
                 <div class="sig-card-body">
                     <p style="font-size: 13px; color: #475569; margin: 0 0 16px 0;">
-                        Lựa chọn phương thức cung cấp chữ ký cá nhân: Tải ảnh con dấu/chữ ký tay có sẵn, Ký trực tiếp
-                        trên màn hình, hoặc Sử dụng mẫu con dấu điện tử chuẩn Bộ GD&amp;ĐT theo Nghị định 30/2020/NĐ-CP.
+                        Quý Thầy/Cô tự cung cấp hình ảnh chữ ký thật của mình bằng cách: <strong>Tải ảnh chụp/scan chữ ký tay hoặc con dấu cá nhân</strong> (file PNG nền trong suốt hoặc JPG), hoặc <strong>Ký tay trực tiếp trên màn hình</strong>.
                     </p>
 
                     <!-- Hướng dẫn cho BGH & người dùng USB Token -->
@@ -506,20 +505,22 @@
                         <div style="font-size: 13px; color: #1e3a8a; line-height: 1.5;">
                             <strong>Dành cho Ban Giám Hiệu &amp; Thiết bị USB Token:</strong>
                             Thiết bị phần cứng USB Token chỉ lưu trữ chứng thư số mật mã (Khóa riêng bí mật) để đảm bảo giá trị pháp lý và chống làm giả, <em>không chứa sẵn file hình ảnh con dấu/chữ ký</em>. 
-                            Quý Thầy/Cô thiết lập hình ảnh con dấu tròn đỏ hoặc chữ ký tay trực tiếp tại mục này (tải file ảnh PNG, vẽ tay hoặc tạo mẫu). Khi cắm USB Token để ký duyệt, hệ thống sẽ tự động ghép ảnh con dấu này vào đúng vị trí trên văn bản PDF, Word, Excel và phiếu đánh giá NQ52.
+                            Quý Thầy/Cô tải file hình ảnh con dấu tròn đỏ hoặc chữ ký tay thật trực tiếp tại mục này. Khi cắm USB Token để ký duyệt, hệ thống sẽ tự động ghép ảnh chữ ký thật này vào đúng vị trí trên văn bản PDF, Word, Excel và phiếu đánh giá NQ52.
                         </div>
                     </div>
 
-                    <!-- 3 Tabs lựa chọn phương thức tạo chữ ký -->
+                    <!-- 2 Tabs lựa chọn: Tải ảnh thật lên HOẶC Ký tay trên màn hình -->
                     <div class="sig-img-tabs">
                         <button type="button" class="sig-img-tab-btn active" id="tabBtnUpload"
                             onclick="switchImageTab('UPLOAD')"
                             style="display: inline-flex; align-items: center; gap: 6px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
                             </svg>
-                            <span>Tải ảnh chữ ký lên</span>
+                            <span>Tải ảnh chữ ký lên (Ưu tiên)</span>
                         </button>
                         <button type="button" class="sig-img-tab-btn" id="tabBtnDraw" onclick="switchImageTab('DRAW')"
                             style="display: inline-flex; align-items: center; gap: 6px;">
@@ -529,25 +530,14 @@
                             </svg>
                             <span>Ký tay trên màn hình</span>
                         </button>
-                        <button type="button" class="sig-img-tab-btn" id="tabBtnGenerate"
-                            onclick="switchImageTab('GENERATE')"
-                            style="display: inline-flex; align-items: center; gap: 6px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="3" y="3" width="18" height="18" rx="2" />
-                                <path d="M3 9h18" />
-                                <path d="M9 21V9" />
-                            </svg>
-                            <span>Mẫu con dấu số chuẩn NĐ 30</span>
-                        </button>
                     </div>
 
                     <!-- Tab 1: Upload file ảnh -->
                     <div id="tabContentUpload" style="display: block;">
-                        <div style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 24px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s;"
+                        <div style="border: 2px dashed #93c5fd; border-radius: 12px; padding: 24px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s;"
                             onclick="document.getElementById('sigFileInput').click()">
                             <div style="margin-bottom: 8px;">
-                                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2563eb"
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563eb"
                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                     <polyline points="17 8 12 3 7 8" />
@@ -555,12 +545,12 @@
                                 </svg>
                             </div>
                             <div style="font-weight: 700; font-size: 14px; color: #1e293b; margin-bottom: 4px;">
-                                Nhấp để chọn ảnh chữ ký / con dấu cá nhân
+                                Bấm vào đây để chọn ảnh chữ ký / con dấu thật từ máy tính
                             </div>
                             <div style="font-size: 12px; color: #64748b;">
-                                Hỗ trợ định dạng PNG (khuyên dùng nền trong suốt), JPG, SVG (Tối đa 5MB)
+                                Hỗ trợ định dạng PNG (khuyên dùng nền trong suốt để khi dán vào văn bản đẹp nhất), JPG, JPEG (Tối đa 5MB)
                             </div>
-                            <input type="file" id="sigFileInput" accept="image/*" style="display: none;"
+                            <input type="file" id="sigFileInput" accept="image/png,image/jpeg,image/jpg" style="display: none;"
                                 onchange="handleSignatureFileUpload(event)">
                         </div>
                     </div>
@@ -592,47 +582,46 @@
                         </div>
                     </div>
 
-                    <!-- Tab 3: Tạo con dấu điện tử tự động -->
-                    <div id="tabContentGenerate" style="display: none;">
-                        <div
-                            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
-                            <div style="font-weight: 700; font-size: 13px; color: #0f172a; margin-bottom: 8px;">
-                                Tạo con dấu điện tử chuẩn theo mẫu cơ quan:
-                            </div>
-                            <p style="font-size: 12.5px; color: #475569; margin: 0 0 12px 0;">
-                                Hệ thống tự động sinh con dấu hình chữ nhật bo góc với họ tên, đơn vị công tác và cơ
-                                quan cấp chứng thư số đã đăng ký.
-                            </p>
-                            <button type="button" class="btn btn-primary" onclick="generateStandardSeal()"
-                                style="font-size: 13px; padding: 8px 18px; display: inline-flex; align-items: center; gap: 6px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                                    <path d="M3 9h18" />
-                                </svg>
-                                <span>Tạo &amp; Áp dụng con dấu chuẩn NĐ 30</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Khung Xem trước chữ ký hiện tại -->
                     <div
                         style="margin-top: 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px;">
-                        <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px;">
+                        <div style="flex: 1; min-width: 280px;">
+                            <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px;">
                                 HÌNH ẢNH CHỮ KÝ / CON DẤU HIỆN TẠI:
                             </div>
                             <div
-                                style="border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; padding: 8px; display: inline-flex; align-items: center; justify-content: center; min-width: 220px; min-height: 90px;">
+                                style="border: 1.5px dashed #cbd5e1; border-radius: 8px; background: #ffffff; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 240px; min-height: 100px;">
                                 <img id="currentSignaturePreview"
                                     th:src="${(profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()) ? profile.signatureImageBase64 : ''}"
-                                    alt="Chữ ký số" style="max-height: 85px; max-width: 260px; object-fit: contain;"
+                                    alt="Chữ ký số do người dùng tải lên" style="max-height: 85px; max-width: 260px; object-fit: contain;"
                                     th:styleappend="${profile.signatureImageBase64 == null or profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
-                                <span id="noSignaturePlaceholder"
-                                    style="font-size: 12px; color: #94a3b8; font-style: italic;"
-                                    th:styleappend="${profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: inline;'">
-                                    Chưa có hình ảnh chữ ký hoặc con dấu (Vui lòng tải ảnh lên, vẽ tay hoặc tạo con dấu ở trên)
-                                </span>
+                                <div id="noSignaturePlaceholder"
+                                    style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 8px;"
+                                    th:styleappend="${profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: flex;'">
+                                    <span style="font-size: 12.5px; color: #64748b; font-weight: 600;">
+                                        Chưa có hình ảnh chữ ký hoặc con dấu cá nhân
+                                    </span>
+                                    <span style="font-size: 11.5px; color: #94a3b8; font-style: italic;">
+                                        (Vui lòng tải file ảnh chữ ký thật từ máy tính lên để tự động dán vào biểu mẫu)
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- Nút thao tác ảnh chữ ký -->
+                            <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('sigFileInput').click()"
+                                    style="font-size: 12px; font-weight: 600; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px; border-color: #2563eb; color: #2563eb; background: #fff;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    <span id="btnUploadText" th:text="${profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank() ? 'Đổi ảnh khác' : 'Tải ảnh chữ ký lên'}">Tải ảnh chữ ký lên</span>
+                                </button>
+                                <button type="button" id="btnDeleteSignature" class="btn btn-outline" onclick="removeSignatureImage()"
+                                    th:style="${profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'font-size: 12px; font-weight: 600; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px; border-color: #fca5a5; color: #dc2626; background: #fef2f2;' : 'display: none; font-size: 12px; font-weight: 600; padding: 6px 14px; align-items: center; gap: 6px; border-color: #fca5a5; color: #dc2626; background: #fef2f2;'">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                    <span>Xóa ảnh</span>
+                                </button>
                             </div>
                         </div>
                         <div style="flex: 1; min-width: 260px;">
@@ -706,9 +695,10 @@
                                             style="max-height: 75px; max-width: 220px; object-fit: contain;"
                                             th:styleappend="${profile.signatureImageBase64 == null or profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
                                         <div id="docPreviewPlaceholderTeacher"
-                                            style="font-size: 11px; color: #94a3b8; font-style: italic;"
-                                            th:styleappend="${profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: block;'">
-                                            [Chưa có hình ảnh chữ ký / con dấu]
+                                            style="display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 8px; border: 1px dashed #cbd5e1; border-radius: 6px; width: 100%; background: #ffffff;"
+                                            th:styleappend="${profile.signatureImageBase64 != null and !profile.signatureImageBase64.isBlank()} ? 'display: none;' : 'display: flex;'">
+                                            <span style="font-size: 11.5px; color: #64748b; font-weight: 600;">[Chưa có hình ảnh chữ ký]</span>
+                                            <span style="font-size: 10px; color: #94a3b8; font-style: italic;">Chữ ký thật tải lên sẽ được tự động dán vào đây</span>
                                         </div>
                                     </div>
 
@@ -922,7 +912,7 @@
 
             // Chuyển Tab Hình ảnh chữ ký
             function switchImageTab(tab) {
-                ['Upload', 'Draw', 'Generate'].forEach(t => {
+                ['Upload', 'Draw'].forEach(t => {
                     const btn = document.getElementById('tabBtn' + t);
                     const content = document.getElementById('tabContent' + t);
                     if (btn) btn.classList.remove('active');
@@ -933,9 +923,6 @@
                     document.getElementById('tabBtnDraw').classList.add('active');
                     document.getElementById('tabContentDraw').style.display = 'block';
                     initSignaturePad();
-                } else if (tab === 'GENERATE') {
-                    document.getElementById('tabBtnGenerate').classList.add('active');
-                    document.getElementById('tabContentGenerate').style.display = 'block';
                 } else {
                     document.getElementById('tabBtnUpload').classList.add('active');
                     document.getElementById('tabContentUpload').style.display = 'block';
@@ -946,6 +933,12 @@
             function handleSignatureFileUpload(event) {
                 const file = event.target.files[0];
                 if (!file) return;
+
+                // Kiểm tra dung lượng (tối đa 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Dung lượng tệp ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 5MB.');
+                    return;
+                }
 
                 const reader = new FileReader();
                 reader.onload = function (e) {
@@ -1029,38 +1022,63 @@
                 alert('Đã áp dụng chữ ký vẽ tay thành công!');
             }
 
-            // Tạo con dấu điện tử chuẩn Nghị định 30/2020/NĐ-CP
-            function generateStandardSeal() {
-                const fullName = (document.getElementById('fullName').value || '').trim();
-                if (!fullName) {
-                    alert('Vui lòng nhập Họ và tên trước khi tạo con dấu.');
-                    document.getElementById('fullName').focus();
+            // Xóa hình ảnh chữ ký hiện tại
+            function removeSignatureImage() {
+                if (!confirm('Bạn có chắc chắn muốn xóa hình ảnh chữ ký hiện tại? Sau khi xóa, biểu mẫu sẽ không dán ảnh chữ ký này nữa.')) {
                     return;
                 }
-                const caProvider = document.getElementById('caProvider').value || 'VNPT-CA';
-                const today = new Date().toLocaleDateString('vi-VN');
 
-                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="280" height="90" viewBox="0 0 280 90">
-                <rect x="2" y="2" width="276" height="86" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
-                <text x="14" y="22" font-family="'Times New Roman', serif" font-size="12" font-weight="bold" fill="#1e40af">CHỮ KÝ SỐ ĐIỆN TỬ HỢP LỆ</text>
-                <line x1="12" y1="30" x2="268" y2="30" stroke="#cbd5e1" stroke-width="1"/>
-                <text x="14" y="46" font-family="'Times New Roman', serif" font-size="12" font-weight="bold" fill="#0f172a">Ký bởi: ${fullName.toUpperCase()}</text>
-                <text x="14" y="62" font-family="'Times New Roman', serif" font-size="10.5" fill="#334155">Đơn vị: Trường THCS Nguyễn Văn Linh</text>
-                <text x="14" y="78" font-family="'Times New Roman', serif" font-size="9.5" fill="#64748b">Ngày ký: ${today} | CA: ${caProvider.split('(')[0].trim()}</text>
-            </svg>`;
+                fetch('/portal/api/nq52/signature-profile/remove-image', {
+                    method: 'POST',
+                    headers: getHeaders()
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.success) {
+                        const inputHidden = document.getElementById('signatureImageBase64');
+                        if (inputHidden) inputHidden.value = '';
 
-                const base64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
-                updateSignaturePreview(base64);
-                alert('Đã tạo con dấu chữ ký số điện tử chuẩn cơ quan thành công!');
+                        const previewImg = document.getElementById('currentSignaturePreview');
+                        if (previewImg) {
+                            previewImg.src = '';
+                            previewImg.style.display = 'none';
+                        }
+                        const placeholder = document.getElementById('noSignaturePlaceholder');
+                        if (placeholder) placeholder.style.display = 'flex';
+
+                        const docStampImg = document.getElementById('docPreviewStampTeacher');
+                        if (docStampImg) {
+                            docStampImg.src = '';
+                            docStampImg.style.display = 'none';
+                        }
+                        const docStampPlaceholder = document.getElementById('docPreviewPlaceholderTeacher');
+                        if (docStampPlaceholder) docStampPlaceholder.style.display = 'flex';
+
+                        const delBtn = document.getElementById('btnDeleteSignature');
+                        if (delBtn) delBtn.style.display = 'none';
+
+                        const uploadTxt = document.getElementById('btnUploadText');
+                        if (uploadTxt) uploadTxt.textContent = 'Tải ảnh chữ ký lên';
+
+                        showPageSuccess('Đã xóa hình ảnh chữ ký thành công!');
+                    } else {
+                        alert(res.message || 'Không thể xóa hình ảnh chữ ký.');
+                    }
+                })
+                .catch(err => {
+                    alert('Lỗi kết nối khi xóa ảnh: ' + err);
+                });
             }
 
-            // Cập nhật xem trước chữ ký & tự động lưu hình ảnh
+            // Cập nhật xem trước chữ ký & tự động lưu hình ảnh thật
             function updateSignaturePreview(dataUrl) {
                 const inputHidden = document.getElementById('signatureImageBase64');
                 const previewImg = document.getElementById('currentSignaturePreview');
                 const placeholder = document.getElementById('noSignaturePlaceholder');
                 const docStampImg = document.getElementById('docPreviewStampTeacher');
                 const docStampPlaceholder = document.getElementById('docPreviewPlaceholderTeacher');
+                const delBtn = document.getElementById('btnDeleteSignature');
+                const uploadTxt = document.getElementById('btnUploadText');
 
                 if (inputHidden) inputHidden.value = dataUrl;
                 if (previewImg) {
@@ -1075,6 +1093,9 @@
                 }
                 if (docStampPlaceholder) docStampPlaceholder.style.display = 'none';
 
+                if (delBtn) delBtn.style.display = 'inline-flex';
+                if (uploadTxt) uploadTxt.textContent = 'Đổi ảnh khác';
+
                 // Tự động lưu hình ảnh vào hệ thống ngay lập tức
                 if (dataUrl && dataUrl.startsWith('data:image/')) {
                     fetch('/portal/api/nq52/signature-profile/upload-image', {
@@ -1083,7 +1104,7 @@
                         body: JSON.stringify({ signatureImageBase64: dataUrl })
                     }).then(r => r.json()).then(res => {
                         if (res && res.success) {
-                            console.log('Hình ảnh chữ ký/con dấu đã được tự động lưu thành công.');
+                            console.log('Hình ảnh chữ ký/con dấu thật đã được lưu thành công.');
                         }
                     }).catch(err => {
                         console.warn('Lỗi khi tự động lưu ảnh chữ ký:', err);

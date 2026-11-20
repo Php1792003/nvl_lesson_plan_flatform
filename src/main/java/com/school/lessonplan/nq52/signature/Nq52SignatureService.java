@@ -98,6 +98,7 @@ public class Nq52SignatureService {
         response.setDocumentId(documentId);
         response.setSignerName(user.getFullName());
         String signerIdentifier = null;
+        boolean hasSignatureImage = false;
         if (profileRepository != null) {
             try {
                 var pOpt = profileRepository.findByUserId(user.getId());
@@ -115,10 +116,14 @@ public class Nq52SignatureService {
                     } else {
                         response.setHasConfiguredProfile(false);
                     }
+                    if (p.getSignatureImageBase64() != null && !p.getSignatureImageBase64().isBlank()) {
+                        hasSignatureImage = true;
+                    }
                 }
             } catch (Exception ignored) {
             }
         }
+        response.setHasSignatureImage(hasSignatureImage);
         if (signerIdentifier == null || signerIdentifier.isBlank()) {
             signerIdentifier = user.getEmail() != null ? user.getEmail() : ("user-" + user.getId());
         }
@@ -204,6 +209,11 @@ public class Nq52SignatureService {
         boolean hasSavedCert = savedProfile != null && savedProfile.getCertSerial() != null
                 && !savedProfile.getCertSerial().isBlank();
         boolean passwordProvided = request.getPassword() != null && !request.getPassword().isBlank();
+
+        if (savedProfile == null || savedProfile.getSignatureImageBase64() == null || savedProfile.getSignatureImageBase64().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Bạn chưa cấu hình hình ảnh chữ ký số. Vui lòng vào trang Quản lý Chữ ký số để tải ảnh chữ ký lên trước khi ký.");
+        }
 
         if (!passwordProvided) {
             if (!hasSavedCert) {
@@ -547,6 +557,9 @@ public class Nq52SignatureService {
                 var pOpt = profileRepository.findByUserId(user.getId());
                 if (pOpt.isPresent()) {
                     var p = pOpt.get();
+                    if (p.getSignatureImageBase64() == null || p.getSignatureImageBase64().isBlank()) {
+                        throw new IllegalArgumentException("Bạn chưa cấu hình hình ảnh chữ ký số. Vui lòng vào trang Quản lý Chữ ký số để tải ảnh chữ ký lên trước khi ký.");
+                    }
                     if (!p.isLinkValid()) {
                         throw new IllegalArgumentException("Tài khoản chưa được liên kết chứng thư số hoặc phiên liên kết đã hết hạn. Vui lòng vào trang 'Tài khoản chữ ký số' để liên kết tên đăng nhập và mật khẩu trước khi ký.");
                     }
@@ -565,7 +578,7 @@ public class Nq52SignatureService {
                         caPassword = p.getCaPassword();
                     }
                 } else {
-                    throw new IllegalArgumentException("Tài khoản chưa được liên kết chứng thư số. Vui lòng vào trang 'Tài khoản chữ ký số' để liên kết tên đăng nhập và mật khẩu trước khi ký.");
+                    throw new IllegalArgumentException("Bạn chưa cấu hình hồ sơ chữ ký số. Vui lòng vào trang Quản lý Chữ ký số để tải ảnh chữ ký lên trước khi ký.");
                 }
             } catch (IllegalArgumentException e) {
                 throw e;
@@ -1046,12 +1059,16 @@ public class Nq52SignatureService {
         if (profileRepository != null && user != null && user.getId() != null) {
             try {
                 var pOpt = profileRepository.findByUserId(user.getId());
-                if (pOpt.isPresent()) {
-                    Nq52UserSignatureProfile p = pOpt.get();
-                    if (p.getCaPassword() != null && !p.getCaPassword().isBlank()) {
-                        expectedPin = p.getCaPassword().trim();
-                    }
+                if (pOpt.isEmpty() || pOpt.get().getSignatureImageBase64() == null || pOpt.get().getSignatureImageBase64().isBlank()) {
+                    throw new IllegalArgumentException(
+                            "Ban Giám Hiệu chưa cấu hình hình ảnh con dấu / chữ ký số. Vui lòng vào trang Quản lý Chữ ký số để tải ảnh con dấu trước khi ký duyệt.");
                 }
+                Nq52UserSignatureProfile p = pOpt.get();
+                if (p.getCaPassword() != null && !p.getCaPassword().isBlank()) {
+                    expectedPin = p.getCaPassword().trim();
+                }
+            } catch (IllegalArgumentException iae) {
+                throw iae;
             } catch (Exception ignored) {
             }
         }

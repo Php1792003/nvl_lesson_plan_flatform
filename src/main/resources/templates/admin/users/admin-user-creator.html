@@ -282,11 +282,11 @@
                                 </div>
 
                                 <div class="tc-form-grid-2">
-                                    <!-- Môn học / Tổ bộ môn -->
+                                    <!-- Tổ Chuyên Môn -->
                                     <div class="form-group tc-field"
                                         th:classappend="${#fields.hasErrors('departmentId')} ? 'has-error'">
                                         <label class="form-label" for="departmentId">
-                                            <span>Tổ bộ môn / Môn giảng dạy</span>
+                                            <span>Tổ Chuyên Môn</span>
                                             <span class="req" aria-hidden="true">*</span>
                                         </label>
                                         <div class="tc-select-wrapper">
@@ -301,9 +301,9 @@
                                             </span>
                                             <select id="departmentId" th:field="*{departmentId}"
                                                 class="form-select tc-select" required
-                                                data-msg-required="Vui lòng chọn môn học."
+                                                data-msg-required="Vui lòng chọn tổ chuyên môn."
                                                 th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby='departmentId-error'">
-                                                <option value="">-- Chọn tổ môn học --</option>
+                                                <option value="">-- Chọn tổ chuyên môn --</option>
                                                 <option th:each="dept : ${departments}" th:value="${dept.id}"
                                                     th:text="${dept.name}"></option>
                                             </select>
