@@ -79,7 +79,9 @@ public class SecurityConfig {
                         .permitAll()
                         // API auth endpoints
                         .requestMatchers("/auth/**").permitAll()
-                        // Admin routes
+                        // Quản trị & Duyệt giáo án: Cho phép Ban Giám Hiệu và Tổ trưởng chuyên môn
+                        .requestMatchers("/admin/plans", "/admin/plans/**").authenticated()
+                        // Admin routes còn lại (quản lý user, roles, audit logs, feedbacks)
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // API endpoints
                         .requestMatchers("/api/dashboard/**").authenticated()

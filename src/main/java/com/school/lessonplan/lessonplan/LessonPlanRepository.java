@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
@@ -116,6 +117,59 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
           AND (:favorite IS NULL OR lp.favorite = :favorite)
     """)
     Page<LessonPlan> searchAll(
+        @Param("search") String search,
+        @Param("departmentId") Long departmentId,
+        @Param("schoolYear") String schoolYear,
+        @Param("semester") Integer semester,
+        @Param("favorite") Boolean favorite,
+        Pageable pageable
+    );
+
+    /**
+     * Giáo án lọc theo danh sách bộ môn (cho Tổ trưởng chuyên môn)
+     */
+    @Query(value = """
+        SELECT lp FROM LessonPlan lp
+        LEFT JOIN FETCH lp.department d
+        LEFT JOIN FETCH lp.owner o
+        WHERE d.id IN :departmentIds
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.lastName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.givenName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(CONCAT(o.lastName, ' ', o.givenName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(CONCAT(o.givenName, ' ', o.lastName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.email) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(lp.ownerSnapshotName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(lp.ownerSnapshotEmail) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:departmentId IS NULL OR d.id = :departmentId)
+          AND (:schoolYear IS NULL OR :schoolYear = '' OR lp.schoolYear = :schoolYear)
+          AND (:semester IS NULL OR lp.semester = :semester)
+          AND (:favorite IS NULL OR lp.favorite = :favorite)
+    """,
+    countQuery = """
+        SELECT COUNT(lp) FROM LessonPlan lp
+        LEFT JOIN lp.department d
+        LEFT JOIN lp.owner o
+        WHERE d.id IN :departmentIds
+          AND (:search IS NULL OR :search = '' 
+               OR LOWER(lp.title) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.lastName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.givenName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(CONCAT(o.lastName, ' ', o.givenName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(CONCAT(o.givenName, ' ', o.lastName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(o.email) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(lp.ownerSnapshotName) LIKE LOWER(CONCAT('%', :search, '%')) 
+               OR LOWER(lp.ownerSnapshotEmail) LIKE LOWER(CONCAT('%', :search, '%')))
+          AND (:departmentId IS NULL OR d.id = :departmentId)
+          AND (:schoolYear IS NULL OR :schoolYear = '' OR lp.schoolYear = :schoolYear)
+          AND (:semester IS NULL OR lp.semester = :semester)
+          AND (:favorite IS NULL OR lp.favorite = :favorite)
+    """)
+    Page<LessonPlan> searchByDepartmentIds(
+        @Param("departmentIds") Collection<Long> departmentIds,
         @Param("search") String search,
         @Param("departmentId") Long departmentId,
         @Param("schoolYear") String schoolYear,

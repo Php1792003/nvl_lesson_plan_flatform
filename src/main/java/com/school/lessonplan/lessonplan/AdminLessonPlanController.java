@@ -2,9 +2,13 @@ package com.school.lessonplan.lessonplan;
 
 import com.school.lessonplan.common.exception.BusinessException;
 import com.school.lessonplan.common.exception.FieldValidationException;
+import com.school.lessonplan.department.Department;
+import com.school.lessonplan.department.DepartmentGroupService;
 import com.school.lessonplan.department.DepartmentRepository;
 import com.school.lessonplan.evaluation.EvaluationService;
 import com.school.lessonplan.security.CurrentUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -14,25 +18,31 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin/plans")
 @PreAuthorize("hasRole('ADMIN') or hasAuthority('PLAN_VIEW_ALL')")
 public class AdminLessonPlanController {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminLessonPlanController.class);
+
     private final LessonPlanService lessonPlanService;
     private final EvaluationService evaluationService;
     private final DepartmentRepository departmentRepository;
     private final com.school.lessonplan.ai.AiReviewService aiReviewService;
+    private final DepartmentGroupService departmentGroupService;
 
     public AdminLessonPlanController(LessonPlanService lessonPlanService,
                                     EvaluationService evaluationService,
                                     DepartmentRepository departmentRepository,
-                                    com.school.lessonplan.ai.AiReviewService aiReviewService) {
+                                    com.school.lessonplan.ai.AiReviewService aiReviewService,
+                                    DepartmentGroupService departmentGroupService) {
         this.lessonPlanService = lessonPlanService;
         this.evaluationService = evaluationService;
         this.departmentRepository = departmentRepository;
         this.aiReviewService = aiReviewService;
+        this.departmentGroupService = departmentGroupService;
     }
 
     @GetMapping
@@ -44,24 +54,49 @@ public class AdminLessonPlanController {
             @RequestParam(name = "favorite", required = false) Boolean favorite,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
+            @AuthenticationPrincipal CurrentUser currentUser,
             Model model) {
 
         String cleanSearch = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
         String cleanSchoolYear = (schoolYear != null && !schoolYear.trim().isEmpty()) ? schoolYear.trim() : null;
 
+        boolean isAdmin = currentUser != null && currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isDeptHead = currentUser != null && departmentGroupService.isDepartmentHead(currentUser);
+        String groupName = currentUser != null ? departmentGroupService.getDepartmentGroupName(currentUser) : "";
+
+        List<Department> accessibleDepartments = departmentGroupService.getAccessibleDepartments(currentUser);
+        List<Long> accessibleDeptIds = departmentGroupService.getAccessibleDepartmentIds(currentUser);
+
+        log.info("[AdminPlans] user={}, isAdmin={}, isDeptHead={}, groupName={}, deptName={}, accessibleDeptIds={}, accessibleDepts={}",
+                currentUser != null ? currentUser.getUsername() : "null",
+                isAdmin, isDeptHead, groupName,
+                currentUser != null ? currentUser.getDepartmentName() : "null",
+                accessibleDeptIds,
+                accessibleDepartments.stream().map(d -> d.getId() + ":" + d.getName()).collect(java.util.stream.Collectors.joining(", ")));
+
+        // Nếu là tổ trưởng và người dùng chọn bộ môn: chỉ chấp nhận ID thuộc tổ chuyên môn của mình
+        Long effectiveDeptId = departmentId;
+        if (isDeptHead && accessibleDeptIds != null && effectiveDeptId != null && !accessibleDeptIds.contains(effectiveDeptId)) {
+            effectiveDeptId = null;
+        }
+
         Page<LessonPlan> plansPage = lessonPlanService.searchAllForAdmin(
-            cleanSearch, departmentId, cleanSchoolYear, semester, favorite,
+            cleanSearch, effectiveDeptId, cleanSchoolYear, semester, favorite, currentUser,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
 
         model.addAttribute("plansPage", plansPage);
         model.addAttribute("search", cleanSearch);
-        model.addAttribute("departmentId", departmentId);
+        model.addAttribute("departmentId", effectiveDeptId);
         model.addAttribute("schoolYear", cleanSchoolYear);
         model.addAttribute("semester", semester);
         model.addAttribute("favorite", favorite);
-        model.addAttribute("departments", departmentRepository.findAll());
+        model.addAttribute("departments", accessibleDepartments);
         model.addAttribute("schoolYears", lessonPlanService.getDistinctSchoolYears());
+        model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("isDeptHead", isDeptHead);
+        model.addAttribute("groupName", groupName);
 
         return "admin/plans/admin-plan-catalog";
     }
@@ -71,7 +106,7 @@ public class AdminLessonPlanController {
      * Tự động bảo vệ tất cả giáo án được đánh dấu yêu thích.
      */
     @PostMapping("/cleanup-semester")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PLAN_VIEW_ALL')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String cleanupSemester(
             @RequestParam("schoolYear") String schoolYear,
             @RequestParam("semester") int semester,

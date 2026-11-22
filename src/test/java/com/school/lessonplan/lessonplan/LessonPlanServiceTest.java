@@ -3,6 +3,7 @@ package com.school.lessonplan.lessonplan;
 import com.school.lessonplan.audit.AuditService;
 import com.school.lessonplan.common.exception.BusinessException;
 import com.school.lessonplan.config.AppProperties;
+import com.school.lessonplan.department.DepartmentGroupService;
 import com.school.lessonplan.department.DepartmentRepository;
 import com.school.lessonplan.evaluation.EvaluationRepository;
 import com.school.lessonplan.security.CurrentUser;
@@ -34,6 +35,7 @@ class LessonPlanServiceTest {
     @Mock private LessonPlanAccessService accessService;
     @Mock private FileStorageService fileStorageService;
     @Mock private AuditService auditService;
+    @Mock private DepartmentGroupService departmentGroupService;
 
     private LessonPlanService lessonPlanService;
 
@@ -43,7 +45,7 @@ class LessonPlanServiceTest {
         lessonPlanService = new LessonPlanService(
             lessonPlanRepository, versionRepository, evaluationRepository,
             departmentRepository, userRepository, accessService,
-            fileStorageService, auditService, appProperties
+            fileStorageService, auditService, appProperties, departmentGroupService
         );
     }
 

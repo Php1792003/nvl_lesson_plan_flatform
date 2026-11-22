@@ -19,6 +19,8 @@ public class CurrentUser implements UserDetails {
     private final String passwordHash;
     private final boolean enabled;
     private final Set<GrantedAuthority> authorities;
+    private final Long departmentId;
+    private final String departmentName;
 
     public CurrentUser(User user, Set<GrantedAuthority> authorities) {
         this.id = user.getId();
@@ -27,10 +29,14 @@ public class CurrentUser implements UserDetails {
         this.passwordHash = user.getPasswordHash();
         this.enabled = user.getStatus() == com.school.lessonplan.user.UserStatus.ACTIVE;
         this.authorities = authorities;
+        this.departmentId = user.getDepartment() != null ? user.getDepartment().getId() : null;
+        this.departmentName = user.getDepartment() != null ? user.getDepartment().getName() : null;
     }
 
     public Long getId() { return id; }
     public String getFullName() { return fullName; }
+    public Long getDepartmentId() { return departmentId; }
+    public String getDepartmentName() { return departmentName; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
