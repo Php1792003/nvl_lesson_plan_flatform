@@ -26,3 +26,4 @@ WHERE (r.code IN ('TO_TRUONG', 'TO_TRUONG_CHUYEN_MON', 'TTCM') OR LOWER(r.name) 
       WHERE rp.role_id = r.id AND rp.permission_id = p.id
   );
 GO
+
