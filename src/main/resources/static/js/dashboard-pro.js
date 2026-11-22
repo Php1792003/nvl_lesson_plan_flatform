@@ -831,34 +831,40 @@
             form.submit();
         }
 
-        // ================= Gõ đến đâu lọc dần đến đó (Real-time live search) =================
-        if (fSearch && rows.length) {
-            rows.forEach(function (tr) {
-                tr.__text = NVL.norm(tr.textContent);
+        // Khôi phục vị trí con trỏ nếu vừa tìm kiếm tự động
+        if (fSearch && sessionStorage.getItem('keepPlanSearchFocus') === 'true') {
+            sessionStorage.removeItem('keepPlanSearchFocus');
+            fSearch.focus();
+            var len = fSearch.value.length;
+            fSearch.setSelectionRange(len, len);
+        }
+
+        // ================= Tìm kiếm giáo án toàn hệ thống (Server-side Search & Debounce) =================
+        if (fSearch) {
+            var planSearchTimer = null;
+            var lastPlanQuery = fSearch.value.trim();
+
+            fSearch.addEventListener('input', function () {
+                clearTimeout(planSearchTimer);
+                var currentVal = fSearch.value.trim();
+                // Tự động tìm kiếm toàn hệ thống sau 500ms khi người dùng ngừng gõ
+                planSearchTimer = setTimeout(function () {
+                    if (currentVal !== lastPlanQuery) {
+                        sessionStorage.setItem('keepPlanSearchFocus', 'true');
+                        submitForm();
+                    }
+                }, 500);
             });
 
-            function applyLiveSearch() {
-                var q = NVL.norm(fSearch.value.trim());
-                var shown = 0;
-                rows.forEach(function (tr) {
-                    var ok = !q || (tr.__text && tr.__text.indexOf(q) !== -1);
-                    tr.style.display = ok ? '' : 'none';
-                    tr.classList.remove('row-in');
-                    if (ok) shown++;
-                });
-                if (adShown) adShown.textContent = shown;
-                if (adNoMatch) {
-                    adNoMatch.style.display = (shown === 0 && rows.length > 0) ? 'block' : 'none';
-                }
-            }
-
-            fSearch.addEventListener('input', applyLiveSearch);
-
-            // Xử lý phím Escape để xoá nhanh tìm kiếm
             fSearch.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearTimeout(planSearchTimer);
+                    submitForm();
+                } else if (e.key === 'Escape') {
                     fSearch.value = '';
-                    applyLiveSearch();
+                    clearTimeout(planSearchTimer);
+                    submitForm();
                 }
             });
         }
@@ -951,34 +957,40 @@
             form.submit();
         }
 
-        // ================= Gõ đến đâu lọc dần đến đó (Real-time live search) =================
-        if (fSearch && rows.length) {
-            rows.forEach(function (tr) {
-                tr.__text = NVL.norm(tr.textContent);
+        // Khôi phục vị trí con trỏ nếu vừa tìm kiếm tự động
+        if (fSearch && sessionStorage.getItem('keepUserSearchFocus') === 'true') {
+            sessionStorage.removeItem('keepUserSearchFocus');
+            fSearch.focus();
+            var len = fSearch.value.length;
+            fSearch.setSelectionRange(len, len);
+        }
+
+        // ================= Tìm kiếm giáo viên toàn hệ thống (Server-side Search & Debounce) =================
+        if (fSearch) {
+            var userSearchTimer = null;
+            var lastUserQuery = fSearch.value.trim();
+
+            fSearch.addEventListener('input', function () {
+                clearTimeout(userSearchTimer);
+                var currentVal = fSearch.value.trim();
+                // Tự động tìm kiếm toàn hệ thống sau 500ms khi người dùng ngừng gõ
+                userSearchTimer = setTimeout(function () {
+                    if (currentVal !== lastUserQuery) {
+                        sessionStorage.setItem('keepUserSearchFocus', 'true');
+                        submitForm();
+                    }
+                }, 500);
             });
 
-            function applyLiveSearch() {
-                var q = NVL.norm(fSearch.value.trim());
-                var shown = 0;
-                rows.forEach(function (tr) {
-                    var ok = !q || (tr.__text && tr.__text.indexOf(q) !== -1);
-                    tr.style.display = ok ? '' : 'none';
-                    tr.classList.remove('row-in');
-                    if (ok) shown++;
-                });
-                if (usShown) usShown.textContent = shown;
-                if (usNoMatch) {
-                    usNoMatch.style.display = (shown === 0 && rows.length > 0) ? 'block' : 'none';
-                }
-            }
-
-            fSearch.addEventListener('input', applyLiveSearch);
-
-            // Xử lý phím Escape để xoá nhanh tìm kiếm
             fSearch.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearTimeout(userSearchTimer);
+                    submitForm();
+                } else if (e.key === 'Escape') {
                     fSearch.value = '';
-                    applyLiveSearch();
+                    clearTimeout(userSearchTimer);
+                    submitForm();
                 }
             });
         }
