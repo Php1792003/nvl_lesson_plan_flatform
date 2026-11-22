@@ -111,6 +111,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             for (Permission permission : role.getPermissions()) {
                 authorities.add(new SimpleGrantedAuthority(permission.getCode()));
             }
+
+            // Tự động đảm bảo quyền xem & duyệt giáo án nếu role là Tổ trưởng chuyên môn
+            String roleCode = role.getCode() != null ? role.getCode().toUpperCase() : "";
+            String roleName = role.getName() != null ? role.getName().toLowerCase() : "";
+            boolean isDeptHeadRole = roleCode.contains("TO_TRUONG") || roleCode.contains("TTCM")
+                    || roleCode.contains("DEPARTMENT_HEAD") || roleCode.contains("DEPT_LEADER")
+                    || roleName.contains("tổ trưởng") || roleName.contains("to truong")
+                    || (roleName.contains("chuyên môn") && !roleCode.contains("ADMIN"));
+
+            if (isDeptHeadRole) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_TO_TRUONG"));
+                authorities.add(new SimpleGrantedAuthority("PLAN_VIEW_ALL"));
+                authorities.add(new SimpleGrantedAuthority("EVALUATION_CREATE"));
+            }
         }
 
         return authorities;

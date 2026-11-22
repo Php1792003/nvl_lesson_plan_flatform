@@ -1,18 +1,24 @@
 package com.school.lessonplan.lessonplan;
 
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
+import com.school.lessonplan.department.DepartmentGroupService;
 import com.school.lessonplan.security.CurrentUser;
 import com.school.lessonplan.share.LessonPlanShareRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class LessonPlanAccessService {
 
     private final LessonPlanShareRepository shareRepository;
+    private final DepartmentGroupService departmentGroupService;
 
-    public LessonPlanAccessService(LessonPlanShareRepository shareRepository) {
+    public LessonPlanAccessService(LessonPlanShareRepository shareRepository,
+                                  DepartmentGroupService departmentGroupService) {
         this.shareRepository = shareRepository;
+        this.departmentGroupService = departmentGroupService;
     }
 
     public boolean canView(CurrentUser user, LessonPlan plan) {
@@ -20,11 +26,11 @@ public class LessonPlanAccessService {
             return false;
         }
 
-        // 1. User có PLAN_VIEW_ALL hoặc vai trò ADMIN
-        boolean hasAdminAccess = user.getAuthorities().stream()
+        // 1. User có vai trò ADMIN (Ban Giám Hiệu) -> xem tất cả giáo án trường
+        boolean isAdmin = user.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority)
-            .anyMatch(a -> a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
-        if (hasAdminAccess) {
+            .anyMatch(a -> a.equals("ROLE_ADMIN"));
+        if (isAdmin) {
             return true;
         }
 
@@ -34,7 +40,19 @@ public class LessonPlanAccessService {
         }
 
         // 3. User được chia sẻ giáo án hợp lệ (chưa thu hồi, chưa hết hạn)
-        return shareRepository.hasActiveShare(plan.getId(), user.getId());
+        if (shareRepository.hasActiveShare(plan.getId(), user.getId())) {
+            return true;
+        }
+
+        // 4. User là Tổ trưởng chuyên môn -> xem được giáo án thuộc các bộ môn trong tổ của mình
+        if (departmentGroupService.isDepartmentHead(user)) {
+            List<Long> deptIds = departmentGroupService.getAccessibleDepartmentIds(user);
+            if (deptIds != null && plan.getDepartment() != null && deptIds.contains(plan.getDepartment().getId())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public boolean canManage(CurrentUser user, LessonPlan plan) {
@@ -60,7 +78,7 @@ public class LessonPlanAccessService {
      */
     public void requireManageAccess(CurrentUser user, LessonPlan plan) {
         if (!canManage(user, plan)) {
-            throw new ResourceNotFoundException("Không tìm thấy giáo án.");
+            throw new ResourceNotFoundException("Không tìm thấy giáo án hoặc không có quyền thao tác.");
         }
     }
 }

@@ -6,6 +6,7 @@ import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
 import com.school.lessonplan.config.AppProperties;
 import com.school.lessonplan.department.Department;
+import com.school.lessonplan.department.DepartmentGroupService;
 import com.school.lessonplan.department.DepartmentRepository;
 import com.school.lessonplan.evaluation.EvaluationRepository;
 import com.school.lessonplan.security.CurrentUser;
@@ -25,6 +26,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -58,6 +61,7 @@ public class LessonPlanService {
     private final FileStorageService fileStorageService;
     private final AuditService auditService;
     private final AppProperties appProperties;
+    private final DepartmentGroupService departmentGroupService;
 
     public LessonPlanService(LessonPlanRepository lessonPlanRepository,
             LessonPlanVersionRepository versionRepository,
@@ -67,7 +71,8 @@ public class LessonPlanService {
             LessonPlanAccessService accessService,
             FileStorageService fileStorageService,
             AuditService auditService,
-            AppProperties appProperties) {
+            AppProperties appProperties,
+            DepartmentGroupService departmentGroupService) {
         this.lessonPlanRepository = lessonPlanRepository;
         this.versionRepository = versionRepository;
         this.evaluationRepository = evaluationRepository;
@@ -77,6 +82,7 @@ public class LessonPlanService {
         this.fileStorageService = fileStorageService;
         this.auditService = auditService;
         this.appProperties = appProperties;
+        this.departmentGroupService = departmentGroupService;
     }
 
     /**
@@ -157,10 +163,40 @@ public class LessonPlanService {
     }
 
     public Page<LessonPlan> searchAllForAdmin(String search, Long departmentId, String schoolYear,
-            Integer semester, Boolean favorite, Pageable pageable) {
+            Integer semester, Boolean favorite, CurrentUser currentUser, Pageable pageable) {
         String cleanSearch = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
         String cleanSchoolYear = (schoolYear != null && !schoolYear.trim().isEmpty()) ? schoolYear.trim() : null;
-        return lessonPlanRepository.searchAll(cleanSearch, departmentId, cleanSchoolYear, semester, favorite, pageable);
+
+        boolean isDeptHead = currentUser != null && departmentGroupService.isDepartmentHead(currentUser);
+        List<Long> deptIds = isDeptHead ? departmentGroupService.getAccessibleDepartmentIds(currentUser) : null;
+
+        if (isDeptHead) {
+            // Nếu là tổ trưởng nhưng không có môn nào trong tổ (hoặc chưa gán bộ môn) -> trả về trang rỗng
+            if (deptIds == null || deptIds.isEmpty()) {
+                log.warn("[LessonPlanService] User {} is Department Head but has empty accessible department IDs (deptName={})",
+                        currentUser.getUsername(), currentUser.getDepartmentName());
+                return Page.empty(pageable);
+            }
+
+            Long effectiveDeptId = departmentId;
+            if (effectiveDeptId != null && !deptIds.contains(effectiveDeptId)) {
+                effectiveDeptId = null;
+            }
+
+            return lessonPlanRepository.searchByDepartmentIds(
+                deptIds, cleanSearch, effectiveDeptId, cleanSchoolYear, semester, favorite, pageable
+            );
+        }
+
+        // Dành cho Ban Giám Hiệu (ROLE_ADMIN): xem tất cả
+        return lessonPlanRepository.searchAll(
+            cleanSearch, departmentId, cleanSchoolYear, semester, favorite, pageable
+        );
+    }
+
+    public Page<LessonPlan> searchAllForAdmin(String search, Long departmentId, String schoolYear,
+            Integer semester, Boolean favorite, Pageable pageable) {
+        return searchAllForAdmin(search, departmentId, schoolYear, semester, favorite, null, pageable);
     }
 
     public LessonPlan getPlanById(Long id, CurrentUser user) {

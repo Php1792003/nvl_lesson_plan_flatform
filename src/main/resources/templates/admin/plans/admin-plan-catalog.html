@@ -9,12 +9,13 @@
 
             <div class="ad-head reveal" style="--i:0">
                 <div>
-                    <h2 data-i18n="catalog.admin.heading" th:text="#{catalog.admin.heading}">Toàn bộ giáo án</h2>
-                    <p data-i18n="catalog.admin.subheading" th:text="#{catalog.admin.subheading}">Xem trước, nhận xét và
-                        theo dõi giáo án của toàn trường.</p>
+                    <h2 th:if="${isDeptHead}" th:text="'Giáo án ' + ${groupName}">Giáo án Tổ Toán - Tin</h2>
+                    <h2 th:unless="${isDeptHead}" data-i18n="catalog.admin.heading" th:text="#{catalog.admin.heading}">Toàn bộ giáo án</h2>
+                    <p th:if="${isDeptHead}">Xem trước, nhận xét và thẩm định giáo án của các bộ môn trong tổ chuyên môn.</p>
+                    <p th:unless="${isDeptHead}" data-i18n="catalog.admin.subheading" th:text="#{catalog.admin.subheading}">Xem trước, nhận xét và theo dõi giáo án của toàn trường.</p>
                 </div>
                 <div class="ad-head-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <button type="button" class="ad-btn-cleanup"
+                    <button th:if="${isAdmin}" type="button" class="ad-btn-cleanup"
                         onclick="document.getElementById('cleanupModal').classList.add('active')">
                         <span class="ad-btn-cleanup-ico">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -57,7 +58,7 @@
                             <label class="ad-label" for="fDept" data-i18n="filter.department"
                                 th:text="#{filter.department}">Môn học</label>
                             <select id="fDept" name="departmentId" class="ad-control">
-                                <option value="" data-i18n="filter.all_departments" th:text="#{filter.all_departments}">
+                                <option value="" th:text="${isDeptHead ? 'Tất cả môn (' + groupName + ')' : 'Tất cả bộ môn'}">
                                     Tất cả bộ môn</option>
                                 <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"
                                     th:selected="${dept.id == departmentId}"></option>
@@ -276,7 +277,7 @@
             </section>
 
             <!-- Modal Dọn dẹp giáo án sau học kỳ -->
-            <div id="cleanupModal" class="modal-overlay" style="display: none;">
+            <div th:if="${isAdmin}" id="cleanupModal" class="modal-overlay" style="display: none;">
                 <div class="modal-box" style="max-width: 520px;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">

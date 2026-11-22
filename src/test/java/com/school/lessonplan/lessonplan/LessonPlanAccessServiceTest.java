@@ -1,6 +1,7 @@
 package com.school.lessonplan.lessonplan;
 
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
+import com.school.lessonplan.department.DepartmentGroupService;
 import com.school.lessonplan.security.CurrentUser;
 import com.school.lessonplan.share.LessonPlanShareRepository;
 import com.school.lessonplan.user.User;
@@ -24,11 +25,14 @@ class LessonPlanAccessServiceTest {
     @Mock
     private LessonPlanShareRepository shareRepository;
 
+    @Mock
+    private DepartmentGroupService departmentGroupService;
+
     private LessonPlanAccessService accessService;
 
     @BeforeEach
     void setUp() {
-        accessService = new LessonPlanAccessService(shareRepository);
+        accessService = new LessonPlanAccessService(shareRepository, departmentGroupService);
     }
 
     private CurrentUser createUser(Long id, String email, String role) {

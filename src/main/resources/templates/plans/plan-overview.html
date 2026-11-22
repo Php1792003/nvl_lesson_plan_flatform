@@ -278,7 +278,7 @@
                     </div>
                 </div>
 
-                <!-- BGH Evaluations Section (Visible only to owner and BGH per Rule 4.6) -->
+                <!-- Evaluations Section (Visible to owner, BGH, and Tổ trưởng CM) -->
                 <div th:if="${isOwner || isAdmin}" class="card">
                     <div class="card-header">
                         <h3 class="card-title">Đánh giá & Nhận xét của Ban Giám Hiệu</h3>
@@ -287,6 +287,8 @@
 
                     <!-- BGH Add Evaluation Form (Only for BGH) -->
                     <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE')"
+                    <!-- BGH / Tổ trưởng CM Add Evaluation Form -->
+                    <div sec:authorize="hasRole('ADMIN') or hasAuthority('EVALUATION_CREATE') or hasAuthority('PLAN_VIEW_ALL')"
                         style="margin-bottom: 24px; background: var(--surface-alt); padding: 18px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                             <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: var(--dark);">Gửi nhận xét đánh giá</h4>
@@ -326,7 +328,7 @@
                     <!-- Evaluations List -->
                     <div th:if="${evaluations.empty}"
                         style="text-align: center; color: var(--text-muted); padding: 24px;">
-                        Chưa có nhận xét nào từ Ban Giám Hiệu.
+                        Chưa có nhận xét nào.
                     </div>
 
                     <div th:each="eval : ${evaluations}" class="eval-card-item">

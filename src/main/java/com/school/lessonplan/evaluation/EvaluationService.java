@@ -1,6 +1,7 @@
 package com.school.lessonplan.evaluation;
 
 import com.school.lessonplan.audit.AuditService;
+import com.school.lessonplan.department.DepartmentGroupService;
 import com.school.lessonplan.common.exception.BusinessException;
 import com.school.lessonplan.common.exception.FieldValidationException;
 import com.school.lessonplan.common.exception.ResourceNotFoundException;
@@ -34,15 +35,17 @@ public class EvaluationService {
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
     private final AuditService auditService;
+    private final DepartmentGroupService departmentGroupService;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
-                             EvaluationReplyRepository replyRepository,
-                             LessonPlanRepository lessonPlanRepository,
-                             LessonPlanVersionRepository versionRepository,
-                             UserRepository userRepository,
-                             NotificationRepository notificationRepository,
-                             EmailService emailService,
-                             AuditService auditService) {
+            EvaluationReplyRepository replyRepository,
+            LessonPlanRepository lessonPlanRepository,
+            LessonPlanVersionRepository versionRepository,
+            UserRepository userRepository,
+            NotificationRepository notificationRepository,
+            EmailService emailService,
+            AuditService auditService,
+            DepartmentGroupService departmentGroupService) {
         this.evaluationRepository = evaluationRepository;
         this.replyRepository = replyRepository;
         this.lessonPlanRepository = lessonPlanRepository;
@@ -51,6 +54,7 @@ public class EvaluationService {
         this.notificationRepository = notificationRepository;
         this.emailService = emailService;
         this.auditService = auditService;
+        this.departmentGroupService = departmentGroupService;
     }
 
     /**
@@ -58,16 +62,21 @@ public class EvaluationService {
      */
     public List<Evaluation> getEvaluationsForPlan(Long planId, CurrentUser user) {
         LessonPlan plan = lessonPlanRepository.findById(planId)
-            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giáo án."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giáo án."));
 
         boolean isAdmin = user.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .anyMatch(a -> a.equals("PLAN_VIEW_ALL") || a.equals("ROLE_ADMIN"));
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_ADMIN"));
 
         boolean isOwner = plan.getOwner() != null && plan.getOwner().getId().equals(user.getId());
 
-        if (!isAdmin && !isOwner) {
-            // Người được chia sẻ không thấy đánh giá
+        boolean isDeptHead = departmentGroupService.isDepartmentHead(user)
+                && plan.getDepartment() != null
+                && departmentGroupService.getAccessibleDepartmentIds(user) != null
+                && departmentGroupService.getAccessibleDepartmentIds(user).contains(plan.getDepartment().getId());
+
+        if (!isAdmin && !isOwner && !isDeptHead) {
+            // Người được chia sẻ hoặc ngoài tổ không thấy đánh giá
             return List.of();
         }
 
@@ -84,10 +93,10 @@ public class EvaluationService {
         }
 
         LessonPlan plan = lessonPlanRepository.findById(planId)
-            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giáo án."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giáo án."));
 
         LessonPlanVersion version = versionRepository.findById(versionId)
-            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiên bản giáo án."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiên bản giáo án."));
 
         if (!version.getPlan().getId().equals(planId)) {
             throw new BusinessException("Phiên bản không khớp với giáo án.");
@@ -114,11 +123,10 @@ public class EvaluationService {
             payload.put("planId", plan.getId());
 
             emailService.queueEmail(
-                plan.getOwner().getEmail(),
-                "Nhận xét mới cho giáo án: " + plan.getTitle(),
-                "mail/mail-new-evaluation",
-                payload
-            );
+                    plan.getOwner().getEmail(),
+                    "Nhận xét mới cho giáo án: " + plan.getTitle(),
+                    "mail/mail-new-evaluation",
+                    payload);
 
             Notification notif = new Notification();
             notif.setUser(plan.getOwner());
@@ -129,13 +137,14 @@ public class EvaluationService {
         }
 
         auditService.log("EVALUATION_CREATE", "EVALUATION", eval.getId(),
-            "Ban Giám Hiệu nhận xét giáo án: " + plan.getTitle() + " (phiên bản " + version.getVersionNo() + ")");
+                "Ban Giám Hiệu nhận xét giáo án: " + plan.getTitle() + " (phiên bản " + version.getVersionNo() + ")");
 
         return eval;
     }
 
     /**
-     * BGH sửa nhận xét của chính mình (hiển thị 'đã chỉnh sửa', không gửi lại email)
+     * BGH sửa nhận xét của chính mình (hiển thị 'đã chỉnh sửa', không gửi lại
+     * email)
      */
     @Transactional
     public Evaluation editEvaluation(Long evaluationId, CurrentUser reviewerUser, String newContent) {
@@ -144,7 +153,7 @@ public class EvaluationService {
         }
 
         Evaluation eval = evaluationRepository.findById(evaluationId)
-            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhận xét."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhận xét."));
 
         // Chỉ người viết nhận xét hoặc admin mới sửa được
         if (eval.getReviewer() != null && !eval.getReviewer().getId().equals(reviewerUser.getId())) {
@@ -165,13 +174,15 @@ public class EvaluationService {
     @Transactional
     public void deleteEvaluation(Long evaluationId, CurrentUser reviewerUser) {
         Evaluation eval = evaluationRepository.findById(evaluationId)
-            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhận xét."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhận xét."));
 
         boolean isAdmin = reviewerUser != null && reviewerUser.getAuthorities() != null &&
-            reviewerUser.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ADMIN".equals(a.getAuthority()));
+                reviewerUser.getAuthorities().stream()
+                        .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "ADMIN".equals(a.getAuthority()));
 
         // Chỉ người viết nhận xét hoặc admin mới thu hồi được
-        if (!isAdmin && eval.getReviewer() != null && reviewerUser != null && !eval.getReviewer().getId().equals(reviewerUser.getId())) {
+        if (!isAdmin && eval.getReviewer() != null && reviewerUser != null
+                && !eval.getReviewer().getId().equals(reviewerUser.getId())) {
             throw new BusinessException("Bạn chỉ có thể thu hồi nhận xét của chính mình.");
         }
 
@@ -186,7 +197,7 @@ public class EvaluationService {
         evaluationRepository.delete(eval);
 
         auditService.log("EVALUATION_DELETE", "EVALUATION", evaluationId,
-            "Thu hồi nhận xét trên giáo án: " + planTitle);
+                "Thu hồi nhận xét trên giáo án: " + planTitle);
     }
 
     /**
@@ -199,7 +210,7 @@ public class EvaluationService {
         }
 
         Evaluation eval = evaluationRepository.findById(evaluationId)
-            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhận xét."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhận xét."));
 
         LessonPlan plan = eval.getPlan();
 
@@ -217,7 +228,8 @@ public class EvaluationService {
         reply.setContent(content.trim());
         reply = replyRepository.save(reply);
 
-        // Gửi email & notification cho người đã viết nhận xét (nếu người đó còn tồn tại)
+        // Gửi email & notification cho người đã viết nhận xét (nếu người đó còn tồn
+        // tại)
         if (eval.getReviewer() != null) {
             Map<String, Object> payload = new HashMap<>();
             payload.put("reviewerName", eval.getReviewerNameSnapshot());
@@ -227,11 +239,10 @@ public class EvaluationService {
             payload.put("planId", plan.getId());
 
             emailService.queueEmail(
-                eval.getReviewer().getEmail(),
-                "Phản hồi nhận xét giáo án: " + plan.getTitle(),
-                "mail/mail-evaluation-reply",
-                payload
-            );
+                    eval.getReviewer().getEmail(),
+                    "Phản hồi nhận xét giáo án: " + plan.getTitle(),
+                    "mail/mail-evaluation-reply",
+                    payload);
 
             Notification notif = new Notification();
             notif.setUser(eval.getReviewer());
@@ -242,7 +253,7 @@ public class EvaluationService {
         }
 
         auditService.log("EVALUATION_REPLY", "EVALUATION_REPLY", reply.getId(),
-            "Giáo viên trả lời nhận xét trên giáo án: " + plan.getTitle());
+                "Giáo viên trả lời nhận xét trên giáo án: " + plan.getTitle());
 
         return reply;
     }
